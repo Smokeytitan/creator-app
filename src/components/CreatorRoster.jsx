@@ -1,7 +1,14 @@
 import { useState, useRef, useMemo } from 'react';
-import { Upload, Plus, Trash2, FileText, X, DollarSign, Edit2, Search, Filter, SortAsc, Download, Eye } from 'lucide-react';
+import { Upload, Plus, Trash2, FileText, X, DollarSign, Edit2, Search, Filter, SortAsc, Download, Eye, RefreshCw } from 'lucide-react';
+import { IMPORTED_CREATORS } from '../data/importedCreators';
 
 export default function CreatorRoster({ creators, setCreators }) {
+  const resetToImportedData = () => {
+    if (confirm('This will replace all current creator data with the data from Google Sheets. Are you sure?')) {
+      setCreators(IMPORTED_CREATORS);
+      alert('Creator data has been reset to imported data from Google Sheets!');
+    }
+  };
   const [editingId, setEditingId] = useState(null);
   const [isAdding, setIsAdding] = useState(false);
   const [editForm, setEditForm] = useState({ name: '', handle: '', notes: '', costPerPost: '' });
@@ -406,6 +413,14 @@ export default function CreatorRoster({ creators, setCreators }) {
           >
             <Download className="w-4 h-4 mr-2" />
             Export CSV
+          </button>
+          <button
+            onClick={resetToImportedData}
+            className="inline-flex items-center px-4 py-2 bg-orange-600 dark:bg-orange-500 text-white rounded-lg hover:bg-orange-700 dark:hover:bg-orange-600 transition-colors"
+            title="Reset to Google Sheets data"
+          >
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Reset Data
           </button>
         </div>
       </div>
