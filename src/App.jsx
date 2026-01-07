@@ -70,7 +70,8 @@ export default function App() {
             return {
               ...newCreator,
               posts: existing?.posts || [], // Preserve existing posts
-              costPerPost: newCreator.costPerPost || existing?.costPerPost || '' // Preserve or update costPerPost
+              costPerPost: newCreator.costPerPost || existing?.costPerPost || '', // Preserve or update costPerPost
+              platforms: existing?.platforms || newCreator.platforms || [] // Preserve platforms
             };
           });
 
