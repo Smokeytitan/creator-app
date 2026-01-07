@@ -109,9 +109,47 @@ export default function App() {
         </div>
       </div>
 
+      {/* Mobile Navigation - visible on small screens */}
+      <div className="md:hidden bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+        <nav className="flex overflow-x-auto">
+          <button
+            onClick={() => setActiveTab('roster')}
+            className={`px-4 py-3 text-sm font-medium whitespace-nowrap ${
+              activeTab === 'roster' ? 'border-b-2 border-red-600 text-gray-900 dark:text-gray-50' : 'text-gray-600 dark:text-gray-400'
+            }`}
+          >
+            Roster
+          </button>
+          <button
+            onClick={() => setActiveTab('requests')}
+            className={`px-4 py-3 text-sm font-medium whitespace-nowrap ${
+              activeTab === 'requests' ? 'border-b-2 border-red-600 text-gray-900 dark:text-gray-50' : 'text-gray-600 dark:text-gray-400'
+            }`}
+          >
+            Requests
+          </button>
+          <button
+            onClick={() => setActiveTab('analytics')}
+            className={`px-4 py-3 text-sm font-medium whitespace-nowrap ${
+              activeTab === 'analytics' ? 'border-b-2 border-red-600 text-gray-900 dark:text-gray-50' : 'text-gray-600 dark:text-gray-400'
+            }`}
+          >
+            Analytics
+          </button>
+          <button
+            onClick={() => setActiveTab('kaito')}
+            className={`px-4 py-3 text-sm font-medium whitespace-nowrap ${
+              activeTab === 'kaito' ? 'border-b-2 border-red-600 text-gray-900 dark:text-gray-50' : 'text-gray-600 dark:text-gray-400'
+            }`}
+          >
+            Kaito
+          </button>
+        </nav>
+      </div>
+
       <div className="flex">
-        {/* Sidebar */}
-        <div className="w-60 h-screen sticky top-0 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 py-3 overflow-y-auto">
+        {/* Sidebar - hidden on small screens, visible on medium+ */}
+        <div className="hidden md:block w-60 h-screen sticky top-0 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 py-3 overflow-y-auto">
           <nav className="flex flex-col gap-1">
             <button
               onClick={() => setActiveTab('roster')}
