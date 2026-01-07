@@ -28,16 +28,21 @@ export class KaitoService {
         params: queryParams,
         headers: {
           'X-API-KEY': this.apiKey,
-          'Content-Type': 'application/json'
-        }
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Accept-Encoding': 'gzip, deflate, br'
+        },
+        decompress: true
       });
 
       const data = response.data;
       console.log(`Kaito API: Successfully fetched community mindshare data`);
       console.log('Kaito API Response:', data);
 
-      // Return top 100 if data is an array, otherwise return the data structure as-is
-      if (Array.isArray(data)) {
+      // Extract top_100_creators from community_mindshare response
+      if (data.community_mindshare && data.community_mindshare.top_100_creators) {
+        return data.community_mindshare.top_100_creators;
+      } else if (Array.isArray(data)) {
         return data.slice(0, 100);
       } else if (data.results && Array.isArray(data.results)) {
         return data.results.slice(0, 100);
