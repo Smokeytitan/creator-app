@@ -438,6 +438,12 @@ const ContentRequests = ({ creators }) => {
                           <User className="h-4 w-4 mr-1" />
                           {(request.creators || []).map(c => c.name).join(', ')}
                         </div>
+                        {request.startDate && (
+                          <div className="flex items-center">
+                            <Calendar className="h-4 w-4 mr-1" />
+                            Started: {new Date(request.startDate).toLocaleDateString()}
+                          </div>
+                        )}
                         <div className="flex items-center">
                           <Calendar className="h-4 w-4 mr-1" />
                           Due: {new Date(request.dueDate).toLocaleDateString()}

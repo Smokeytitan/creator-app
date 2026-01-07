@@ -13,7 +13,10 @@ const GOOGLE_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1J75nBdYNyQivMd
 const DEFAULT_CREATORS = IMPORTED_CREATORS;
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState('roster');
+  const [activeTab, setActiveTab] = useState(() => {
+    const stored = localStorage.getItem('activeTab');
+    return stored || 'roster';
+  });
   const [loading, setLoading] = useState(true);
   const [creators, setCreators] = useState(() => {
     const stored = localStorage.getItem('creators');
@@ -90,6 +93,11 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('creators', JSON.stringify(creators));
   }, [creators]);
+
+  // Save active tab to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('activeTab', activeTab);
+  }, [activeTab]);
 
   useEffect(() => {
     const kaito = new KaitoService();
