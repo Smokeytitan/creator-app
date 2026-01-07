@@ -110,36 +110,36 @@ export default function App() {
       </div>
 
       {/* Mobile Navigation - visible on small screens */}
-      <div className="md:hidden bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-        <nav className="flex overflow-x-auto">
+      <div className="md:hidden bg-white dark:bg-gray-800 border-b-2 border-gray-200 dark:border-gray-700 px-2">
+        <nav className="flex gap-2 overflow-x-auto">
           <button
             onClick={() => setActiveTab('roster')}
-            className={`px-4 py-3 text-sm font-medium whitespace-nowrap ${
-              activeTab === 'roster' ? 'border-b-2 border-red-600 text-gray-900 dark:text-gray-50' : 'text-gray-600 dark:text-gray-400'
+            className={`flex-1 px-4 py-3 text-sm font-medium whitespace-nowrap transition-colors ${
+              activeTab === 'roster' ? 'bg-red-600 text-white rounded-t-lg' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-t-lg'
             }`}
           >
             Roster
           </button>
           <button
             onClick={() => setActiveTab('requests')}
-            className={`px-4 py-3 text-sm font-medium whitespace-nowrap ${
-              activeTab === 'requests' ? 'border-b-2 border-red-600 text-gray-900 dark:text-gray-50' : 'text-gray-600 dark:text-gray-400'
+            className={`flex-1 px-4 py-3 text-sm font-medium whitespace-nowrap transition-colors ${
+              activeTab === 'requests' ? 'bg-red-600 text-white rounded-t-lg' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-t-lg'
             }`}
           >
             Requests
           </button>
           <button
             onClick={() => setActiveTab('analytics')}
-            className={`px-4 py-3 text-sm font-medium whitespace-nowrap ${
-              activeTab === 'analytics' ? 'border-b-2 border-red-600 text-gray-900 dark:text-gray-50' : 'text-gray-600 dark:text-gray-400'
+            className={`flex-1 px-4 py-3 text-sm font-medium whitespace-nowrap transition-colors ${
+              activeTab === 'analytics' ? 'bg-red-600 text-white rounded-t-lg' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-t-lg'
             }`}
           >
             Analytics
           </button>
           <button
             onClick={() => setActiveTab('kaito')}
-            className={`px-4 py-3 text-sm font-medium whitespace-nowrap ${
-              activeTab === 'kaito' ? 'border-b-2 border-red-600 text-gray-900 dark:text-gray-50' : 'text-gray-600 dark:text-gray-400'
+            className={`flex-1 px-4 py-3 text-sm font-medium whitespace-nowrap transition-colors ${
+              activeTab === 'kaito' ? 'bg-red-600 text-white rounded-t-lg' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-t-lg'
             }`}
           >
             Kaito
