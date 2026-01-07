@@ -5,6 +5,8 @@ import { KaitoService } from '../services/kaitoService';
 
 export default function CreatorRoster({ creators, setCreators }) {
   const [fetchingKaito, setFetchingKaito] = useState(false);
+  const [kaitoStartDate, setKaitoStartDate] = useState('2025-12-01');
+  const [kaitoEndDate, setKaitoEndDate] = useState('2025-12-31');
 
   const resetToImportedData = () => {
     if (confirm('This will replace all current creator data with the data from Google Sheets. Are you sure?')) {
@@ -17,10 +19,14 @@ export default function CreatorRoster({ creators, setCreators }) {
     setFetchingKaito(true);
     try {
       const kaitoService = new KaitoService();
-      const leaderboardData = await kaitoService.fetchLeaderboard();
+      const leaderboardData = await kaitoService.fetchLeaderboard({
+        start_date: kaitoStartDate,
+        end_date: kaitoEndDate
+      });
 
       console.log('Kaito Leaderboard Data:', leaderboardData);
-      alert(`Successfully fetched Kaito leaderboard data! Check console for details.`);
+      console.log(`Date Range: ${kaitoStartDate} to ${kaitoEndDate}`);
+      alert(`Successfully fetched Kaito leaderboard data for ${kaitoStartDate} to ${kaitoEndDate}! Check console for details.`);
 
       // TODO: You can process and display this data as needed
       // For now, it's logged to console
@@ -458,6 +464,34 @@ export default function CreatorRoster({ creators, setCreators }) {
             <RefreshCw className="w-4 h-4 mr-2" />
             Reset Data
           </button>
+        </div>
+      </div>
+
+      {/* Kaito API Section */}
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-4 mb-4">
+        <div className="flex flex-wrap items-end gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Start Date
+            </label>
+            <input
+              type="date"
+              value={kaitoStartDate}
+              onChange={(e) => setKaitoStartDate(e.target.value)}
+              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-50"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              End Date
+            </label>
+            <input
+              type="date"
+              value={kaitoEndDate}
+              onChange={(e) => setKaitoEndDate(e.target.value)}
+              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-50"
+            />
+          </div>
           <button
             onClick={fetchKaitoLeaderboard}
             disabled={fetchingKaito}
