@@ -7,13 +7,13 @@ export const IMPORTED_CREATORS = [
     name: "Picolas Cage",
     handle: "@Picolas_Caged",
     notes: "9 posts completed",
-    costPerPost: "$1,000.00",
+    costPerPost: "$100.00",
     posts: [
       {
         id: 1001,
         description: "Revolut x Mastercard",
         date: "2025-11-18",
-        cost: "$1,000.00",
+        cost: "$100.00",
         link: "https://x.com/Picolas_Caged/status/1990869187481244002?s=20",
         impressions: "7,600"
       },
@@ -21,7 +21,7 @@ export const IMPORTED_CREATORS = [
         id: 1002,
         description: "POL Token Status on Robinhood US",
         date: "2025-11-19",
-        cost: "$1,000.00",
+        cost: "$100.00",
         link: "https://x.com/Picolas_Caged/status/1991590224758206899?s=20",
         impressions: "2,800"
       },
@@ -29,7 +29,7 @@ export const IMPORTED_CREATORS = [
         id: 1003,
         description: "ETH Foundation Polygon Payments Overview",
         date: "2025-12-02",
-        cost: "$1,000.00",
+        cost: "$100.00",
         link: "https://x.com/Picolas_Caged/status/1996290625948254547?s=20",
         impressions: "7,900"
       },
@@ -37,7 +37,7 @@ export const IMPORTED_CREATORS = [
         id: 1004,
         description: "Highest Day of Stablecoin Transactions",
         date: "2025-12-04",
-        cost: "$1,000.00",
+        cost: "$100.00",
         link: "https://x.com/Picolas_Caged/status/1997064649133772933?s=20",
         impressions: "5,900"
       },
@@ -45,7 +45,7 @@ export const IMPORTED_CREATORS = [
         id: 1005,
         description: "Madhurigi Hardfork",
         date: "2025-12-09",
-        cost: "$1,000.00",
+        cost: "$100.00",
         link: "https://x.com/Picolas_Caged/status/2000647762166054944?s=20",
         impressions: "5,100"
       },
@@ -53,7 +53,7 @@ export const IMPORTED_CREATORS = [
         id: 1006,
         description: "P2P Stablecoin Volume Stats Via Dune",
         date: "2025-12-16",
-        cost: "$1,000.00",
+        cost: "$100.00",
         link: "https://x.com/Picolas_Caged/status/2001720081093361985?s=20",
         impressions: "9,100"
       },
@@ -61,7 +61,7 @@ export const IMPORTED_CREATORS = [
         id: 1007,
         description: "S2 Polygon/Kaito Campaign",
         date: "2025-12-17",
-        cost: "$1,000.00",
+        cost: "$100.00",
         link: "https://x.com/Picolas_Caged/status/2002763492168958129?s=20",
         impressions: "9,800"
       },
@@ -69,7 +69,7 @@ export const IMPORTED_CREATORS = [
         id: 1008,
         description: "Shift4",
         date: "2025-12-22",
-        cost: "$1,000.00",
+        cost: "$100.00",
         link: "https://x.com/Picolas_Caged/status/2006331702193377748?s=20",
         impressions: "4,100"
       },
@@ -77,7 +77,7 @@ export const IMPORTED_CREATORS = [
         id: 1009,
         description: "End Of Year Video",
         date: "2025-12-31",
-        cost: "$1,000.00",
+        cost: "$100.00",
         link: "https://x.com/Picolas_Caged/status/2006799557288427734?s=20",
         impressions: "1,700"
       }
@@ -88,13 +88,13 @@ export const IMPORTED_CREATORS = [
     name: "Jampzey",
     handle: "@Jampzey",
     notes: "9 posts completed",
-    costPerPost: "$0.00",
+    costPerPost: "$1,000.00",
     posts: [
       {
         id: 2001,
         description: "Revolut x Mastercard",
         date: "2025-11-18",
-        cost: "$0.00",
+        cost: "$1,000.00",
         link: "https://x.com/Jampzey/status/1991328771228762265",
         impressions: "20,600"
       },
@@ -102,7 +102,7 @@ export const IMPORTED_CREATORS = [
         id: 2002,
         description: "POL Token Status on Robinhood US",
         date: "2025-11-19",
-        cost: "$0.00",
+        cost: "$1,000.00",
         link: "https://x.com/Jampzey/status/1991971837904097710",
         impressions: "18,500"
       },
@@ -110,7 +110,7 @@ export const IMPORTED_CREATORS = [
         id: 2003,
         description: "ETH Foundation Polygon Payments Overview",
         date: "2025-12-02",
-        cost: "$0.00",
+        cost: "$1,000.00",
         link: "https://x.com/Jampzey/status/1997205967570645413",
         impressions: "26,600"
       },
@@ -118,7 +118,7 @@ export const IMPORTED_CREATORS = [
         id: 2004,
         description: "Highest Day of Stablecoin Transactions",
         date: "2025-12-04",
-        cost: "$0.00",
+        cost: "$1,000.00",
         link: "https://x.com/Jampzey/status/1996670850305871989",
         impressions: "19,000"
       },
@@ -126,7 +126,7 @@ export const IMPORTED_CREATORS = [
         id: 2005,
         description: "Madhurigi Hardfork",
         date: "2025-12-09",
-        cost: "$0.00",
+        cost: "$1,000.00",
         link: "https://x.com/Jampzey/status/1999024755052024240",
         impressions: "22,400"
       },
@@ -134,7 +134,7 @@ export const IMPORTED_CREATORS = [
         id: 2006,
         description: "P2P Stablecoin Volume Stats Via Dune",
         date: "2025-12-16",
-        cost: "$0.00",
+        cost: "$1,000.00",
         link: "https://x.com/Jampzey/status/2001086984018690117",
         impressions: "21,700"
       },
@@ -142,7 +142,7 @@ export const IMPORTED_CREATORS = [
         id: 2007,
         description: "S2 Polygon/Kaito Campaign",
         date: "2025-12-17",
-        cost: "$0.00",
+        cost: "$1,000.00",
         link: "https://x.com/Jampzey/status/2001772636859183291",
         impressions: "19,400"
       },
@@ -150,7 +150,7 @@ export const IMPORTED_CREATORS = [
         id: 2008,
         description: "Shift4",
         date: "2025-12-22",
-        cost: "$0.00",
+        cost: "$1,000.00",
         link: "https://x.com/Jampzey/status/2004006608750391339",
         impressions: "18,700"
       },
@@ -158,7 +158,7 @@ export const IMPORTED_CREATORS = [
         id: 2009,
         description: "End Of Year Video",
         date: "2025-12-31",
-        cost: "$0.00",
+        cost: "$1,000.00",
         link: "https://x.com/Jampzey/status/2006468162884431991",
         impressions: "18,200"
       }
