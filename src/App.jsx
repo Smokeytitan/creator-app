@@ -28,6 +28,20 @@ export default function App() {
     return DEFAULT_CREATORS;
   });
 
+  // Load requests for analytics
+  const [requests, setRequests] = useState(() => {
+    const stored = localStorage.getItem('requests');
+    if (stored) {
+      try {
+        return JSON.parse(stored);
+      } catch (e) {
+        console.error('Failed to parse requests from localStorage:', e);
+        return [];
+      }
+    }
+    return [];
+  });
+
   // Load creators from Google Sheets on mount
   useEffect(() => {
     const loadCreators = async () => {
@@ -147,7 +161,7 @@ export default function App() {
             <>
               {activeTab === 'roster' && <CreatorRoster creators={creators} setCreators={setCreators} />}
               {activeTab === 'requests' && <ContentRequests creators={creators} />}
-              {activeTab === 'analytics' && <Analytics creators={creators} />}
+              {activeTab === 'analytics' && <Analytics creators={creators} requests={requests} />}
             </>
           )}
         </div>

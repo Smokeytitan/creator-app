@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { TrendingUp, DollarSign, FileText, Eye, Award, Download, Calendar, X } from 'lucide-react';
+import { TrendingUp, DollarSign, FileText, Eye, Award, Download, Calendar, X, Target, Users } from 'lucide-react';
 import {
   BarChart,
   Bar,
@@ -7,12 +7,17 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  ResponsiveContainer
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  Legend
 } from 'recharts';
 
-export default function Analytics({ creators }) {
+export default function Analytics({ creators, requests = [] }) {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [viewMode, setViewMode] = useState('creators'); // 'creators' or 'campaigns'
 
   // Calculate analytics metrics
   const analytics = useMemo(() => {

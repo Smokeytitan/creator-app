@@ -1,5 +1,5 @@
 import { useState, useRef, useMemo } from 'react';
-import { Upload, Plus, Trash2, FileText, X, DollarSign, Edit2, Search, Filter, SortAsc, Download, Eye, RefreshCw } from 'lucide-react';
+import { Upload, Plus, Trash2, FileText, X, DollarSign, Edit2, Search, Filter, SortAsc, Download, Eye, RefreshCw, Calendar } from 'lucide-react';
 import { IMPORTED_CREATORS } from '../data/importedCreators';
 
 export default function CreatorRoster({ creators, setCreators }) {
@@ -669,10 +669,10 @@ export default function CreatorRoster({ creators, setCreators }) {
                 <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
                   <button
                     onClick={(e) => toggleViewPosts(c.id, e)}
-                    className="inline-flex items-center text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-medium"
+                    className="inline-flex items-center px-3 py-2 text-sm bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 rounded-lg font-medium transition-colors w-full justify-center"
                   >
-                    <FileText className="h-4 w-4 mr-1" />
-                    {(c.posts || []).length} Posts
+                    <FileText className="h-4 w-4 mr-2" />
+                    {viewingPostsId === c.id ? 'Hide' : 'View'} {(c.posts || []).length} Post{(c.posts || []).length !== 1 ? 's' : ''}
                   </button>
                 </div>
 
@@ -743,12 +743,12 @@ export default function CreatorRoster({ creators, setCreators }) {
                       </div>
                     )}
 
-                    <div className="space-y-2 max-h-64 overflow-y-auto">
+                    <div className="space-y-2 max-h-96 overflow-y-auto">
                       {(c.posts || []).length === 0 && addingPostId !== c.id ? (
                         <p className="text-xs text-gray-400 text-center py-2">No posts yet</p>
                       ) : (
                         (c.posts || []).map((post) => (
-                          <div key={post.id} className="bg-gray-50 rounded p-2 text-xs">
+                          <div key={post.id} className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3 text-sm border border-gray-200 dark:border-gray-600">
                             {editingPostId === post.id ? (
                               <div className="space-y-2 border border-indigo-200 rounded p-2 bg-white">
                                 <input
@@ -804,25 +804,35 @@ export default function CreatorRoster({ creators, setCreators }) {
                             ) : (
                               <div className="flex items-start justify-between">
                                 <div className="flex-1">
-                                  <p className="font-medium text-gray-900">{post.description}</p>
-                                  <div className="flex items-center gap-3 mt-1 text-gray-500">
-                                    {post.date && <span>{post.date}</span>}
+                                  <p className="font-semibold text-gray-900 dark:text-gray-50 mb-2">{post.description}</p>
+                                  <div className="flex flex-wrap items-center gap-3 text-gray-600 dark:text-gray-400 text-sm">
+                                    {post.date && (
+                                      <span className="inline-flex items-center">
+                                        <Calendar className="h-3 w-3 mr-1" />
+                                        {post.date}
+                                      </span>
+                                    )}
                                     {post.cost && (
                                       <span className="inline-flex items-center">
                                         <DollarSign className="h-3 w-3 mr-0.5" />
                                         {post.cost}
                                       </span>
                                     )}
-                                    {post.impressions && <span>{post.impressions} imp</span>}
+                                    {post.impressions && (
+                                      <span className="inline-flex items-center">
+                                        <Eye className="h-3 w-3 mr-1" />
+                                        {post.impressions} impressions
+                                      </span>
+                                    )}
                                   </div>
                                   {post.link && (
                                     <a
                                       href={post.link}
                                       target="_blank"
                                       rel="noopener noreferrer"
-                                      className="text-indigo-600 hover:underline mt-1 inline-block"
+                                      className="inline-flex items-center text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-medium mt-2 text-sm hover:underline"
                                     >
-                                      View Post
+                                      View Post on X →
                                     </a>
                                   )}
                                 </div>

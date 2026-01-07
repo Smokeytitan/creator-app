@@ -1,81 +1,119 @@
 // Initial content requests imported from Google Sheets
+// Each campaign shows the creators who participated
 export const INITIAL_REQUESTS = [
   {
     id: 1,
-    title: "Picolas Cage - 9 Posts Campaign",
-    description: "Content campaign for Picolas Cage to create 9 posts.",
+    title: "Revolut x Mastercard",
+    description: "Content campaign promoting Revolut x Mastercard partnership.",
     creators: [
-      {
-        id: 1,
-        name: "Picolas Cage"
-      }
+      { id: 1, name: "Picolas Cage" },
+      { id: 2, name: "Jampzey" },
+      { id: 3, name: "R2D2" },
+      { id: 4, name: "Eliza" }
     ],
-    dueDate: "2026-02-06T07:33:59.278Z",
-    status: "pending"
+    dueDate: "2025-11-18T00:00:00.000Z",
+    status: "completed"
   },
   {
     id: 2,
-    title: "Jampzey - 9 Posts Campaign",
-    description: "Content campaign for Jampzey to create 9 posts.",
+    title: "POL Token Status on Robinhood US",
+    description: "Campaign covering POL token availability on Robinhood US platform.",
     creators: [
-      {
-        id: 2,
-        name: "Jampzey"
-      }
+      { id: 1, name: "Picolas Cage" },
+      { id: 2, name: "Jampzey" },
+      { id: 3, name: "R2D2" },
+      { id: 4, name: "Eliza" }
     ],
-    dueDate: "2026-02-06T07:33:59.284Z",
-    status: "pending"
+    dueDate: "2025-11-19T00:00:00.000Z",
+    status: "completed"
   },
   {
     id: 3,
-    title: "Xero - 1 Post Campaign",
-    description: "Content campaign for Xero to create 1 post.",
+    title: "ETH Foundation Polygon Payments Overview",
+    description: "Content highlighting ETH Foundation's payments on Polygon network.",
     creators: [
-      {
-        id: 3,
-        name: "Xero"
-      }
+      { id: 1, name: "Picolas Cage" },
+      { id: 2, name: "Jampzey" },
+      { id: 3, name: "R2D2" },
+      { id: 4, name: "Eliza" }
     ],
-    dueDate: "2026-02-06T07:33:59.284Z",
-    status: "pending"
+    dueDate: "2025-12-02T00:00:00.000Z",
+    status: "completed"
   },
   {
     id: 4,
-    title: "Bawsa - 1 Post Campaign",
-    description: "Content campaign for Bawsa to create 1 post.",
+    title: "Highest Day of Stablecoin Transactions",
+    description: "Campaign showcasing record-breaking stablecoin transaction volume.",
     creators: [
-      {
-        id: 4,
-        name: "Bawsa"
-      }
+      { id: 1, name: "Picolas Cage" },
+      { id: 2, name: "Jampzey" },
+      { id: 3, name: "R2D2" }
     ],
-    dueDate: "2026-02-06T07:33:59.284Z",
-    status: "pending"
+    dueDate: "2025-12-04T00:00:00.000Z",
+    status: "completed"
   },
   {
     id: 5,
-    title: "R2D2 - 8 Posts Campaign",
-    description: "Content campaign for R2D2 to create 8 posts.",
+    title: "Madhurigi Hardfork",
+    description: "Content campaign covering the Madhurigi hardfork event.",
     creators: [
-      {
-        id: 5,
-        name: "R2D2"
-      }
+      { id: 1, name: "Picolas Cage" },
+      { id: 2, name: "Jampzey" },
+      { id: 3, name: "R2D2" },
+      { id: 4, name: "Eliza" }
     ],
-    dueDate: "2026-02-06T07:33:59.284Z",
-    status: "pending"
+    dueDate: "2025-12-09T00:00:00.000Z",
+    status: "completed"
   },
   {
     id: 6,
-    title: "Eliza - 8 Posts Campaign",
-    description: "Content campaign for Eliza to create 8 posts.",
+    title: "P2P Stablecoin Volume Stats Via Dune",
+    description: "Campaign highlighting P2P stablecoin volume statistics from Dune Analytics.",
     creators: [
-      {
-        id: 6,
-        name: "Eliza"
-      }
+      { id: 1, name: "Picolas Cage" },
+      { id: 2, name: "Jampzey" },
+      { id: 3, name: "R2D2" },
+      { id: 4, name: "Eliza" }
     ],
-    dueDate: "2026-02-06T07:33:59.284Z",
-    status: "pending"
+    dueDate: "2025-12-16T00:00:00.000Z",
+    status: "completed"
+  },
+  {
+    id: 7,
+    title: "S2 Polygon/Kaito Campaign",
+    description: "Season 2 campaign collaboration between Polygon and Kaito.",
+    creators: [
+      { id: 1, name: "Picolas Cage" },
+      { id: 2, name: "Jampzey" },
+      { id: 3, name: "R2D2" },
+      { id: 4, name: "Eliza" }
+    ],
+    dueDate: "2025-12-17T00:00:00.000Z",
+    status: "completed"
+  },
+  {
+    id: 8,
+    title: "Shift4",
+    description: "Content campaign promoting Shift4 integration or partnership.",
+    creators: [
+      { id: 1, name: "Picolas Cage" },
+      { id: 2, name: "Jampzey" },
+      { id: 3, name: "R2D2" },
+      { id: 4, name: "Eliza" }
+    ],
+    dueDate: "2025-12-22T00:00:00.000Z",
+    status: "completed"
+  },
+  {
+    id: 9,
+    title: "End Of Year Video",
+    description: "Year-end recap video campaign highlighting achievements.",
+    creators: [
+      { id: 1, name: "Picolas Cage" },
+      { id: 2, name: "Jampzey" },
+      { id: 4, name: "Eliza" }
+    ],
+    dueDate: "2025-12-31T00:00:00.000Z",
+    status: "completed"
   }
 ];

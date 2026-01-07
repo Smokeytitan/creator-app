@@ -1,9 +1,15 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Plus, Calendar, User, CheckCircle, Clock, XCircle, Trash2, Edit2, Save, X, Search } from 'lucide-react';
+import { Plus, Calendar, User, CheckCircle, Clock, XCircle, Trash2, Edit2, Save, X, Search, RefreshCw, Eye, DollarSign } from 'lucide-react';
 import ContentRequestModal from './ContentRequestModal';
 import { INITIAL_REQUESTS } from '../data/initialRequests';
 
 const ContentRequests = ({ creators }) => {
+  const resetToCampaigns = () => {
+    if (confirm('This will load all campaigns from Google Sheets. Your current requests will be replaced. Are you sure?')) {
+      setRequests(INITIAL_REQUESTS);
+      alert('Campaign data has been loaded from Google Sheets!');
+    }
+  };
   const [requests, setRequests] = useState(() => {
     const stored = localStorage.getItem('requests');
     if (stored) {
@@ -169,6 +175,47 @@ const ContentRequests = ({ creators }) => {
     }
   };
 
+  const getCampaignMetrics = (request) => {
+    let totalImpressions = 0;
+    let totalCost = 0;
+
+    // Get the campaign creators
+    const campaignCreators = request.creators || [];
+
+    // For each creator in the campaign
+    campaignCreators.forEach(campaignCreator => {
+      // Find the creator in the full creators list
+      const creator = creators.find(c => c.id === campaignCreator.id);
+      if (!creator || !creator.posts) return;
+
+      // Find posts that match this campaign by description/title
+      const matchingPosts = creator.posts.filter(post =>
+        post.description && post.description.toLowerCase().includes(request.title.toLowerCase().split(' ').slice(0, 2).join(' ').toLowerCase())
+      );
+
+      // Sum up impressions and costs from matching posts
+      matchingPosts.forEach(post => {
+        if (post.impressions) {
+          const impressions = parseFloat(post.impressions.replace(/[^0-9.-]+/g, ''));
+          if (!isNaN(impressions)) {
+            totalImpressions += impressions;
+          }
+        }
+        if (post.cost) {
+          const cost = parseFloat(post.cost.replace(/[^0-9.-]+/g, ''));
+          if (!isNaN(cost)) {
+            totalCost += cost;
+          }
+        }
+      });
+    });
+
+    return {
+      totalImpressions,
+      totalCost
+    };
+  };
+
   return (
     <div className="space-y-6">
       {/* Stats Overview */}
@@ -210,13 +257,23 @@ const ContentRequests = ({ creators }) => {
                 </button>
               ))}
             </div>
-            <button
-              onClick={() => setShowModal(true)}
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 dark:bg-indigo-500 hover:bg-indigo-700 dark:hover:bg-indigo-600"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              New Request
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={resetToCampaigns}
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-orange-600 dark:bg-orange-500 hover:bg-orange-700 dark:hover:bg-orange-600"
+                title="Load campaigns from Google Sheets"
+              >
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Load Campaigns
+              </button>
+              <button
+                onClick={() => setShowModal(true)}
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 dark:bg-indigo-500 hover:bg-indigo-700 dark:hover:bg-indigo-600"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                New Request
+              </button>
+            </div>
           </div>
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
             {/* Search Bar */}
@@ -370,7 +427,7 @@ const ContentRequests = ({ creators }) => {
                         {request.title}
                       </h4>
                       <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">{request.description}</p>
-                      <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
+                      <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400 mb-2">
                         <div className="flex items-center">
                           <User className="h-4 w-4 mr-1" />
                           {(request.creators || []).map(c => c.name).join(', ')}
@@ -380,6 +437,28 @@ const ContentRequests = ({ creators }) => {
                           Due: {new Date(request.dueDate).toLocaleDateString()}
                         </div>
                       </div>
+                      {(() => {
+                        const metrics = getCampaignMetrics(request);
+                        if (metrics.totalImpressions > 0 || metrics.totalCost > 0) {
+                          return (
+                            <div className="flex items-center gap-4 text-sm font-medium">
+                              {metrics.totalImpressions > 0 && (
+                                <div className="flex items-center text-indigo-600 dark:text-indigo-400">
+                                  <Eye className="h-4 w-4 mr-1" />
+                                  {metrics.totalImpressions.toLocaleString()} impressions
+                                </div>
+                              )}
+                              {metrics.totalCost > 0 && (
+                                <div className="flex items-center text-green-600 dark:text-green-400">
+                                  <DollarSign className="h-4 w-4 mr-1" />
+                                  ${metrics.totalCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        }
+                        return null;
+                      })()}
                     </div>
                   </div>
                   <div className="ml-4 flex items-center gap-2">
