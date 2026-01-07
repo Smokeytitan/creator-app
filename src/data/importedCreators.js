@@ -309,13 +309,5 @@ export const IMPORTED_CREATORS = [
         impressions: "4,500"
       }
     ]
-  },
-  {
-    id: 5,
-    name: "Xero",
-    handle: "@xero",
-    notes: "0 posts completed",
-    costPerPost: "$0.00",
-    posts: []
   }
 ];
