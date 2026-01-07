@@ -1,57 +1,104 @@
-import { useMemo } from 'react';
-import { TrendingUp, Users, Eye, DollarSign, RefreshCw, AlertCircle } from 'lucide-react';
+import { useState, useMemo, useEffect } from 'react';
+import { TrendingUp, Award, Eye, Users, RefreshCw, AlertCircle, Search, Filter } from 'lucide-react';
+import { KaitoService } from '../services/kaitoService';
 
-export default function Kaito({ creators }) {
-  // Calculate aggregate metrics
-  const metrics = useMemo(() => {
-    const stats = {
-      totalCreators: creators.length,
-      totalPosts: 0,
-      totalImpressions: 0,
-      totalSpend: 0,
-      avgEngagement: 0
-    };
+export default function Kaito() {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [leaderboardData, setLeaderboardData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-    creators.forEach(creator => {
-      const posts = creator.posts || [];
-      stats.totalPosts += posts.length;
+  // Fetch leaderboard data from Kaito API
+  const fetchLeaderboard = async () => {
+    setLoading(true);
+    setError(null);
 
-      posts.forEach(post => {
-        // Parse impressions
-        if (post.impressions) {
-          const impressions = parseFloat(post.impressions.replace(/[^0-9.-]+/g, ''));
-          if (!isNaN(impressions)) {
-            stats.totalImpressions += impressions;
-          }
-        }
+    try {
+      const kaitoService = new KaitoService();
+      const data = await kaitoService.fetchLeaderboard();
 
-        // Parse cost
-        if (post.cost) {
-          const cost = parseFloat(post.cost.replace(/[^0-9.-]+/g, ''));
-          if (!isNaN(cost)) {
-            stats.totalSpend += cost;
-          }
-        }
+      // Map API response to display format
+      const mappedData = data.map(creator => {
+        // Calculate engagement rate
+        const totalEngagement =
+          (creator.total_retweets || 0) +
+          (creator.total_quote_tweets || 0) +
+          (creator.total_likes || 0) +
+          (creator.total_bookmarks || 0);
+
+        const engagementRate = creator.total_impressions > 0
+          ? ((totalEngagement / creator.total_impressions) * 100).toFixed(1)
+          : '0.0';
+
+        // Calculate score based on mindshare (normalize to 0-100 scale)
+        const score = Math.min(Math.round((creator.mindshare || 0) * 10000), 100);
+
+        // Format followers
+        const followers = creator.smart_followers
+          ? creator.smart_followers >= 1000000
+            ? `${(creator.smart_followers / 1000000).toFixed(1)}M`
+            : creator.smart_followers >= 1000
+              ? `${(creator.smart_followers / 1000).toFixed(0)}K`
+              : creator.smart_followers.toString()
+          : '0';
+
+        return {
+          rank: parseInt(creator.rank) || 0,
+          name: creator.displayname || creator.username || 'Unknown',
+          handle: `@${creator.username || 'unknown'}`,
+          followers,
+          engagement: `${engagementRate}%`,
+          category: creator.user_level || 'General',
+          score,
+          impressions: creator.total_impressions || 0,
+          userId: creator.user_id
+        };
       });
-    });
 
-    // Calculate average engagement (impressions per post)
-    stats.avgEngagement = stats.totalPosts > 0 ? Math.round(stats.totalImpressions / stats.totalPosts) : 0;
-
-    return stats;
-  }, [creators]);
-
-  const formatNumber = (value) => {
-    return new Intl.NumberFormat('en-US').format(Math.round(value));
+      setLeaderboardData(mappedData);
+    } catch (err) {
+      console.error('Failed to fetch Kaito leaderboard:', err);
+      setError(err.message || 'Failed to load leaderboard data');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const formatCurrency = (value) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(value);
+  // Fetch on mount
+  useEffect(() => {
+    fetchLeaderboard();
+  }, []);
+
+  const categories = useMemo(() => {
+    const cats = new Set(leaderboardData.map(c => c.category));
+    return ['all', ...Array.from(cats)];
+  }, [leaderboardData]);
+
+  const filteredLeaderboard = useMemo(() => {
+    let filtered = leaderboardData;
+
+    if (categoryFilter !== 'all') {
+      filtered = filtered.filter(c => c.category === categoryFilter);
+    }
+
+    if (searchTerm.trim()) {
+      const search = searchTerm.toLowerCase();
+      filtered = filtered.filter(c =>
+        c.name.toLowerCase().includes(search) ||
+        c.handle.toLowerCase().includes(search) ||
+        c.category.toLowerCase().includes(search)
+      );
+    }
+
+    return filtered;
+  }, [leaderboardData, categoryFilter, searchTerm]);
+
+  const getRankBadgeColor = (rank) => {
+    if (rank === 1) return 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200';
+    if (rank === 2) return 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200';
+    if (rank === 3) return 'bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200';
+    return 'bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400';
   };
 
   return (
@@ -59,128 +106,150 @@ export default function Kaito({ creators }) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-medium text-gray-900 dark:text-gray-50">Kaito Integration</h2>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Social media analytics and creator insights</p>
+          <h2 className="text-xl font-medium text-gray-900 dark:text-gray-50">Kaito Creator Leaderboard</h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Discover top Web3 creators ranked by influence and engagement</p>
         </div>
         <button
-          className="inline-flex items-center px-4 py-2 bg-indigo-600 dark:bg-indigo-500 text-white rounded hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-colors text-sm font-medium"
-          title="Refresh data from Kaito API"
+          onClick={fetchLeaderboard}
+          disabled={loading}
+          className="inline-flex items-center px-4 py-2 bg-indigo-600 dark:bg-indigo-500 text-white rounded hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+          title="Refresh leaderboard from Kaito API"
         >
-          <RefreshCw className="w-4 h-4 mr-2" />
-          Sync Data
+          <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+          {loading ? 'Refreshing...' : 'Refresh Leaderboard'}
         </button>
       </div>
 
-      {/* Integration Status */}
-      <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
-        <div className="flex items-start">
-          <AlertCircle className="h-5 w-5 text-yellow-600 dark:text-yellow-500 mt-0.5 mr-3 flex-shrink-0" />
-          <div>
-            <h3 className="text-sm font-medium text-yellow-800 dark:text-yellow-200">Kaito API Integration Pending</h3>
-            <p className="text-sm text-yellow-700 dark:text-yellow-300 mt-1">
-              Connect your Kaito account to unlock advanced social media analytics, engagement tracking, and creator performance insights.
-            </p>
+      {/* Error Status */}
+      {error && (
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+          <div className="flex items-start">
+            <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-500 mt-0.5 mr-3 flex-shrink-0" />
+            <div>
+              <h3 className="text-sm font-medium text-red-800 dark:text-red-200">Failed to Load Leaderboard</h3>
+              <p className="text-sm text-red-700 dark:text-red-300 mt-1">
+                {error}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Search and Filters */}
+      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded p-4">
+        <div className="flex flex-col sm:flex-row gap-4">
+          {/* Search */}
+          <div className="flex-1">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search creators..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+          </div>
+
+          {/* Category Filter */}
+          <div className="flex items-center gap-2">
+            <Filter className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+            <select
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+              className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            >
+              {categories.map(cat => (
+                <option key={cat} value={cat}>
+                  {cat === 'all' ? 'All Categories' : cat}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
       </div>
 
-      {/* Current Metrics Overview */}
-      <div>
-        <h3 className="text-base font-medium text-gray-900 dark:text-gray-50 mb-4">Current Performance</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded p-4">
-            <div className="flex items-center justify-between mb-2">
-              <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Total Creators</div>
-              <Users className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+      {/* Leaderboard */}
+      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded overflow-hidden">
+        {loading && !error ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="text-center">
+              <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-indigo-600 dark:border-indigo-500 border-r-transparent"></div>
+              <p className="mt-4 text-gray-600 dark:text-gray-400">Loading leaderboard...</p>
             </div>
-            <div className="text-3xl font-bold text-gray-900 dark:text-gray-50">{metrics.totalCreators}</div>
           </div>
-
-          <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded p-4">
-            <div className="flex items-center justify-between mb-2">
-              <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Total Posts</div>
-              <TrendingUp className="h-5 w-5 text-green-600 dark:text-green-400" />
-            </div>
-            <div className="text-3xl font-bold text-gray-900 dark:text-gray-50">{metrics.totalPosts}</div>
-          </div>
-
-          <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded p-4">
-            <div className="flex items-center justify-between mb-2">
-              <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Total Impressions</div>
-              <Eye className="h-5 w-5 text-purple-600 dark:text-purple-400" />
-            </div>
-            <div className="text-3xl font-bold text-gray-900 dark:text-gray-50">{formatNumber(metrics.totalImpressions)}</div>
-          </div>
-
-          <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded p-4">
-            <div className="flex items-center justify-between mb-2">
-              <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Total Spend</div>
-              <DollarSign className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-            </div>
-            <div className="text-3xl font-bold text-gray-900 dark:text-gray-50">{formatCurrency(metrics.totalSpend)}</div>
-          </div>
-        </div>
-      </div>
-
-      {/* Creator Performance Table */}
-      <div>
-        <h3 className="text-base font-medium text-gray-900 dark:text-gray-50 mb-4">Creator Performance</h3>
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-            <thead className="bg-gray-50 dark:bg-gray-900">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Creator</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Posts</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Impressions</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Avg Engagement</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Cost</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-              {creators.map(creator => {
-                const posts = creator.posts || [];
-                const totalImpressions = posts.reduce((sum, post) => {
-                  if (post.impressions) {
-                    const impressions = parseFloat(post.impressions.replace(/[^0-9.-]+/g, ''));
-                    if (!isNaN(impressions)) return sum + impressions;
-                  }
-                  return sum;
-                }, 0);
-                const totalCost = posts.reduce((sum, post) => {
-                  if (post.cost) {
-                    const cost = parseFloat(post.cost.replace(/[^0-9.-]+/g, ''));
-                    if (!isNaN(cost)) return sum + cost;
-                  }
-                  return sum;
-                }, 0);
-                const avgEngagement = posts.length > 0 ? Math.round(totalImpressions / posts.length) : 0;
-
-                return (
-                  <tr key={creator.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+        ) : (
+          <>
+            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+              <thead className="bg-gray-50 dark:bg-gray-900">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Rank</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Creator</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Category</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Followers</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Engagement</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Score</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                {filteredLeaderboard.map((creator) => (
+                  <tr key={creator.rank} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className={`inline-flex items-center justify-center w-8 h-8 rounded-full ${getRankBadgeColor(creator.rank)} font-bold text-sm`}>
+                        {creator.rank <= 3 ? (
+                          <Award className="h-4 w-4" />
+                        ) : (
+                          creator.rank
+                        )}
+                      </div>
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
                         <div className="text-sm font-medium text-gray-900 dark:text-gray-50">{creator.name}</div>
                         <div className="text-sm text-gray-500 dark:text-gray-400">{creator.handle}</div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-50">
-                      {posts.length}
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200">
+                        {creator.category}
+                      </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-50">
-                      {formatNumber(totalImpressions)}
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center text-sm text-gray-900 dark:text-gray-50">
+                        <Users className="h-4 w-4 mr-1 text-gray-400" />
+                        {creator.followers}
+                      </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-50">
-                      {formatNumber(avgEngagement)}
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center text-sm text-gray-900 dark:text-gray-50">
+                        <Eye className="h-4 w-4 mr-1 text-gray-400" />
+                        {creator.engagement}
+                      </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-50">
-                      {formatCurrency(totalCost)}
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-2 mr-2">
+                          <div
+                            className="bg-indigo-600 dark:bg-indigo-500 h-2 rounded-full"
+                            style={{ width: `${creator.score}%` }}
+                          ></div>
+                        </div>
+                        <span className="text-sm font-medium text-gray-900 dark:text-gray-50">{creator.score}</span>
+                      </div>
                     </td>
                   </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+                ))}
+              </tbody>
+            </table>
+
+            {!loading && filteredLeaderboard.length === 0 && (
+              <div className="text-center py-12">
+                <p className="text-gray-500 dark:text-gray-400">No creators found matching your search.</p>
+              </div>
+            )}
+          </>
+        )}
       </div>
     </div>
   );
