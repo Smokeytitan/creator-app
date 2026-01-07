@@ -1,77 +1,12 @@
 import { useState, useRef, useMemo } from 'react';
-import { Upload, Plus, Trash2, FileText, X, DollarSign, Edit2, Search, Filter, SortAsc, Download, Eye, RefreshCw, Calendar, TrendingUp } from 'lucide-react';
+import { Upload, Plus, Trash2, FileText, X, DollarSign, Edit2, Search, Filter, SortAsc, Download, Eye, RefreshCw, Calendar } from 'lucide-react';
 import { IMPORTED_CREATORS } from '../data/importedCreators';
-import { KaitoService } from '../services/kaitoService';
 
 export default function CreatorRoster({ creators, setCreators }) {
-  const [enrichingKaito, setEnrichingKaito] = useState(false);
-  const [kaitoStartDate, setKaitoStartDate] = useState('2025-12-01');
-  const [kaitoEndDate, setKaitoEndDate] = useState('2025-12-31');
-
   const resetToImportedData = () => {
     if (confirm('This will replace all current creator data with the data from Google Sheets. Are you sure?')) {
       setCreators(IMPORTED_CREATORS);
       alert('Creator data has been reset to imported data from Google Sheets!');
-    }
-  };
-
-  const enrichWithKaitoData = async () => {
-    setEnrichingKaito(true);
-    try {
-      const kaitoService = new KaitoService();
-      console.log(`Fetching Kaito data for date range: ${kaitoStartDate} to ${kaitoEndDate}`);
-
-      const leaderboardData = await kaitoService.fetchLeaderboard({
-        start_date: kaitoStartDate,
-        end_date: kaitoEndDate
-      });
-
-      console.log(`Received ${leaderboardData.length} creators from Kaito`);
-
-      let matchedCount = 0;
-      const enrichedCreators = creators.map(creator => {
-        // Extract username from handle (remove @ symbol)
-        const creatorUsername = creator.handle?.toLowerCase().replace('@', '').trim();
-
-        if (!creatorUsername) return creator;
-
-        // Find matching Kaito data by username
-        const kaitoData = leaderboardData.find(
-          member => member.username?.toLowerCase() === creatorUsername
-        );
-
-        if (kaitoData) {
-          matchedCount++;
-          console.log(`✓ Matched: ${creator.name} (@${creatorUsername}) - Rank #${kaitoData.rank}`);
-
-          return {
-            ...creator,
-            kaitoMetrics: {
-              rank: parseInt(kaitoData.rank) || null,
-              mindshare: kaitoData.mindshare || 0,
-              totalImpressions: kaitoData.total_impressions || 0,
-              totalEngagement: (kaitoData.total_retweets || 0) +
-                             (kaitoData.total_likes || 0) +
-                             (kaitoData.total_bookmarks || 0),
-              tweetCount: kaitoData.tweet_counts || 0,
-              smartFollowers: kaitoData.smart_followers || 0,
-              userLevel: kaitoData.user_level || null,
-              lastUpdated: new Date().toISOString(),
-              dateRange: `${kaitoStartDate} to ${kaitoEndDate}`
-            }
-          };
-        }
-
-        return creator;
-      });
-
-      setCreators(enrichedCreators);
-      alert(`Successfully enriched ${matchedCount} out of ${creators.length} creators with Kaito data!\n\nDate range: ${kaitoStartDate} to ${kaitoEndDate}`);
-    } catch (error) {
-      console.error('Failed to enrich with Kaito data:', error);
-      alert(`Failed to fetch Kaito data: ${error.message}`);
-    } finally {
-      setEnrichingKaito(false);
     }
   };
 
@@ -504,43 +439,6 @@ export default function CreatorRoster({ creators, setCreators }) {
         </div>
       </div>
 
-      {/* Kaito Data Enrichment Section */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-4">
-        <div className="flex flex-wrap items-end gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Start Date
-            </label>
-            <input
-              type="date"
-              value={kaitoStartDate}
-              onChange={(e) => setKaitoStartDate(e.target.value)}
-              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-50"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              End Date
-            </label>
-            <input
-              type="date"
-              value={kaitoEndDate}
-              onChange={(e) => setKaitoEndDate(e.target.value)}
-              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-50"
-            />
-          </div>
-          <button
-            onClick={enrichWithKaitoData}
-            disabled={enrichingKaito}
-            className="inline-flex items-center px-4 py-2 bg-purple-600 dark:bg-purple-500 text-white rounded-lg hover:bg-purple-700 dark:hover:bg-purple-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            title="Match creators with Kaito leaderboard data"
-          >
-            <TrendingUp className="w-4 h-4 mr-2" />
-            {enrichingKaito ? 'Enriching...' : 'Enrich with Kaito Data'}
-          </button>
-        </div>
-      </div>
-
       {/* Search and Filter Section */}
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-4 mb-4 space-y-4">
         {/* Search Bar */}
@@ -809,60 +707,6 @@ export default function CreatorRoster({ creators, setCreators }) {
                   </button>
                 </div>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">{c.notes}</p>
-
-                {/* Kaito Metrics */}
-                {c.kaitoMetrics && (
-                  <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-3 mb-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <TrendingUp className="h-4 w-4 text-purple-600 dark:text-purple-400" />
-                      <span className="text-xs font-semibold text-purple-900 dark:text-purple-100">Kaito Leaderboard</span>
-                      {c.kaitoMetrics.rank && (
-                        <span className="ml-auto px-2 py-0.5 text-xs font-bold bg-purple-600 dark:bg-purple-500 text-white rounded-full">
-                          #{c.kaitoMetrics.rank}
-                        </span>
-                      )}
-                    </div>
-                    <div className="grid grid-cols-2 gap-2 text-xs">
-                      {c.kaitoMetrics.totalImpressions > 0 && (
-                        <div>
-                          <span className="text-gray-600 dark:text-gray-400">Impressions:</span>
-                          <span className="ml-1 font-semibold text-gray-900 dark:text-gray-50">
-                            {c.kaitoMetrics.totalImpressions.toLocaleString()}
-                          </span>
-                        </div>
-                      )}
-                      {c.kaitoMetrics.totalEngagement > 0 && (
-                        <div>
-                          <span className="text-gray-600 dark:text-gray-400">Engagement:</span>
-                          <span className="ml-1 font-semibold text-gray-900 dark:text-gray-50">
-                            {c.kaitoMetrics.totalEngagement.toLocaleString()}
-                          </span>
-                        </div>
-                      )}
-                      {c.kaitoMetrics.smartFollowers > 0 && (
-                        <div>
-                          <span className="text-gray-600 dark:text-gray-400">Smart Followers:</span>
-                          <span className="ml-1 font-semibold text-gray-900 dark:text-gray-50">
-                            {c.kaitoMetrics.smartFollowers.toLocaleString()}
-                          </span>
-                        </div>
-                      )}
-                      {c.kaitoMetrics.tweetCount > 0 && (
-                        <div>
-                          <span className="text-gray-600 dark:text-gray-400">Tweets:</span>
-                          <span className="ml-1 font-semibold text-gray-900 dark:text-gray-50">
-                            {c.kaitoMetrics.tweetCount}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                    {c.kaitoMetrics.dateRange && (
-                      <div className="text-xs text-purple-700 dark:text-purple-300 mt-2">
-                        {c.kaitoMetrics.dateRange}
-                      </div>
-                    )}
-                  </div>
-                )}
 
                 {/* Stats */}
                 {(c.posts || []).length > 0 && (() => {
