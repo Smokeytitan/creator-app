@@ -215,21 +215,34 @@ const ContentRequests = ({ creators }) => {
                       rows={3}
                     />
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Creator</label>
-                      <select
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-50"
-                        value={editRequestForm.creatorId}
-                        onChange={(e) => setEditRequestForm({ ...editRequestForm, creatorId: e.target.value })}
-                      >
-                        {creators.map((c) => (
-                          <option key={c.id} value={c.id}>
-                            {c.name}
-                          </option>
-                        ))}
-                      </select>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Creators ({editRequestForm.selectedCreatorIds.length} selected)
+                    </label>
+                    <div className="max-h-48 overflow-y-auto border border-gray-300 dark:border-gray-600 rounded-md p-3 bg-white dark:bg-gray-900 space-y-2">
+                      {creators.map((c) => (
+                        <label key={c.id} className="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 p-2 rounded">
+                          <input
+                            type="checkbox"
+                            checked={editRequestForm.selectedCreatorIds.includes(c.id)}
+                            onChange={(e) => {
+                              e.stopPropagation();
+                              const isChecked = e.target.checked;
+                              setEditRequestForm({
+                                ...editRequestForm,
+                                selectedCreatorIds: isChecked
+                                  ? [...editRequestForm.selectedCreatorIds, c.id]
+                                  : editRequestForm.selectedCreatorIds.filter(id => id !== c.id)
+                              });
+                            }}
+                            className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                          />
+                          <span className="text-sm text-gray-900 dark:text-gray-50">{c.name}</span>
+                        </label>
+                      ))}
                     </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Due Date</label>
                       <input
@@ -282,7 +295,7 @@ const ContentRequests = ({ creators }) => {
                       <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
                         <div className="flex items-center">
                           <User className="h-4 w-4 mr-1" />
-                          {request.creatorName}
+                          {(request.creators || []).map(c => c.name).join(', ')}
                         </div>
                         <div className="flex items-center">
                           <Calendar className="h-4 w-4 mr-1" />
