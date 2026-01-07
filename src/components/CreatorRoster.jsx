@@ -563,7 +563,10 @@ export default function CreatorRoster({ creators, setCreators }) {
                     <button
                       key={platform}
                       type="button"
-                      onClick={() => togglePlatform(platform)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        togglePlatform(platform);
+                      }}
                       className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
                         (editForm.platforms || []).includes(platform)
                           ? 'bg-indigo-600 dark:bg-indigo-500 text-white'
@@ -653,7 +656,10 @@ export default function CreatorRoster({ creators, setCreators }) {
                       <button
                         key={platform}
                         type="button"
-                        onClick={() => togglePlatform(platform)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          togglePlatform(platform);
+                        }}
                         className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
                           (editForm.platforms || []).includes(platform)
                             ? 'bg-indigo-600 dark:bg-indigo-500 text-white'
