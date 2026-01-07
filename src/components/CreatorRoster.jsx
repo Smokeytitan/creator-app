@@ -11,7 +11,7 @@ export default function CreatorRoster({ creators, setCreators }) {
   };
   const [editingId, setEditingId] = useState(null);
   const [isAdding, setIsAdding] = useState(false);
-  const [editForm, setEditForm] = useState({ name: '', handle: '', notes: '', costPerPost: '' });
+  const [editForm, setEditForm] = useState({ name: '', handle: '', notes: '', costPerPost: '', platforms: [] });
   const [viewingPostsId, setViewingPostsId] = useState(null);
   const [addingPostId, setAddingPostId] = useState(null);
   const [editingPostId, setEditingPostId] = useState(null);
@@ -23,6 +23,17 @@ export default function CreatorRoster({ creators, setCreators }) {
   const [filterActivity, setFilterActivity] = useState('all');
   const [sortBy, setSortBy] = useState('name');
 
+  const AVAILABLE_PLATFORMS = ['X', 'TikTok', 'Instagram', 'YouTube'];
+
+  const togglePlatform = (platform) => {
+    const platforms = editForm.platforms || [];
+    if (platforms.includes(platform)) {
+      setEditForm({ ...editForm, platforms: platforms.filter(p => p !== platform) });
+    } else {
+      setEditForm({ ...editForm, platforms: [...platforms, platform] });
+    }
+  };
+
   const startEdit = (creator) => {
     setEditingId(creator.id);
     setIsAdding(false);
@@ -30,20 +41,21 @@ export default function CreatorRoster({ creators, setCreators }) {
       name: creator.name,
       handle: creator.handle,
       notes: creator.notes || '',
-      costPerPost: creator.costPerPost || ''
+      costPerPost: creator.costPerPost || '',
+      platforms: creator.platforms || []
     });
   };
 
   const startAdd = () => {
     setIsAdding(true);
     setEditingId(null);
-    setEditForm({ name: '', handle: '', notes: '', costPerPost: '' });
+    setEditForm({ name: '', handle: '', notes: '', costPerPost: '', platforms: [] });
   };
 
   const cancelEdit = () => {
     setEditingId(null);
     setIsAdding(false);
-    setEditForm({ name: '', handle: '', notes: '', costPerPost: '' });
+    setEditForm({ name: '', handle: '', notes: '', costPerPost: '', platforms: [] });
   };
 
   const saveEdit = (creatorId) => {
@@ -51,7 +63,7 @@ export default function CreatorRoster({ creators, setCreators }) {
       c.id === creatorId ? { ...c, ...editForm } : c
     ));
     setEditingId(null);
-    setEditForm({ name: '', handle: '', notes: '', costPerPost: '' });
+    setEditForm({ name: '', handle: '', notes: '', costPerPost: '', platforms: [] });
   };
 
   const saveNew = () => {
@@ -66,12 +78,13 @@ export default function CreatorRoster({ creators, setCreators }) {
       handle: editForm.handle || '@' + editForm.name.toLowerCase().replace(/\s+/g, '_'),
       notes: editForm.notes,
       costPerPost: editForm.costPerPost,
+      platforms: editForm.platforms || [],
       posts: []
     };
 
     setCreators([...creators, newCreator]);
     setIsAdding(false);
-    setEditForm({ name: '', handle: '', notes: '', costPerPost: '' });
+    setEditForm({ name: '', handle: '', notes: '', costPerPost: '', platforms: [] });
   };
 
   const deleteCreator = (creatorId, e) => {
@@ -538,6 +551,26 @@ export default function CreatorRoster({ creators, setCreators }) {
                 />
               </div>
 
+              <div>
+                <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Platforms</label>
+                <div className="flex flex-wrap gap-2">
+                  {AVAILABLE_PLATFORMS.map(platform => (
+                    <button
+                      key={platform}
+                      type="button"
+                      onClick={() => togglePlatform(platform)}
+                      className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                        (editForm.platforms || []).includes(platform)
+                          ? 'bg-indigo-600 dark:bg-indigo-500 text-white'
+                          : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                      }`}
+                    >
+                      {platform}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               <div className="flex gap-2 pt-2">
                 <button
                   className="flex-1 px-4 py-2 text-sm bg-green-600 dark:bg-green-500 text-white rounded hover:bg-green-700 dark:hover:bg-green-600"
@@ -608,6 +641,26 @@ export default function CreatorRoster({ creators, setCreators }) {
                   />
                 </div>
 
+                <div onClick={(e) => e.stopPropagation()}>
+                  <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Platforms</label>
+                  <div className="flex flex-wrap gap-2">
+                    {AVAILABLE_PLATFORMS.map(platform => (
+                      <button
+                        key={platform}
+                        type="button"
+                        onClick={() => togglePlatform(platform)}
+                        className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                          (editForm.platforms || []).includes(platform)
+                            ? 'bg-indigo-600 dark:bg-indigo-500 text-white'
+                            : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                        }`}
+                      >
+                        {platform}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
                 <div className="flex gap-2 pt-2" onClick={(e) => e.stopPropagation()}>
                   <button
                     className="flex-1 px-4 py-2 text-sm bg-indigo-600 dark:bg-indigo-500 text-white rounded hover:bg-indigo-700 dark:hover:bg-indigo-600"
@@ -627,7 +680,21 @@ export default function CreatorRoster({ creators, setCreators }) {
               <div className="flex flex-col h-full">
                 <div className="flex items-start justify-between mb-3">
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-50">{c.name}</h3>
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-50">{c.name}</h3>
+                      {(c.platforms || []).length > 0 && (
+                        <div className="flex gap-1">
+                          {c.platforms.map(platform => (
+                            <span
+                              key={platform}
+                              className="px-2 py-0.5 text-xs font-medium bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200 rounded-full"
+                            >
+                              {platform}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                     <p className="text-sm text-gray-500 dark:text-gray-400">{c.handle}</p>
                   </div>
                   <button
