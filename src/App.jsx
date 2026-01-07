@@ -111,7 +111,7 @@ export default function App() {
 
       <div className="flex">
         {/* Sidebar */}
-        <div className="w-60 min-h-screen bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 py-3">
+        <div className="w-60 h-screen sticky top-0 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 py-3 overflow-y-auto">
           <nav className="flex flex-col gap-1">
             <button
               onClick={() => setActiveTab('roster')}
