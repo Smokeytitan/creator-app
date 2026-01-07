@@ -2,9 +2,8 @@ import axios from 'axios';
 
 export class KaitoService {
   constructor() {
-    this.apiKey = import.meta.env.VITE_KAITO_API_KEY;
-    // Use proxy in development, direct API in production
-    this.baseUrl = import.meta.env.DEV ? '/api/kaito' : 'https://api.kaito.ai/api/v1';
+    // Always use the Vercel serverless function proxy to avoid CORS issues
+    this.baseUrl = '/api/kaito';
   }
 
   /**
@@ -30,15 +29,13 @@ export class KaitoService {
     try {
       console.log('Kaito API: Fetching community mindshare data...', queryParams);
 
-      const response = await axios.get(`${this.baseUrl}/community_mindshare`, {
+      // Call the Vercel serverless function which proxies to Kaito API
+      const response = await axios.get(this.baseUrl, {
         params: queryParams,
         headers: {
-          'X-API-KEY': this.apiKey,
           'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'Accept-Encoding': 'gzip, deflate, br'
-        },
-        decompress: true
+          'Accept': 'application/json'
+        }
       });
 
       const data = response.data;
