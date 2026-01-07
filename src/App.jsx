@@ -122,56 +122,65 @@ export default function App() {
   }, [creators]);
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6 transition-colors">
-      <div className="max-w-5xl mx-auto">
-        <div className="flex items-center justify-between mb-6">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
+      {/* Header */}
+      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
+        <div className="flex items-center justify-between">
           <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-50">Creator Platform</h1>
           <ThemeToggle />
         </div>
+      </div>
 
-        {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <div className="text-center">
-              <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-indigo-600 dark:border-indigo-500 border-r-transparent"></div>
-              <p className="mt-4 text-gray-600 dark:text-gray-400">Loading creators...</p>
+      <div className="flex">
+        {/* Sidebar */}
+        <div className="w-64 min-h-screen bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 p-4">
+          <nav className="flex flex-col gap-2">
+            <button
+              onClick={() => setActiveTab('roster')}
+              className={`px-4 py-3 rounded-lg text-sm font-medium transition-colors text-left ${
+                activeTab === 'roster' ? 'bg-indigo-600 dark:bg-indigo-500 text-white' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+              }`}
+            >
+              Creator Roster
+            </button>
+
+            <button
+              onClick={() => setActiveTab('requests')}
+              className={`px-4 py-3 rounded-lg text-sm font-medium transition-colors text-left ${
+                activeTab === 'requests' ? 'bg-indigo-600 dark:bg-indigo-500 text-white' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+              }`}
+            >
+              Content Requests
+            </button>
+
+            <button
+              onClick={() => setActiveTab('analytics')}
+              className={`px-4 py-3 rounded-lg text-sm font-medium transition-colors text-left ${
+                activeTab === 'analytics' ? 'bg-indigo-600 dark:bg-indigo-500 text-white' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+              }`}
+            >
+              Analytics
+            </button>
+          </nav>
+        </div>
+
+        {/* Main Content */}
+        <div className="flex-1 p-6">
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="text-center">
+                <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-indigo-600 dark:border-indigo-500 border-r-transparent"></div>
+                <p className="mt-4 text-gray-600 dark:text-gray-400">Loading creators...</p>
+              </div>
             </div>
-          </div>
-        ) : (
-          <>
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-2 mb-6 flex gap-2">
-              <button
-                onClick={() => setActiveTab('roster')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  activeTab === 'roster' ? 'bg-indigo-600 dark:bg-indigo-500 text-white' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-                }`}
-              >
-                Creator Roster
-              </button>
-
-              <button
-                onClick={() => setActiveTab('requests')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  activeTab === 'requests' ? 'bg-indigo-600 dark:bg-indigo-500 text-white' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-                }`}
-              >
-                Content Requests
-              </button>
-
-              <button
-                onClick={() => setActiveTab('analytics')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  activeTab === 'analytics' ? 'bg-indigo-600 dark:bg-indigo-500 text-white' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-                }`}
-              >
-                Analytics
-              </button>
-            </div>
-
-            {activeTab === 'roster' && <CreatorRoster creators={creators} setCreators={setCreators} />}
-            {activeTab === 'requests' && <ContentRequests creators={creators} />}
-            {activeTab === 'analytics' && <Analytics creators={creators} />}
-          </>
-        )}
+          ) : (
+            <>
+              {activeTab === 'roster' && <CreatorRoster creators={creators} setCreators={setCreators} />}
+              {activeTab === 'requests' && <ContentRequests creators={creators} />}
+              {activeTab === 'analytics' && <Analytics creators={creators} />}
+            </>
+          )}
+        </div>
       </div>
     </div>
   );
