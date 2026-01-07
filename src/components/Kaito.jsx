@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { TrendingUp, Award, Eye, Users, RefreshCw, AlertCircle, Search, Filter } from 'lucide-react';
 import { KaitoService } from '../services/kaitoService';
 
@@ -8,15 +8,23 @@ export default function Kaito() {
   const [leaderboardData, setLeaderboardData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [startDate, setStartDate] = useState('2025-12-01');
+  const [endDate, setEndDate] = useState('2025-12-31');
 
   // Fetch leaderboard data from Kaito API
-  const fetchLeaderboard = async () => {
+  const fetchLeaderboard = useCallback(async () => {
     setLoading(true);
     setError(null);
 
     try {
       const kaitoService = new KaitoService();
-      const data = await kaitoService.fetchLeaderboard();
+      console.log('Kaito Component: Starting leaderboard fetch...');
+      console.log(`Date Range: ${startDate} to ${endDate}`);
+      const data = await kaitoService.fetchLeaderboard({
+        start_date: startDate,
+        end_date: endDate
+      });
+      console.log('Kaito Component: Received data:', data);
 
       // Map API response to display format
       const mappedData = data.map(creator => {
@@ -63,12 +71,12 @@ export default function Kaito() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [startDate, endDate]);
 
-  // Fetch on mount
+  // Fetch on mount and when dates change
   useEffect(() => {
     fetchLeaderboard();
-  }, []);
+  }, [fetchLeaderboard]);
 
   const categories = useMemo(() => {
     const cats = new Set(leaderboardData.map(c => c.category));
@@ -118,6 +126,37 @@ export default function Kaito() {
           <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
           {loading ? 'Refreshing...' : 'Refresh Leaderboard'}
         </button>
+      </div>
+
+      {/* Date Range Filters */}
+      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded p-4">
+        <div className="flex flex-wrap items-end gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Start Date
+            </label>
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              End Date
+            </label>
+            <input
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+          </div>
+          <div className="text-sm text-gray-600 dark:text-gray-400">
+            Showing data from {new Date(startDate).toLocaleDateString()} to {new Date(endDate).toLocaleDateString()}
+          </div>
+        </div>
       </div>
 
       {/* Error Status */}
