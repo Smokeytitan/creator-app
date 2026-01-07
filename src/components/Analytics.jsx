@@ -105,8 +105,91 @@ export default function Analytics({ creators, requests = [] }) {
       .sort((a, b) => a.cpi - b.cpi)
       .slice(0, 5);
 
+    // Campaign analytics
+    stats.totalCampaigns = requests.length;
+    stats.completedCampaigns = requests.filter(r => r.status === 'completed').length;
+    stats.campaignStats = [];
+
+    requests.forEach(request => {
+      // Filter by date if needed
+      const requestDate = new Date(request.dueDate);
+      const start = startDate ? new Date(startDate) : null;
+      const end = endDate ? new Date(endDate) : null;
+
+      if (start && requestDate < start) return;
+      if (end && requestDate > end) return;
+
+      let campaignImpressions = 0;
+      let campaignCost = 0;
+      let postCount = 0;
+
+      // Calculate metrics for this campaign
+      (request.creators || []).forEach(campaignCreator => {
+        const creator = creators.find(c => c.id === campaignCreator.id);
+        if (!creator || !creator.posts) return;
+
+        // Find posts matching this campaign
+        const matchingPosts = creator.posts.filter(post =>
+          post.description && post.description.toLowerCase().includes(request.title.toLowerCase().split(' ').slice(0, 2).join(' ').toLowerCase())
+        );
+
+        postCount += matchingPosts.length;
+
+        matchingPosts.forEach(post => {
+          if (post.impressions) {
+            const impressions = parseFloat(post.impressions.replace(/[^0-9.-]+/g, ''));
+            if (!isNaN(impressions)) {
+              campaignImpressions += impressions;
+            }
+          }
+          if (post.cost) {
+            const cost = parseFloat(post.cost.replace(/[^0-9.-]+/g, ''));
+            if (!isNaN(cost)) {
+              campaignCost += cost;
+            }
+          }
+        });
+      });
+
+      stats.campaignStats.push({
+        id: request.id,
+        title: request.title,
+        status: request.status,
+        creatorCount: (request.creators || []).length,
+        postCount,
+        impressions: campaignImpressions,
+        cost: campaignCost,
+        cpm: campaignImpressions > 0 ? (campaignCost / campaignImpressions) * 1000 : 0,
+        dueDate: request.dueDate
+      });
+    });
+
+    // Top campaigns
+    stats.topCampaignsByImpressions = [...stats.campaignStats]
+      .filter(c => c.impressions > 0)
+      .sort((a, b) => b.impressions - a.impressions)
+      .slice(0, 5);
+
+    stats.topCampaignsByCost = [...stats.campaignStats]
+      .filter(c => c.cost > 0)
+      .sort((a, b) => b.cost - a.cost)
+      .slice(0, 5);
+
+    stats.topCampaignsByROI = [...stats.campaignStats]
+      .filter(c => c.impressions > 0 && c.cpm > 0)
+      .sort((a, b) => a.cpm - b.cpm)
+      .slice(0, 5);
+
+    // Status distribution
+    stats.statusDistribution = [
+      { name: 'Completed', value: requests.filter(r => r.status === 'completed').length },
+      { name: 'In Progress', value: requests.filter(r => r.status === 'in-progress').length },
+      { name: 'Pending', value: requests.filter(r => r.status === 'pending').length },
+      { name: 'Cancelled', value: requests.filter(r => r.status === 'cancelled').length }
+    ].filter(s => s.value > 0);
+
     return stats;
-  }, [creators, startDate, endDate]);
+  }, [creators, requests, startDate, endDate]);
 
   const formatCurrency = (value) => {
     return new Intl.NumberFormat('en-US', {
@@ -252,8 +335,38 @@ export default function Analytics({ creators, requests = [] }) {
         </div>
       </div>
 
-      {/* Overview Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* View Mode Toggle */}
+      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded p-2">
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setViewMode('creators')}
+            className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded transition-colors ${
+              viewMode === 'creators'
+                ? 'bg-indigo-600 dark:bg-indigo-500 text-white'
+                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+            }`}
+          >
+            <Users className="h-4 w-4" />
+            Creator Performance
+          </button>
+          <button
+            onClick={() => setViewMode('campaigns')}
+            className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded transition-colors ${
+              viewMode === 'campaigns'
+                ? 'bg-indigo-600 dark:bg-indigo-500 text-white'
+                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+            }`}
+          >
+            <Target className="h-4 w-4" />
+            Campaign Performance
+          </button>
+        </div>
+      </div>
+
+      {viewMode === 'creators' ? (
+        <>
+          {/* Creator Overview Stats */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded p-4">
           <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Total Creators</div>
           <div className="text-4xl font-bold text-gray-900 dark:text-gray-50">{analytics.totalCreators}</div>
@@ -432,6 +545,149 @@ export default function Analytics({ creators, requests = [] }) {
           </div>
         </div>
       </div>
+        </>
+      ) : (
+        <>
+          {/* Campaign Overview Stats */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded p-4">
+              <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Total Campaigns</div>
+              <div className="text-4xl font-bold text-gray-900 dark:text-gray-50">{analytics.totalCampaigns}</div>
+            </div>
+
+            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded p-4">
+              <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Completed</div>
+              <div className="text-4xl font-bold text-gray-900 dark:text-gray-50">{analytics.completedCampaigns}</div>
+            </div>
+
+            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded p-4">
+              <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Total Cost</div>
+              <div className="text-4xl font-bold text-gray-900 dark:text-gray-50">
+                {formatCurrency(analytics.campaignStats.reduce((sum, c) => sum + c.cost, 0))}
+              </div>
+            </div>
+
+            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded p-4">
+              <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Total Impressions</div>
+              <div className="text-4xl font-bold text-gray-900 dark:text-gray-50">
+                {formatNumber(analytics.campaignStats.reduce((sum, c) => sum + c.impressions, 0))}
+              </div>
+            </div>
+          </div>
+
+          {/* Campaign Performance Tables */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Top Campaigns by Impressions */}
+            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded p-6">
+              <h3 className="text-base font-medium text-gray-900 dark:text-gray-50 mb-4 flex items-center gap-2">
+                <Eye className="h-5 w-5 text-purple-600" />
+                Top Campaigns by Impressions
+              </h3>
+              <div className="space-y-3">
+                {analytics.topCampaignsByImpressions.length > 0 ? (
+                  analytics.topCampaignsByImpressions.map((campaign, index) => (
+                    <div key={campaign.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900 rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <span className="text-lg font-bold text-gray-400 dark:text-gray-600 w-6">#{index + 1}</span>
+                        <div>
+                          <p className="font-medium text-gray-900 dark:text-gray-50">{campaign.title}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">{campaign.postCount} posts</p>
+                        </div>
+                      </div>
+                      <span className="text-lg font-bold text-purple-600 dark:text-purple-400">{formatNumber(campaign.impressions)}</span>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">No campaign data yet</p>
+                )}
+              </div>
+            </div>
+
+            {/* Top Campaigns by Cost */}
+            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded p-6">
+              <h3 className="text-base font-medium text-gray-900 dark:text-gray-50 mb-4 flex items-center gap-2">
+                <DollarSign className="h-5 w-5 text-blue-600" />
+                Top Campaigns by Cost
+              </h3>
+              <div className="space-y-3">
+                {analytics.topCampaignsByCost.length > 0 ? (
+                  analytics.topCampaignsByCost.map((campaign, index) => (
+                    <div key={campaign.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900 rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <span className="text-lg font-bold text-gray-400 dark:text-gray-600 w-6">#{index + 1}</span>
+                        <div>
+                          <p className="font-medium text-gray-900 dark:text-gray-50">{campaign.title}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">{campaign.creatorCount} creators</p>
+                        </div>
+                      </div>
+                      <span className="text-lg font-bold text-blue-600 dark:text-blue-400">{formatCurrency(campaign.cost)}</span>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">No campaign data yet</p>
+                )}
+              </div>
+            </div>
+
+            {/* Best Campaign ROI */}
+            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded p-6">
+              <h3 className="text-base font-medium text-gray-900 dark:text-gray-50 mb-4 flex items-center gap-2">
+                <Award className="h-5 w-5 text-yellow-600" />
+                Best Campaign ROI (Lowest CPM)
+              </h3>
+              <div className="space-y-3">
+                {analytics.topCampaignsByROI.length > 0 ? (
+                  analytics.topCampaignsByROI.map((campaign, index) => (
+                    <div key={campaign.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900 rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <span className="text-lg font-bold text-gray-400 dark:text-gray-600 w-6">#{index + 1}</span>
+                        <div>
+                          <p className="font-medium text-gray-900 dark:text-gray-50">{campaign.title}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">{formatNumber(campaign.impressions)} impressions</p>
+                        </div>
+                      </div>
+                      <span className="text-lg font-bold text-yellow-600 dark:text-yellow-400">
+                        ${campaign.cpm.toFixed(2)}
+                      </span>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">No campaign ROI data yet</p>
+                )}
+              </div>
+            </div>
+
+            {/* Campaign Status Distribution */}
+            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded p-6">
+              <h3 className="text-base font-medium text-gray-900 dark:text-gray-50 mb-4">Campaign Status</h3>
+              {analytics.statusDistribution.length > 0 ? (
+                <ResponsiveContainer width="100%" height={250}>
+                  <PieChart>
+                    <Pie
+                      data={analytics.statusDistribution}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ name, value }) => `${name}: ${value}`}
+                      outerRadius={80}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {analytics.statusDistribution.map((entry, index) => {
+                        const colors = ['#10B981', '#F59E0B', '#6B7280', '#EF4444'];
+                        return <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />;
+                      })}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">No campaign status data</p>
+              )}
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }
