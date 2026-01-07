@@ -14,8 +14,8 @@ const DEFAULT_CREATORS = [
   { id: 2, name: "Jampzey", handle: "@jampzey", tier: "B", notes: "1 post, $0.00 total", costPerPost: '$0.00', posts: [] },
   { id: 3, name: "Xero", handle: "@xero", tier: "B", notes: "1 post, $375.00 total", costPerPost: '$375.00', posts: [] },
   { id: 4, name: "Bawsa", handle: "@bawsa", tier: "B", notes: "8 posts, $1,200.00 total", costPerPost: '$150.00', posts: [] },
-  { id: 5, name: "R2D2", handle: "@r2d2", tier: "A", notes: "8 posts, $4,000.00 total", costPerPost: '$500.00', posts: [] },
-  { id: 6, name: "Eliza", handle: "@eliza", tier: "C", notes: "0 posts, $0.00 total", costPerPost: '', posts: [] }
+  { id: 5, name: "R2D2", handle: "@r2d2", tier: "B", notes: "8 posts, $1,200.00 total", costPerPost: '$150.00', posts: [] },
+  { id: 6, name: "Eliza", handle: "@eliza", tier: "A", notes: "0 posts, $0.00 total", costPerPost: '$500.00', posts: [] }
 ];
 
 export default function App() {
