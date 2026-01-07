@@ -48,20 +48,6 @@ export class GoogleSheetsService {
   }
 
   /**
-   * Determines tier based on cost per post
-   */
-  determineTier(costPerPost) {
-    if (!costPerPost || costPerPost === '') return 'C';
-
-    const cost = parseFloat(costPerPost.replace(/[^0-9.-]+/g, ''));
-
-    if (isNaN(cost) || cost === 0) return 'C';
-    if (cost >= 3000) return 'A';
-    if (cost >= 1500) return 'B';
-    return 'C';
-  }
-
-  /**
    * Maps raw sheet data (horizontal format) to creator format
    * Expected format: Row 1 = names, Row 2 = cost/post, Row 4 = num posts, Row 6 = cost individual
    */
@@ -85,13 +71,11 @@ export class GoogleSheetsService {
 
       const posts = numPosts[i] || '0';
       const cost = totalCost[i] || '$0.00';
-      const tier = this.determineTier(costPerPost[i] || '');
 
       creators.push({
         id: i,
         name: name,
         handle: `@${name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '')}`,
-        tier: tier,
         notes: `${posts} posts, ${cost} total`,
         costPerPost: costPerPost[i] || '',
         posts: [] // Initialize empty posts array

@@ -1,15 +1,20 @@
-import { useState, useRef } from 'react';
-import { Upload, Plus, Trash2, FileText, X, DollarSign, Edit2 } from 'lucide-react';
+import { useState, useRef, useMemo } from 'react';
+import { Upload, Plus, Trash2, FileText, X, DollarSign, Edit2, Search, Filter, SortAsc, Download } from 'lucide-react';
 
 export default function CreatorRoster({ creators, setCreators }) {
   const [editingId, setEditingId] = useState(null);
   const [isAdding, setIsAdding] = useState(false);
-  const [editForm, setEditForm] = useState({ name: '', handle: '', tier: 'C', notes: '', costPerPost: '' });
+  const [editForm, setEditForm] = useState({ name: '', handle: '', notes: '', costPerPost: '' });
   const [viewingPostsId, setViewingPostsId] = useState(null);
   const [addingPostId, setAddingPostId] = useState(null);
   const [editingPostId, setEditingPostId] = useState(null);
   const [postForm, setPostForm] = useState({ description: '', date: '', cost: '', link: '', impressions: '' });
   const fileInputRef = useRef(null);
+
+  // Search and filter state
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterActivity, setFilterActivity] = useState('all');
+  const [sortBy, setSortBy] = useState('name');
 
   const startEdit = (creator) => {
     setEditingId(creator.id);
@@ -17,7 +22,6 @@ export default function CreatorRoster({ creators, setCreators }) {
     setEditForm({
       name: creator.name,
       handle: creator.handle,
-      tier: creator.tier,
       notes: creator.notes || '',
       costPerPost: creator.costPerPost || ''
     });
@@ -26,13 +30,13 @@ export default function CreatorRoster({ creators, setCreators }) {
   const startAdd = () => {
     setIsAdding(true);
     setEditingId(null);
-    setEditForm({ name: '', handle: '', tier: 'C', notes: '', costPerPost: '' });
+    setEditForm({ name: '', handle: '', notes: '', costPerPost: '' });
   };
 
   const cancelEdit = () => {
     setEditingId(null);
     setIsAdding(false);
-    setEditForm({ name: '', handle: '', tier: 'C', notes: '', costPerPost: '' });
+    setEditForm({ name: '', handle: '', notes: '', costPerPost: '' });
   };
 
   const saveEdit = (creatorId) => {
@@ -40,7 +44,7 @@ export default function CreatorRoster({ creators, setCreators }) {
       c.id === creatorId ? { ...c, ...editForm } : c
     ));
     setEditingId(null);
-    setEditForm({ name: '', handle: '', tier: 'C', notes: '', costPerPost: '' });
+    setEditForm({ name: '', handle: '', notes: '', costPerPost: '' });
   };
 
   const saveNew = () => {
@@ -53,7 +57,6 @@ export default function CreatorRoster({ creators, setCreators }) {
       id: Date.now(),
       name: editForm.name,
       handle: editForm.handle || '@' + editForm.name.toLowerCase().replace(/\s+/g, '_'),
-      tier: editForm.tier,
       notes: editForm.notes,
       costPerPost: editForm.costPerPost,
       posts: []
@@ -61,7 +64,7 @@ export default function CreatorRoster({ creators, setCreators }) {
 
     setCreators([...creators, newCreator]);
     setIsAdding(false);
-    setEditForm({ name: '', handle: '', tier: 'C', notes: '', costPerPost: '' });
+    setEditForm({ name: '', handle: '', notes: '', costPerPost: '' });
   };
 
   const deleteCreator = (creatorId, e) => {
@@ -203,7 +206,6 @@ export default function CreatorRoster({ creators, setCreators }) {
     // Find column indices
     const nameIdx = headers.findIndex(h => h.includes('name'));
     const handleIdx = headers.findIndex(h => h.includes('handle') || h.includes('twitter') || h.includes('username'));
-    const tierIdx = headers.findIndex(h => h.includes('tier'));
     const notesIdx = headers.findIndex(h => h.includes('note'));
     const costPerPostIdx = headers.findIndex(h => h.includes('cost') && h.includes('post'));
 
@@ -216,7 +218,6 @@ export default function CreatorRoster({ creators, setCreators }) {
         id: Date.now() + i,
         name: nameIdx >= 0 ? values[nameIdx] : '',
         handle: handleIdx >= 0 ? values[handleIdx] : '',
-        tier: tierIdx >= 0 ? values[tierIdx] : 'C',
         notes: notesIdx >= 0 ? values[notesIdx] : '',
         costPerPost: costPerPostIdx >= 0 ? values[costPerPostIdx] : '',
         posts: []
@@ -261,6 +262,118 @@ export default function CreatorRoster({ creators, setCreators }) {
     }
   };
 
+  const exportToCSV = () => {
+    // Use filtered creators for export
+    const dataToExport = filteredCreators.length > 0 ? filteredCreators : creators;
+
+    // Prepare CSV data
+    const csvRows = dataToExport.map(creator => {
+      const posts = creator.posts || [];
+      const totalPosts = posts.length;
+
+      // Calculate total spend
+      let totalSpend = 0;
+      posts.forEach(post => {
+        if (post.cost) {
+          const cost = parseFloat(post.cost.replace(/[^0-9.-]+/g, ''));
+          if (!isNaN(cost)) {
+            totalSpend += cost;
+          }
+        }
+      });
+
+      return {
+        'Name': creator.name,
+        'Handle': creator.handle,
+        'Cost Per Post': creator.costPerPost || '',
+        'Total Posts': totalPosts,
+        'Total Spend': totalSpend > 0 ? `$${totalSpend.toFixed(2)}` : '$0.00',
+        'Notes': creator.notes || ''
+      };
+    });
+
+    // Convert to CSV
+    let csv = 'CREATOR ROSTER\n';
+
+    // Add filter info
+    if (searchTerm) {
+      csv += `Search: "${searchTerm}"\n`;
+    }
+    if (filterActivity !== 'all') {
+      csv += `Filter: ${filterActivity === 'active' ? 'Has Posts' : 'No Posts'}\n`;
+    }
+    if (sortBy !== 'name') {
+      csv += `Sort: ${sortBy === 'posts' ? 'By Posts' : 'By Name'}\n`;
+    }
+    csv += `\nTotal Creators: ${dataToExport.length}\n\n`;
+
+    // Add headers
+    const headers = Object.keys(csvRows[0] || {});
+    csv += headers.join(',') + '\n';
+
+    // Add data rows
+    csvRows.forEach(row => {
+      csv += headers.map(header => `"${row[header]}"`).join(',') + '\n';
+    });
+
+    // Create download
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    const timestamp = new Date().toISOString().split('T')[0];
+    link.setAttribute('href', url);
+    link.setAttribute('download', `creator_roster_${timestamp}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // Filter and sort creators
+  const filteredCreators = useMemo(() => {
+    let filtered = [...creators];
+
+    // Search filter
+    if (searchTerm) {
+      const search = searchTerm.toLowerCase();
+      filtered = filtered.filter(c =>
+        c.name.toLowerCase().includes(search) ||
+        c.handle.toLowerCase().includes(search)
+      );
+    }
+
+    // Activity filter
+    if (filterActivity !== 'all') {
+      if (filterActivity === 'active') {
+        filtered = filtered.filter(c => (c.posts || []).length > 0);
+      } else if (filterActivity === 'inactive') {
+        filtered = filtered.filter(c => (c.posts || []).length === 0);
+      }
+    }
+
+    // Sort
+    filtered.sort((a, b) => {
+      switch (sortBy) {
+        case 'name':
+          return a.name.localeCompare(b.name);
+        case 'posts':
+          return ((b.posts || []).length) - ((a.posts || []).length);
+        default:
+          return 0;
+      }
+    });
+
+    return filtered;
+  }, [creators, searchTerm, filterActivity, sortBy]);
+
+  const clearFilters = () => {
+    setSearchTerm('');
+    setFilterActivity('all');
+    setSortBy('name');
+  };
+
+  const hasActiveFilters = searchTerm || filterActivity !== 'all' || sortBy !== 'name';
+
   return (
     <div>
       <div className="flex justify-between items-center mb-4">
@@ -287,6 +400,78 @@ export default function CreatorRoster({ creators, setCreators }) {
             <Upload className="w-4 h-4 mr-2" />
             Import CSV
           </button>
+          <button
+            onClick={exportToCSV}
+            className="inline-flex items-center px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors"
+          >
+            <Download className="w-4 h-4 mr-2" />
+            Export CSV
+          </button>
+        </div>
+      </div>
+
+      {/* Search and Filter Section */}
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-4 mb-4 space-y-4">
+        {/* Search Bar */}
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search by name or handle..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+          </div>
+        </div>
+
+        {/* Filters */}
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-2">
+            <Filter className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Filters:</span>
+          </div>
+
+          {/* Activity Filter */}
+          <select
+            value={filterActivity}
+            onChange={(e) => setFilterActivity(e.target.value)}
+            className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-50"
+          >
+            <option value="all">All Activity</option>
+            <option value="active">Has Posts</option>
+            <option value="inactive">No Posts</option>
+          </select>
+
+          {/* Sort By */}
+          <div className="flex items-center gap-2">
+            <SortAsc className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-50"
+            >
+              <option value="name">Sort by Name</option>
+              <option value="posts">Sort by Posts</option>
+            </select>
+          </div>
+
+          {/* Clear Filters */}
+          {hasActiveFilters && (
+            <button
+              onClick={clearFilters}
+              className="inline-flex items-center px-3 py-1.5 text-sm bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+            >
+              <X className="h-4 w-4 mr-1" />
+              Clear All
+            </button>
+          )}
+
+          {/* Results Count */}
+          <span className="text-sm text-gray-500 dark:text-gray-400 ml-auto">
+            Showing {filteredCreators.length} of {creators.length} creators
+          </span>
         </div>
       </div>
 
@@ -314,19 +499,6 @@ export default function CreatorRoster({ creators, setCreators }) {
                   onChange={(e) => setEditForm({ ...editForm, handle: e.target.value })}
                   placeholder="@username"
                 />
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Tier</label>
-                <select
-                  className="border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-sm w-full bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-50"
-                  value={editForm.tier}
-                  onChange={(e) => setEditForm({ ...editForm, tier: e.target.value })}
-                >
-                  <option value="A">A</option>
-                  <option value="B">B</option>
-                  <option value="C">C</option>
-                </select>
               </div>
 
               <div>
@@ -368,7 +540,7 @@ export default function CreatorRoster({ creators, setCreators }) {
             </div>
           </div>
         )}
-        {creators.map((c) => (
+        {filteredCreators.map((c) => (
           <div
             key={c.id}
             className="bg-white dark:bg-gray-800 rounded-xl shadow p-6 hover:shadow-lg transition-shadow cursor-pointer"
@@ -396,20 +568,6 @@ export default function CreatorRoster({ creators, setCreators }) {
                     onChange={(e) => setEditForm({ ...editForm, handle: e.target.value })}
                     onClick={(e) => e.stopPropagation()}
                   />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Tier</label>
-                  <select
-                    className="border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-sm w-full bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-50"
-                    value={editForm.tier}
-                    onChange={(e) => setEditForm({ ...editForm, tier: e.target.value })}
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <option value="A">A</option>
-                    <option value="B">B</option>
-                    <option value="C">C</option>
-                  </select>
                 </div>
 
                 <div>
@@ -454,21 +612,16 @@ export default function CreatorRoster({ creators, setCreators }) {
               <div>
                 <div className="flex items-start justify-between mb-3">
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900">{c.name}</h3>
-                    <p className="text-sm text-gray-500">{c.handle}</p>
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-50">{c.name}</h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">{c.handle}</p>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="px-3 py-1 text-sm font-semibold bg-indigo-100 text-indigo-800 rounded-full">
-                      Tier {c.tier}
-                    </span>
-                    <button
-                      onClick={(e) => deleteCreator(c.id, e)}
-                      className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
-                      title="Delete creator"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
+                  <button
+                    onClick={(e) => deleteCreator(c.id, e)}
+                    className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900 rounded transition-colors"
+                    title="Delete creator"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
                 </div>
                 <p className="text-sm text-gray-600">{c.notes}</p>
 

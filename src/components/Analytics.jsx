@@ -1,7 +1,19 @@
-import { useMemo } from 'react';
-import { TrendingUp, DollarSign, FileText, Eye, Award, BarChart3 } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { TrendingUp, DollarSign, FileText, Eye, Award, Download, Calendar, X } from 'lucide-react';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer
+} from 'recharts';
 
 export default function Analytics({ creators }) {
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+
   // Calculate analytics metrics
   const analytics = useMemo(() => {
     const stats = {
@@ -9,14 +21,26 @@ export default function Analytics({ creators }) {
       totalPosts: 0,
       totalSpend: 0,
       totalImpressions: 0,
-      creatorStats: [],
-      tierStats: { A: { posts: 0, spend: 0, impressions: 0, count: 0 },
-                   B: { posts: 0, spend: 0, impressions: 0, count: 0 },
-                   C: { posts: 0, spend: 0, impressions: 0, count: 0 } }
+      creatorStats: []
     };
 
     creators.forEach(creator => {
-      const posts = creator.posts || [];
+      const allPosts = creator.posts || [];
+
+      // Filter posts by date range
+      const posts = allPosts.filter(post => {
+        if (!post.date) return true; // Include posts without dates
+
+        const postDate = new Date(post.date);
+        const start = startDate ? new Date(startDate) : null;
+        const end = endDate ? new Date(endDate) : null;
+
+        if (start && postDate < start) return false;
+        if (end && postDate > end) return false;
+
+        return true;
+      });
+
       const postCount = posts.length;
       let creatorSpend = 0;
       let creatorImpressions = 0;
@@ -47,21 +71,12 @@ export default function Analytics({ creators }) {
       stats.creatorStats.push({
         id: creator.id,
         name: creator.name,
-        tier: creator.tier,
         posts: postCount,
         spend: creatorSpend,
         impressions: creatorImpressions,
         cpi: creatorImpressions > 0 ? creatorSpend / creatorImpressions : 0,
         avgCost: postCount > 0 ? creatorSpend / postCount : 0
       });
-
-      // Tier stats
-      if (stats.tierStats[creator.tier]) {
-        stats.tierStats[creator.tier].posts += postCount;
-        stats.tierStats[creator.tier].spend += creatorSpend;
-        stats.tierStats[creator.tier].impressions += creatorImpressions;
-        stats.tierStats[creator.tier].count += 1;
-      }
     });
 
     // Sort creators by different metrics
@@ -86,7 +101,7 @@ export default function Analytics({ creators }) {
       .slice(0, 5);
 
     return stats;
-  }, [creators]);
+  }, [creators, startDate, endDate]);
 
   const formatCurrency = (value) => {
     return new Intl.NumberFormat('en-US', {
@@ -101,9 +116,136 @@ export default function Analytics({ creators }) {
     return new Intl.NumberFormat('en-US').format(Math.round(value));
   };
 
+  const exportToCSV = () => {
+    // Prepare creator-level data
+    const creatorRows = analytics.creatorStats
+      .sort((a, b) => b.spend - a.spend)
+      .map(creator => ({
+        'Creator Name': creator.name,
+        'Total Posts': creator.posts,
+        'Total Spend': `$${creator.spend.toFixed(2)}`,
+        'Total Impressions': creator.impressions,
+        'Avg Cost Per Post': creator.avgCost > 0 ? `$${creator.avgCost.toFixed(2)}` : '$0.00',
+        'CPM': creator.cpi > 0 ? `$${(creator.cpi * 1000).toFixed(2)}` : '$0.00'
+      }));
+
+    // Prepare overall summary
+    const overallRow = {
+      'Summary Type': 'OVERALL TOTAL',
+      'Creators': analytics.totalCreators,
+      'Posts': analytics.totalPosts,
+      'Spend': `$${analytics.totalSpend.toFixed(2)}`,
+      'Impressions': analytics.totalImpressions,
+      'CPM': analytics.totalImpressions > 0 ? `$${(analytics.totalSpend / analytics.totalImpressions * 1000).toFixed(2)}` : '$0.00'
+    };
+
+    // Convert to CSV
+    let csv = 'CREATOR ANALYTICS\n';
+    if (startDate || endDate) {
+      csv += `Date Range: ${startDate || 'Beginning'} to ${endDate || 'Present'}\n`;
+    } else {
+      csv += 'Date Range: All Time\n';
+    }
+    csv += '\n';
+
+    // Creator data section
+    csv += 'Creator-Level Performance\n';
+    if (creatorRows.length > 0) {
+      const creatorHeaders = Object.keys(creatorRows[0]);
+      csv += creatorHeaders.join(',') + '\n';
+      creatorRows.forEach(row => {
+        csv += creatorHeaders.map(header => `"${row[header]}"`).join(',') + '\n';
+      });
+    } else {
+      csv += 'No creator data available\n';
+    }
+
+    // Overall summary
+    csv += '\nOverall Summary\n';
+    const overallHeaders = Object.keys(overallRow);
+    csv += overallHeaders.join(',') + '\n';
+    csv += overallHeaders.map(header => `"${overallRow[header]}"`).join(',') + '\n';
+
+    // Create download
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    const timestamp = new Date().toISOString().split('T')[0];
+    link.setAttribute('href', url);
+    link.setAttribute('download', `creator_analytics_${timestamp}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const clearDateFilter = () => {
+    setStartDate('');
+    setEndDate('');
+  };
+
   return (
     <div className="space-y-6">
-      <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-50">Analytics</h2>
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-50">Analytics</h2>
+        <button
+          onClick={exportToCSV}
+          className="inline-flex items-center px-4 py-2 bg-green-600 dark:bg-green-500 text-white rounded-lg hover:bg-green-700 dark:hover:bg-green-600 transition-colors"
+        >
+          <Download className="w-4 h-4 mr-2" />
+          Export to CSV
+        </button>
+      </div>
+
+      {/* Date Range Filter */}
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-4">
+        <div className="flex flex-wrap items-center gap-4">
+          <div className="flex items-center gap-2">
+            <Calendar className="h-5 w-5 text-gray-500 dark:text-gray-400" />
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Filter by Date:</span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <label className="text-sm text-gray-600 dark:text-gray-400">From:</label>
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-50"
+            />
+          </div>
+
+          <div className="flex items-center gap-2">
+            <label className="text-sm text-gray-600 dark:text-gray-400">To:</label>
+            <input
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-50"
+            />
+          </div>
+
+          {(startDate || endDate) && (
+            <button
+              onClick={clearDateFilter}
+              className="inline-flex items-center px-3 py-1.5 text-sm bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+            >
+              <X className="h-4 w-4 mr-1" />
+              Clear Filter
+            </button>
+          )}
+
+          {(startDate || endDate) && (
+            <span className="text-sm text-indigo-600 dark:text-indigo-400 font-medium">
+              {startDate && endDate
+                ? `${startDate} to ${endDate}`
+                : startDate
+                ? `From ${startDate}`
+                : `Until ${endDate}`}
+            </span>
+          )}
+        </div>
+      </div>
 
       {/* Overview Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -156,48 +298,56 @@ export default function Analytics({ creators }) {
         </div>
       </div>
 
-      {/* Tier Performance */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-50 mb-4 flex items-center gap-2">
-          <BarChart3 className="h-5 w-5" />
-          Performance by Tier
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {['A', 'B', 'C'].map(tier => {
-            const tierData = analytics.tierStats[tier];
-            const avgCostPerImpression = tierData.impressions > 0
-              ? (tierData.spend / tierData.impressions * 1000).toFixed(2)
-              : 0;
+      {/* Charts Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Top Creators by Spend */}
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-50 mb-4">Top Creators by Spend</h3>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart
+              data={analytics.topBySpend.slice(0, 5).reverse()}
+              layout="vertical"
+            >
+              <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.2} />
+              <XAxis type="number" stroke="#9CA3AF" />
+              <YAxis dataKey="name" type="category" width={120} stroke="#9CA3AF" />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: '#1F2937',
+                  border: 'none',
+                  borderRadius: '0.5rem',
+                  color: '#F9FAFB'
+                }}
+                formatter={(value) => [`$${value.toLocaleString()}`, 'Spend']}
+              />
+              <Bar dataKey="spend" fill="#3B82F6" />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
 
-            return (
-              <div key={tier} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-2xl font-bold text-gray-900 dark:text-gray-50">Tier {tier}</span>
-                  <span className="px-3 py-1 text-sm font-semibold bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200 rounded-full">
-                    {tierData.count} creators
-                  </span>
-                </div>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-500 dark:text-gray-400">Posts:</span>
-                    <span className="font-medium text-gray-900 dark:text-gray-50">{tierData.posts}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-500 dark:text-gray-400">Spend:</span>
-                    <span className="font-medium text-gray-900 dark:text-gray-50">{formatCurrency(tierData.spend)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-500 dark:text-gray-400">Impressions:</span>
-                    <span className="font-medium text-gray-900 dark:text-gray-50">{formatNumber(tierData.impressions)}</span>
-                  </div>
-                  <div className="flex justify-between pt-2 border-t border-gray-200 dark:border-gray-700">
-                    <span className="text-gray-500 dark:text-gray-400">CPM:</span>
-                    <span className="font-medium text-gray-900 dark:text-gray-50">${avgCostPerImpression}</span>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+        {/* Top Creators by Impressions */}
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-50 mb-4">Top Creators by Impressions</h3>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart
+              data={analytics.topByImpressions.slice(0, 5).reverse()}
+              layout="vertical"
+            >
+              <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.2} />
+              <XAxis type="number" stroke="#9CA3AF" />
+              <YAxis dataKey="name" type="category" width={120} stroke="#9CA3AF" />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: '#1F2937',
+                  border: 'none',
+                  borderRadius: '0.5rem',
+                  color: '#F9FAFB'
+                }}
+                formatter={(value) => [value.toLocaleString(), 'Impressions']}
+              />
+              <Bar dataKey="impressions" fill="#8B5CF6" />
+            </BarChart>
+          </ResponsiveContainer>
         </div>
       </div>
 
@@ -217,7 +367,6 @@ export default function Analytics({ creators }) {
                     <span className="text-lg font-bold text-gray-400 dark:text-gray-600 w-6">#{index + 1}</span>
                     <div>
                       <p className="font-medium text-gray-900 dark:text-gray-50">{creator.name}</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">Tier {creator.tier}</p>
                     </div>
                   </div>
                   <span className="text-lg font-bold text-green-600 dark:text-green-400">{creator.posts}</span>
@@ -243,7 +392,6 @@ export default function Analytics({ creators }) {
                     <span className="text-lg font-bold text-gray-400 dark:text-gray-600 w-6">#{index + 1}</span>
                     <div>
                       <p className="font-medium text-gray-900 dark:text-gray-50">{creator.name}</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">Tier {creator.tier}</p>
                     </div>
                   </div>
                   <span className="text-lg font-bold text-blue-600 dark:text-blue-400">{formatCurrency(creator.spend)}</span>
@@ -269,7 +417,6 @@ export default function Analytics({ creators }) {
                     <span className="text-lg font-bold text-gray-400 dark:text-gray-600 w-6">#{index + 1}</span>
                     <div>
                       <p className="font-medium text-gray-900 dark:text-gray-50">{creator.name}</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">Tier {creator.tier}</p>
                     </div>
                   </div>
                   <span className="text-lg font-bold text-purple-600 dark:text-purple-400">{formatNumber(creator.impressions)}</span>
@@ -295,7 +442,6 @@ export default function Analytics({ creators }) {
                     <span className="text-lg font-bold text-gray-400 dark:text-gray-600 w-6">#{index + 1}</span>
                     <div>
                       <p className="font-medium text-gray-900 dark:text-gray-50">{creator.name}</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">Tier {creator.tier}</p>
                     </div>
                   </div>
                   <span className="text-lg font-bold text-yellow-600 dark:text-yellow-400">

@@ -10,36 +10,36 @@ import ThemeToggle from './components/ThemeToggle';
 const GOOGLE_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1Ge4wZiL_grX_hFups8A50HawZ2GxXFyDmCc-kNDs_5A/export?format=csv&gid=1537582832';
 
 const DEFAULT_CREATORS = [
-  { id: 1, name: "Joshua Jake", handle: "@joshua_jake", tier: "C", notes: "0 posts, $0.00 total", costPerPost: '', posts: [] },
-  { id: 2, name: "Crypto Wendy", handle: "@crypto_wendy", tier: "B", notes: "4 posts, $15,000.00 total", costPerPost: '', posts: [] },
-  { id: 3, name: "Rise Up Morning Show", handle: "@rise_up_morning_show", tier: "A", notes: "15 posts, $6,000.00 total", costPerPost: '', posts: [] },
-  { id: 4, name: "Crypto with Leo", handle: "@crypto_with_leo", tier: "A", notes: "7 posts, $8,750.00 total", costPerPost: '', posts: [] },
-  { id: 5, name: "Jolly Green Investor", handle: "@jolly_green_investor", tier: "B", notes: "4 posts, $12,000.00 total", costPerPost: '', posts: [] },
-  { id: 6, name: "Bodoggos", handle: "@bodoggos", tier: "B", notes: "3 posts, $9,999.00 total", costPerPost: '', posts: [] },
-  { id: 7, name: "Wale.Moca", handle: "@walemoca", tier: "C", notes: "1 posts, $2,500.00 total", costPerPost: '', posts: [] },
-  { id: 8, name: "When Shift Happens", handle: "@when_shift_happens", tier: "C", notes: "0 posts, $0.00 total", costPerPost: '', posts: [] },
-  { id: 9, name: "Star Platinum", handle: "@star_platinum", tier: "C", notes: "1 posts, $2,500.00 total", costPerPost: '', posts: [] },
-  { id: 10, name: "Pix", handle: "@pix", tier: "C", notes: "1 posts, $2,500.00 total", costPerPost: '', posts: [] },
-  { id: 11, name: "Andrew Asks", handle: "@andrew_asks", tier: "B", notes: "2 posts, $2,500.00 total", costPerPost: '', posts: [] },
-  { id: 12, name: "Crypto Meg/Mason", handle: "@crypto_megmason", tier: "B", notes: "2 posts, $2,000.00 total", costPerPost: '', posts: [] },
-  { id: 13, name: "Coach Ty", handle: "@coach_ty", tier: "C", notes: "0 posts, $0.00 total", costPerPost: '', posts: [] },
-  { id: 14, name: "Crypto Ed", handle: "@crypto_ed", tier: "C", notes: "0 posts, $0.00 total", costPerPost: '', posts: [] },
-  { id: 15, name: "Youngsun", handle: "@youngsun", tier: "C", notes: "1 posts, $0.00 total", costPerPost: '', posts: [] },
-  { id: 16, name: "House of Crypto", handle: "@house_of_crypto", tier: "C", notes: "0 posts, $0.00 total", costPerPost: '', posts: [] },
-  { id: 17, name: "Crypto Banter", handle: "@crypto_banter", tier: "C", notes: "0 posts, $0.00 total", costPerPost: '', posts: [] },
-  { id: 18, name: "Crypto Kid", handle: "@crypto_kid", tier: "C", notes: "0 posts, $0.00 total", costPerPost: '', posts: [] },
-  { id: 19, name: "Virtual Bacon", handle: "@virtual_bacon", tier: "C", notes: "0 posts, $0.00 total", costPerPost: '', posts: [] },
-  { id: 20, name: "Lab of Crypto", handle: "@lab_of_crypto", tier: "C", notes: "0 posts, $0.00 total", costPerPost: '', posts: [] },
-  { id: 21, name: "Hustlepedia", handle: "@hustlepedia", tier: "C", notes: "0 posts, $0.00 total", costPerPost: '', posts: [] },
-  { id: 22, name: "No BS Crypto", handle: "@no_bs_crypto", tier: "C", notes: "0 posts, $0.00 total", costPerPost: '', posts: [] },
-  { id: 23, name: "Bitcoin Strategy", handle: "@bitcoin_strategy", tier: "C", notes: "0 posts, $0.00 total", costPerPost: '', posts: [] },
-  { id: 24, name: "The Crypto Lark", handle: "@the_crypto_lark", tier: "C", notes: "0 posts, $0.00 total", costPerPost: '', posts: [] },
-  { id: 25, name: "Tim Warren", handle: "@tim_warren", tier: "C", notes: "0 posts, $0.00 total", costPerPost: '', posts: [] },
-  { id: 26, name: "Ivan on Tech", handle: "@ivan_on_tech", tier: "C", notes: "0 posts, $0.00 total", costPerPost: '', posts: [] },
-  { id: 27, name: "Blockmates", handle: "@blockmates", tier: "C", notes: "0 posts, $0.00 total", costPerPost: '', posts: [] },
-  { id: 28, name: "Americana Crypto", handle: "@americana_crypto", tier: "C", notes: "0 posts, $0.00 total", costPerPost: '', posts: [] },
-  { id: 29, name: "Nifty Investor", handle: "@nifty_investor", tier: "C", notes: "0 posts, $0.00 total", costPerPost: '', posts: [] },
-  { id: 30, name: "Crypto Crush", handle: "@crypto_crush", tier: "C", notes: "0 posts, $0.00 total", costPerPost: '', posts: [] }
+  { id: 1, name: "Joshua Jake", handle: "@joshua_jake", notes: "0 posts, $0.00 total", costPerPost: '', posts: [] },
+  { id: 2, name: "Crypto Wendy", handle: "@crypto_wendy", notes: "4 posts, $15,000.00 total", costPerPost: '', posts: [] },
+  { id: 3, name: "Rise Up Morning Show", handle: "@rise_up_morning_show", notes: "15 posts, $6,000.00 total", costPerPost: '', posts: [] },
+  { id: 4, name: "Crypto with Leo", handle: "@crypto_with_leo", notes: "7 posts, $8,750.00 total", costPerPost: '', posts: [] },
+  { id: 5, name: "Jolly Green Investor", handle: "@jolly_green_investor", notes: "4 posts, $12,000.00 total", costPerPost: '', posts: [] },
+  { id: 6, name: "Bodoggos", handle: "@bodoggos", notes: "3 posts, $9,999.00 total", costPerPost: '', posts: [] },
+  { id: 7, name: "Wale.Moca", handle: "@walemoca", notes: "1 posts, $2,500.00 total", costPerPost: '', posts: [] },
+  { id: 8, name: "When Shift Happens", handle: "@when_shift_happens", notes: "0 posts, $0.00 total", costPerPost: '', posts: [] },
+  { id: 9, name: "Star Platinum", handle: "@star_platinum", notes: "1 posts, $2,500.00 total", costPerPost: '', posts: [] },
+  { id: 10, name: "Pix", handle: "@pix", notes: "1 posts, $2,500.00 total", costPerPost: '', posts: [] },
+  { id: 11, name: "Andrew Asks", handle: "@andrew_asks", notes: "2 posts, $2,500.00 total", costPerPost: '', posts: [] },
+  { id: 12, name: "Crypto Meg/Mason", handle: "@crypto_megmason", notes: "2 posts, $2,000.00 total", costPerPost: '', posts: [] },
+  { id: 13, name: "Coach Ty", handle: "@coach_ty", notes: "0 posts, $0.00 total", costPerPost: '', posts: [] },
+  { id: 14, name: "Crypto Ed", handle: "@crypto_ed", notes: "0 posts, $0.00 total", costPerPost: '', posts: [] },
+  { id: 15, name: "Youngsun", handle: "@youngsun", notes: "1 posts, $0.00 total", costPerPost: '', posts: [] },
+  { id: 16, name: "House of Crypto", handle: "@house_of_crypto", notes: "0 posts, $0.00 total", costPerPost: '', posts: [] },
+  { id: 17, name: "Crypto Banter", handle: "@crypto_banter", notes: "0 posts, $0.00 total", costPerPost: '', posts: [] },
+  { id: 18, name: "Crypto Kid", handle: "@crypto_kid", notes: "0 posts, $0.00 total", costPerPost: '', posts: [] },
+  { id: 19, name: "Virtual Bacon", handle: "@virtual_bacon", notes: "0 posts, $0.00 total", costPerPost: '', posts: [] },
+  { id: 20, name: "Lab of Crypto", handle: "@lab_of_crypto", notes: "0 posts, $0.00 total", costPerPost: '', posts: [] },
+  { id: 21, name: "Hustlepedia", handle: "@hustlepedia", notes: "0 posts, $0.00 total", costPerPost: '', posts: [] },
+  { id: 22, name: "No BS Crypto", handle: "@no_bs_crypto", notes: "0 posts, $0.00 total", costPerPost: '', posts: [] },
+  { id: 23, name: "Bitcoin Strategy", handle: "@bitcoin_strategy", notes: "0 posts, $0.00 total", costPerPost: '', posts: [] },
+  { id: 24, name: "The Crypto Lark", handle: "@the_crypto_lark", notes: "0 posts, $0.00 total", costPerPost: '', posts: [] },
+  { id: 25, name: "Tim Warren", handle: "@tim_warren", notes: "0 posts, $0.00 total", costPerPost: '', posts: [] },
+  { id: 26, name: "Ivan on Tech", handle: "@ivan_on_tech", notes: "0 posts, $0.00 total", costPerPost: '', posts: [] },
+  { id: 27, name: "Blockmates", handle: "@blockmates", notes: "0 posts, $0.00 total", costPerPost: '', posts: [] },
+  { id: 28, name: "Americana Crypto", handle: "@americana_crypto", notes: "0 posts, $0.00 total", costPerPost: '', posts: [] },
+  { id: 29, name: "Nifty Investor", handle: "@nifty_investor", notes: "0 posts, $0.00 total", costPerPost: '', posts: [] },
+  { id: 30, name: "Crypto Crush", handle: "@crypto_crush", notes: "0 posts, $0.00 total", costPerPost: '', posts: [] }
 ];
 
 export default function App() {
@@ -124,21 +124,21 @@ export default function App() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
       {/* Header */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
+      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-3">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-50">Creator Platform</h1>
+          <h1 className="text-xl font-medium text-gray-900 dark:text-gray-50">Creator Platform</h1>
           <ThemeToggle />
         </div>
       </div>
 
       <div className="flex">
         {/* Sidebar */}
-        <div className="w-64 min-h-screen bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 p-4">
-          <nav className="flex flex-col gap-2">
+        <div className="w-60 min-h-screen bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 py-3">
+          <nav className="flex flex-col gap-1">
             <button
               onClick={() => setActiveTab('roster')}
-              className={`px-4 py-3 rounded-lg text-sm font-medium transition-colors text-left ${
-                activeTab === 'roster' ? 'bg-indigo-600 dark:bg-indigo-500 text-white' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+              className={`px-6 py-2.5 text-sm font-medium transition-colors text-left ${
+                activeTab === 'roster' ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-50 border-l-4 border-red-600' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50'
               }`}
             >
               Creator Roster
@@ -146,8 +146,8 @@ export default function App() {
 
             <button
               onClick={() => setActiveTab('requests')}
-              className={`px-4 py-3 rounded-lg text-sm font-medium transition-colors text-left ${
-                activeTab === 'requests' ? 'bg-indigo-600 dark:bg-indigo-500 text-white' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+              className={`px-6 py-2.5 text-sm font-medium transition-colors text-left ${
+                activeTab === 'requests' ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-50 border-l-4 border-red-600' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50'
               }`}
             >
               Content Requests
@@ -155,8 +155,8 @@ export default function App() {
 
             <button
               onClick={() => setActiveTab('analytics')}
-              className={`px-4 py-3 rounded-lg text-sm font-medium transition-colors text-left ${
-                activeTab === 'analytics' ? 'bg-indigo-600 dark:bg-indigo-500 text-white' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+              className={`px-6 py-2.5 text-sm font-medium transition-colors text-left ${
+                activeTab === 'analytics' ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-50 border-l-4 border-red-600' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50'
               }`}
             >
               Analytics

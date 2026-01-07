@@ -129,22 +129,22 @@ const ContentRequests = ({ creators }) => {
   return (
     <div className="space-y-6">
       {/* Stats Overview */}
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-4">
-        <div className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg p-5">
-          <div className="text-sm font-medium text-gray-500 dark:text-gray-400">Pending</div>
-          <div className="mt-1 text-3xl font-semibold text-gray-900 dark:text-gray-50">{statusCounts.pending}</div>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
+        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded p-4">
+          <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Pending</div>
+          <div className="text-4xl font-bold text-gray-900 dark:text-gray-50">{statusCounts.pending}</div>
         </div>
-        <div className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg p-5">
-          <div className="text-sm font-medium text-gray-500 dark:text-gray-400">In Progress</div>
-          <div className="mt-1 text-3xl font-semibold text-yellow-600 dark:text-yellow-500">{statusCounts.inProgress}</div>
+        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded p-4">
+          <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">In Progress</div>
+          <div className="text-4xl font-bold text-gray-900 dark:text-gray-50">{statusCounts.inProgress}</div>
         </div>
-        <div className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg p-5">
-          <div className="text-sm font-medium text-gray-500 dark:text-gray-400">Completed</div>
-          <div className="mt-1 text-3xl font-semibold text-green-600 dark:text-green-500">{statusCounts.completed}</div>
+        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded p-4">
+          <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Completed</div>
+          <div className="text-4xl font-bold text-gray-900 dark:text-gray-50">{statusCounts.completed}</div>
         </div>
-        <div className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg p-5">
-          <div className="text-sm font-medium text-gray-500 dark:text-gray-400">Cancelled</div>
-          <div className="mt-1 text-3xl font-semibold text-red-600 dark:text-red-500">{statusCounts.cancelled}</div>
+        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded p-4">
+          <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Cancelled</div>
+          <div className="text-4xl font-bold text-gray-900 dark:text-gray-50">{statusCounts.cancelled}</div>
         </div>
       </div>
 
