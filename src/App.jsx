@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/clerk-react';
 import CreatorRoster from './components/CreatorRoster';
 import ContentRequests from './components/ContentRequests';
 import Analytics from './components/Analytics';
@@ -106,32 +105,9 @@ export default function App() {
       <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-3">
         <div className="flex items-center justify-between">
           <h1 className="text-xl font-medium text-gray-900 dark:text-gray-50">Creator Platform</h1>
-          <div className="flex items-center gap-4">
-            <ThemeToggle />
-            <SignedIn>
-              <UserButton afterSignOutUrl="/" />
-            </SignedIn>
-          </div>
+          <ThemeToggle />
         </div>
       </div>
-
-      {/* Sign-in screen for unauthenticated users */}
-      <SignedOut>
-        <div className="flex items-center justify-center min-h-[calc(100vh-60px)]">
-          <div className="text-center">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-50 mb-4">Welcome to Creator Platform</h2>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">Please sign in to access the platform</p>
-            <SignInButton mode="modal">
-              <button className="px-6 py-3 bg-indigo-600 dark:bg-indigo-500 text-white rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-colors font-medium">
-                Sign In
-              </button>
-            </SignInButton>
-          </div>
-        </div>
-      </SignedOut>
-
-      {/* Main app content for authenticated users */}
-      <SignedIn>
 
       <div className="flex">
         {/* Sidebar */}
@@ -194,7 +170,6 @@ export default function App() {
           )}
         </div>
       </div>
-      </SignedIn>
     </div>
   );
 }
