@@ -5,18 +5,12 @@ import Analytics from './components/Analytics';
 import { KaitoService } from './services/kaitoService';
 import { GoogleSheetsService } from './services/googleSheetsService';
 import ThemeToggle from './components/ThemeToggle';
+import { IMPORTED_CREATORS } from './data/importedCreators';
 
 // Google Sheets CSV export URL
 const GOOGLE_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1J75nBdYNyQivMdi7XihhpYr6aXOnCNcJIAjTQLwjkXk/export?format=csv&gid=1537582832';
 
-const DEFAULT_CREATORS = [
-  { id: 1, name: "Picolas Cage", handle: "@picolas_cage", tier: "A", notes: "9 posts, $9,000.00 total", costPerPost: '$1,000.00', posts: [] },
-  { id: 2, name: "Jampzey", handle: "@jampzey", tier: "B", notes: "1 post, $0.00 total", costPerPost: '$0.00', posts: [] },
-  { id: 3, name: "Xero", handle: "@xero", tier: "B", notes: "1 post, $375.00 total", costPerPost: '$375.00', posts: [] },
-  { id: 4, name: "Bawsa", handle: "@bawsa", tier: "B", notes: "8 posts, $1,200.00 total", costPerPost: '$150.00', posts: [] },
-  { id: 5, name: "R2D2", handle: "@r2d2", tier: "B", notes: "8 posts, $1,200.00 total", costPerPost: '$150.00', posts: [] },
-  { id: 6, name: "Eliza", handle: "@eliza", tier: "A", notes: "0 posts, $0.00 total", costPerPost: '$500.00', posts: [] }
-];
+const DEFAULT_CREATORS = IMPORTED_CREATORS;
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('roster');
