@@ -166,14 +166,6 @@ export const IMPORTED_CREATORS = [
   },
   {
     id: 3,
-    name: "Xero",
-    handle: "@xero",
-    notes: "0 posts completed",
-    costPerPost: "$0.00",
-    posts: []
-  },
-  {
-    id: 4,
     name: "R2D2",
     handle: "@r2d2zen",
     notes: "8 posts completed",
@@ -246,7 +238,7 @@ export const IMPORTED_CREATORS = [
     ]
   },
   {
-    id: 5,
+    id: 4,
     name: "Eliza",
     handle: "@web3eliza",
     notes: "8 posts completed",
@@ -317,5 +309,13 @@ export const IMPORTED_CREATORS = [
         impressions: "4,500"
       }
     ]
+  },
+  {
+    id: 5,
+    name: "Xero",
+    handle: "@xero",
+    notes: "0 posts completed",
+    costPerPost: "$0.00",
+    posts: []
   }
 ];
