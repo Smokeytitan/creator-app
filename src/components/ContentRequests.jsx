@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Plus, Calendar, User, CheckCircle, Clock, XCircle, Trash2, Edit2, Save, X, Search, RefreshCw, Eye, DollarSign } from 'lucide-react';
+import { Plus, Calendar, User, CheckCircle, Clock, XCircle, Trash2, Edit2, Save, X, Search, RefreshCw, Eye, DollarSign, Download } from 'lucide-react';
 import ContentRequestModal from './ContentRequestModal';
 import { INITIAL_REQUESTS } from '../data/initialRequests';
 
@@ -222,6 +222,114 @@ const ContentRequests = ({ creators }) => {
     };
   };
 
+  const exportCampaignsToCSV = () => {
+    // Prepare campaign data with metrics
+    const campaignRows = filteredRequests.map(request => {
+      const metrics = getCampaignMetrics(request);
+      const creatorNames = (request.creators || []).map(c => c.name).join(', ');
+
+      return {
+        'Campaign': request.title,
+        'Description': request.description,
+        'Creators': creatorNames,
+        'Status': request.status,
+        'Due Date': new Date(request.dueDate).toLocaleDateString(),
+        'Total Impressions': metrics.totalImpressions.toLocaleString(),
+        'Total Cost': `$${metrics.totalCost.toFixed(2)}`,
+        'CPM': metrics.totalImpressions > 0 ? `$${((metrics.totalCost / metrics.totalImpressions) * 1000).toFixed(2)}` : '$0.00'
+      };
+    });
+
+    // Convert to CSV
+    let csv = 'CAMPAIGN DATA EXPORT\n';
+    csv += `Exported: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}\n`;
+    if (filterStatus !== 'all') {
+      csv += `Filter: ${filterStatus}\n`;
+    }
+    csv += '\n';
+
+    if (campaignRows.length > 0) {
+      const headers = Object.keys(campaignRows[0]);
+      csv += headers.join(',') + '\n';
+      campaignRows.forEach(row => {
+        csv += headers.map(header => `"${row[header]}"`).join(',') + '\n';
+      });
+    } else {
+      csv += 'No campaigns to export\n';
+    }
+
+    // Summary statistics
+    const totalImpressions = campaignRows.reduce((sum, row) => {
+      const impressions = parseFloat(row['Total Impressions'].replace(/,/g, ''));
+      return sum + impressions;
+    }, 0);
+    const totalCost = campaignRows.reduce((sum, row) => {
+      const cost = parseFloat(row['Total Cost'].replace(/[$,]/g, ''));
+      return sum + cost;
+    }, 0);
+
+    csv += '\nSUMMARY\n';
+    csv += `Total Campaigns,${campaignRows.length}\n`;
+    csv += `Total Impressions,${totalImpressions.toLocaleString()}\n`;
+    csv += `Total Cost,$${totalCost.toFixed(2)}\n`;
+    csv += `Average CPM,${totalImpressions > 0 ? `$${((totalCost / totalImpressions) * 1000).toFixed(2)}` : '$0.00'}\n`;
+
+    // Create download
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    const timestamp = new Date().toISOString().split('T')[0];
+    link.setAttribute('href', url);
+    link.setAttribute('download', `campaign_data_${timestamp}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const getEstimatedMetrics = (request) => {
+    let estimatedImpressions = 0;
+    let estimatedCost = 0;
+
+    // Get the campaign creators
+    const campaignCreators = request.creators || [];
+
+    // For each creator in the campaign
+    campaignCreators.forEach(campaignCreator => {
+      // Find the creator in the full creators list
+      const creator = creators.find(c => c.id === campaignCreator.id);
+      if (!creator) return;
+
+      // Calculate average impressions from their posts
+      const posts = creator.posts || [];
+      if (posts.length > 0) {
+        const totalCreatorImpressions = posts.reduce((sum, post) => {
+          if (post.impressions) {
+            const impressions = parseFloat(post.impressions.replace(/[^0-9.-]+/g, ''));
+            if (!isNaN(impressions)) {
+              return sum + impressions;
+            }
+          }
+          return sum;
+        }, 0);
+        estimatedImpressions += Math.round(totalCreatorImpressions / posts.length);
+      }
+
+      // Get cost per post from creator
+      if (creator.costPerPost) {
+        const cost = parseFloat(creator.costPerPost.replace(/[^0-9.-]+/g, ''));
+        if (!isNaN(cost)) {
+          estimatedCost += cost;
+        }
+      }
+    });
+
+    return {
+      estimatedImpressions,
+      estimatedCost
+    };
+  };
+
   return (
     <div className="space-y-6">
       {/* Stats Overview */}
@@ -264,6 +372,14 @@ const ContentRequests = ({ creators }) => {
               ))}
             </div>
             <div className="flex gap-2">
+              <button
+                onClick={exportCampaignsToCSV}
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 dark:bg-green-500 hover:bg-green-700 dark:hover:bg-green-600"
+                title="Export campaign data to CSV"
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Export CSV
+              </button>
               <button
                 onClick={resetToCampaigns}
                 className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-orange-600 dark:bg-orange-500 hover:bg-orange-700 dark:hover:bg-orange-600"
@@ -450,24 +566,48 @@ const ContentRequests = ({ creators }) => {
                         </div>
                       </div>
                       {(() => {
-                        const metrics = getCampaignMetrics(request);
-                        if (metrics.totalImpressions > 0 || metrics.totalCost > 0) {
-                          return (
-                            <div className="flex items-center gap-4 text-sm font-medium">
-                              {metrics.totalImpressions > 0 && (
-                                <div className="flex items-center text-indigo-600 dark:text-indigo-400">
-                                  <Eye className="h-4 w-4 mr-1" />
-                                  {metrics.totalImpressions.toLocaleString()} impressions
-                                </div>
-                              )}
-                              {metrics.totalCost > 0 && (
-                                <div className="flex items-center text-green-600 dark:text-green-400">
-                                  <DollarSign className="h-4 w-4 mr-1" />
-                                  ${metrics.totalCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                </div>
-                              )}
-                            </div>
-                          );
+                        // For pending requests, show estimated metrics
+                        if (request.status === 'pending') {
+                          const estimated = getEstimatedMetrics(request);
+                          if (estimated.estimatedImpressions > 0 || estimated.estimatedCost > 0) {
+                            return (
+                              <div className="flex items-center gap-4 text-sm font-medium">
+                                {estimated.estimatedImpressions > 0 && (
+                                  <div className="flex items-center text-indigo-600 dark:text-indigo-400">
+                                    <Eye className="h-4 w-4 mr-1" />
+                                    ~{estimated.estimatedImpressions.toLocaleString()} est. impressions
+                                  </div>
+                                )}
+                                {estimated.estimatedCost > 0 && (
+                                  <div className="flex items-center text-green-600 dark:text-green-400">
+                                    <DollarSign className="h-4 w-4 mr-1" />
+                                    ~${estimated.estimatedCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} est. cost
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          }
+                        } else {
+                          // For other statuses, show actual metrics
+                          const metrics = getCampaignMetrics(request);
+                          if (metrics.totalImpressions > 0 || metrics.totalCost > 0) {
+                            return (
+                              <div className="flex items-center gap-4 text-sm font-medium">
+                                {metrics.totalImpressions > 0 && (
+                                  <div className="flex items-center text-indigo-600 dark:text-indigo-400">
+                                    <Eye className="h-4 w-4 mr-1" />
+                                    {metrics.totalImpressions.toLocaleString()} impressions
+                                  </div>
+                                )}
+                                {metrics.totalCost > 0 && (
+                                  <div className="flex items-center text-green-600 dark:text-green-400">
+                                    <DollarSign className="h-4 w-4 mr-1" />
+                                    ${metrics.totalCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          }
                         }
                         return null;
                       })()}
