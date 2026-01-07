@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import CreatorRoster from './components/CreatorRoster';
 import ContentRequests from './components/ContentRequests';
 import Analytics from './components/Analytics';
+import Kaito from './components/Kaito';
 import { KaitoService } from './services/kaitoService';
 import { GoogleSheetsService } from './services/googleSheetsService';
 import ThemeToggle from './components/ThemeToggle';
@@ -153,6 +154,15 @@ export default function App() {
             >
               Analytics
             </button>
+
+            <button
+              onClick={() => setActiveTab('kaito')}
+              className={`px-6 py-2.5 text-sm font-medium transition-colors text-left ${
+                activeTab === 'kaito' ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-50 border-l-4 border-red-600' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50'
+              }`}
+            >
+              Kaito
+            </button>
           </nav>
         </div>
 
@@ -170,6 +180,7 @@ export default function App() {
               {activeTab === 'roster' && <CreatorRoster creators={creators} setCreators={setCreators} />}
               {activeTab === 'requests' && <ContentRequests creators={creators} />}
               {activeTab === 'analytics' && <Analytics creators={creators} requests={requests} />}
+              {activeTab === 'kaito' && <Kaito creators={creators} />}
             </>
           )}
         </div>
