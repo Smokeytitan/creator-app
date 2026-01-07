@@ -8,8 +8,9 @@ export class KaitoService {
   }
 
   /**
-   * Fetch top 100 community members from Kaito community mindshare
+   * Fetch community members from Kaito community mindshare
    * @param {Object} params - Parameters for the leaderboard query
+   * @param {number} params.limit - Optional limit for number of creators (default: no limit, returns all)
    * @returns {Promise<Array>} - Array of top community members
    */
   async fetchLeaderboard(params = {}) {
@@ -21,6 +22,10 @@ export class KaitoService {
     };
 
     const queryParams = { ...defaultParams, ...params };
+
+    // Extract limit if provided (for local filtering)
+    const localLimit = params.limit;
+    delete queryParams.limit; // Don't send limit to API as it may not support it
 
     try {
       console.log('Kaito API: Fetching community mindshare data...', queryParams);
@@ -40,18 +45,29 @@ export class KaitoService {
       console.log(`Kaito API: Successfully fetched community mindshare data`);
       console.log('Kaito API Response:', data);
 
-      // Extract top_100_creators from community_mindshare response
+      let results = [];
+
+      // Extract creators from community_mindshare response
       if (data.community_mindshare && data.community_mindshare.top_100_creators) {
-        return data.community_mindshare.top_100_creators;
+        results = data.community_mindshare.top_100_creators;
       } else if (Array.isArray(data)) {
-        return data.slice(0, 100);
+        results = data;
       } else if (data.results && Array.isArray(data.results)) {
-        return data.results.slice(0, 100);
+        results = data.results;
       } else if (data.data && Array.isArray(data.data)) {
-        return data.data.slice(0, 100);
+        results = data.data;
+      } else {
+        results = data;
       }
 
-      return data;
+      console.log(`Kaito API: Received ${Array.isArray(results) ? results.length : 'unknown'} creators`);
+
+      // Apply local limit if specified
+      if (localLimit && Array.isArray(results)) {
+        return results.slice(0, localLimit);
+      }
+
+      return results;
     } catch (error) {
       console.error('Kaito API Error:', error.response?.data || error.message);
       throw error;
