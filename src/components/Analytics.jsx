@@ -198,7 +198,7 @@ export default function Analytics({ creators }) {
       </div>
 
       {/* Date Range Filter */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-4">
+      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded p-4">
         <div className="flex flex-wrap items-center gap-4">
           <div className="flex items-center gap-2">
             <Calendar className="h-5 w-5 text-gray-500 dark:text-gray-400" />
@@ -249,60 +249,32 @@ export default function Analytics({ creators }) {
 
       {/* Overview Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-indigo-100 dark:bg-indigo-900 rounded-lg">
-              <Award className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Total Creators</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-gray-50">{analytics.totalCreators}</p>
-            </div>
-          </div>
+        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded p-4">
+          <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Total Creators</div>
+          <div className="text-4xl font-bold text-gray-900 dark:text-gray-50">{analytics.totalCreators}</div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-green-100 dark:bg-green-900 rounded-lg">
-              <FileText className="h-6 w-6 text-green-600 dark:text-green-400" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Total Posts</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-gray-50">{analytics.totalPosts}</p>
-            </div>
-          </div>
+        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded p-4">
+          <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Total Posts</div>
+          <div className="text-4xl font-bold text-gray-900 dark:text-gray-50">{analytics.totalPosts}</div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-blue-100 dark:bg-blue-900 rounded-lg">
-              <DollarSign className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Total Spend</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-gray-50">{formatCurrency(analytics.totalSpend)}</p>
-            </div>
-          </div>
+        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded p-4">
+          <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Total Spend</div>
+          <div className="text-4xl font-bold text-gray-900 dark:text-gray-50">{formatCurrency(analytics.totalSpend)}</div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-purple-100 dark:bg-purple-900 rounded-lg">
-              <Eye className="h-6 w-6 text-purple-600 dark:text-purple-400" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Total Impressions</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-gray-50">{formatNumber(analytics.totalImpressions)}</p>
-            </div>
-          </div>
+        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded p-4">
+          <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Total Impressions</div>
+          <div className="text-4xl font-bold text-gray-900 dark:text-gray-50">{formatNumber(analytics.totalImpressions)}</div>
         </div>
       </div>
 
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Top Creators by Spend */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-50 mb-4">Top Creators by Spend</h3>
+        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded p-6">
+          <h3 className="text-base font-medium text-gray-900 dark:text-gray-50 mb-4">Top Creators by Spend</h3>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart
               data={analytics.topBySpend.slice(0, 5).reverse()}
@@ -326,8 +298,8 @@ export default function Analytics({ creators }) {
         </div>
 
         {/* Top Creators by Impressions */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-50 mb-4">Top Creators by Impressions</h3>
+        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded p-6">
+          <h3 className="text-base font-medium text-gray-900 dark:text-gray-50 mb-4">Top Creators by Impressions</h3>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart
               data={analytics.topByImpressions.slice(0, 5).reverse()}
@@ -354,8 +326,8 @@ export default function Analytics({ creators }) {
       {/* Top Performers */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Top by Posts */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-50 mb-4 flex items-center gap-2">
+        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded p-6">
+          <h3 className="text-base font-medium text-gray-900 dark:text-gray-50 mb-4 flex items-center gap-2">
             <TrendingUp className="h-5 w-5 text-green-600" />
             Top by Posts
           </h3>
@@ -379,8 +351,8 @@ export default function Analytics({ creators }) {
         </div>
 
         {/* Top by Spend */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-50 mb-4 flex items-center gap-2">
+        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded p-6">
+          <h3 className="text-base font-medium text-gray-900 dark:text-gray-50 mb-4 flex items-center gap-2">
             <DollarSign className="h-5 w-5 text-blue-600" />
             Top by Spend
           </h3>
@@ -404,8 +376,8 @@ export default function Analytics({ creators }) {
         </div>
 
         {/* Top by Impressions */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-50 mb-4 flex items-center gap-2">
+        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded p-6">
+          <h3 className="text-base font-medium text-gray-900 dark:text-gray-50 mb-4 flex items-center gap-2">
             <Eye className="h-5 w-5 text-purple-600" />
             Top by Impressions
           </h3>

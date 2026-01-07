@@ -7,7 +7,20 @@ const ContentRequests = ({ creators }) => {
     const stored = localStorage.getItem('requests');
     if (stored) {
       try {
-        return JSON.parse(stored);
+        const parsedRequests = JSON.parse(stored);
+        // Migrate old format (single creator) to new format (multiple creators)
+        return parsedRequests.map(req => {
+          if (req.creatorId && !req.creators) {
+            return {
+              ...req,
+              creators: [{
+                id: req.creatorId,
+                name: req.creatorName
+              }]
+            };
+          }
+          return req;
+        });
       } catch (e) {
         console.error('Failed to parse requests from localStorage:', e);
         return [];
@@ -21,8 +34,7 @@ const ContentRequests = ({ creators }) => {
   const [editRequestForm, setEditRequestForm] = useState({
     title: '',
     description: '',
-    creatorId: '',
-    creatorName: '',
+    selectedCreatorIds: [],
     dueDate: '',
     status: 'pending'
   });
@@ -37,8 +49,7 @@ const ContentRequests = ({ creators }) => {
     setEditRequestForm({
       title: request.title,
       description: request.description,
-      creatorId: request.creatorId || '',
-      creatorName: request.creatorName,
+      selectedCreatorIds: (request.creators || []).map(c => c.id),
       dueDate: new Date(request.dueDate).toISOString().slice(0, 10),
       status: request.status
     });
