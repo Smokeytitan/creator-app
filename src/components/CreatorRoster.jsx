@@ -681,7 +681,7 @@ export default function CreatorRoster({ creators, setCreators }) {
                 <div className="flex items-start justify-between mb-3">
                   <div>
                     <div className="flex items-center gap-2 mb-1">
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-50">{c.name}</h3>
+                      <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-50">{c.name}</h3>
                       {(c.platforms || []).length > 0 && (
                         <div className="flex gap-1">
                           {c.platforms.map(platform => (
