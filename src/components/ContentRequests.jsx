@@ -182,16 +182,22 @@ const ContentRequests = ({ creators }) => {
     // Get the campaign creators
     const campaignCreators = request.creators || [];
 
+    // Normalize campaign title for matching
+    const campaignTitle = request.title.toLowerCase().trim();
+
     // For each creator in the campaign
     campaignCreators.forEach(campaignCreator => {
       // Find the creator in the full creators list
       const creator = creators.find(c => c.id === campaignCreator.id);
       if (!creator || !creator.posts) return;
 
-      // Find posts that match this campaign by description/title
-      const matchingPosts = creator.posts.filter(post =>
-        post.description && post.description.toLowerCase().includes(request.title.toLowerCase().split(' ').slice(0, 2).join(' ').toLowerCase())
-      );
+      // Find posts that match this campaign by exact description match
+      const matchingPosts = creator.posts.filter(post => {
+        if (!post.description) return false;
+        const postDesc = post.description.toLowerCase().trim();
+        // Try exact match first, then contains match
+        return postDesc === campaignTitle || postDesc.includes(campaignTitle) || campaignTitle.includes(postDesc);
+      });
 
       // Sum up impressions and costs from matching posts
       matchingPosts.forEach(post => {
