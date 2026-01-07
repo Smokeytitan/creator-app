@@ -144,9 +144,9 @@ export default function Kaito() {
       </div>
 
       {/* Date Range Filters */}
-      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded p-4">
-        <div className="flex flex-wrap items-end gap-4">
-          <div>
+      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded p-3 sm:p-4">
+        <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-end gap-3 sm:gap-4">
+          <div className="flex-1 min-w-[200px]">
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Start Date
             </label>
@@ -155,7 +155,7 @@ export default function Kaito() {
                 selected={startDate}
                 onChange={(date) => setStartDate(date)}
                 dateFormat="MMMM d, yyyy"
-                className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 pr-10 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-50 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 cursor-pointer"
+                className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 pr-10 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-50 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 cursor-pointer text-sm"
                 maxDate={endDate}
                 showPopperArrow={false}
                 wrapperClassName="w-full"
@@ -166,7 +166,7 @@ export default function Kaito() {
               <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
             </div>
           </div>
-          <div>
+          <div className="flex-1 min-w-[200px]">
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               End Date
             </label>
@@ -175,7 +175,7 @@ export default function Kaito() {
                 selected={endDate}
                 onChange={(date) => setEndDate(date)}
                 dateFormat="MMMM d, yyyy"
-                className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 pr-10 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-50 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 cursor-pointer"
+                className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 pr-10 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-50 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 cursor-pointer text-sm"
                 minDate={startDate}
                 showPopperArrow={false}
                 wrapperClassName="w-full"
@@ -189,35 +189,35 @@ export default function Kaito() {
           <button
             onClick={fetchLeaderboard}
             disabled={loading}
-            className="inline-flex items-center px-4 py-2 bg-purple-600 dark:bg-purple-500 text-white rounded-lg hover:bg-purple-700 dark:hover:bg-purple-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+            className="inline-flex items-center justify-center px-4 py-2 bg-purple-600 dark:bg-purple-500 text-white rounded-lg hover:bg-purple-700 dark:hover:bg-purple-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium w-full sm:w-auto"
             title="Fetch Kaito data for selected date range"
           >
             <TrendingUp className={`w-4 h-4 mr-2 ${loading ? 'animate-pulse' : ''}`} />
             {loading ? 'Fetching...' : 'Fetch Kaito Data'}
           </button>
-          <div className="text-sm text-gray-600 dark:text-gray-400">
-            Showing data from {startDate.toLocaleDateString()} to {endDate.toLocaleDateString()}
-          </div>
+        </div>
+        <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-3">
+          Showing data from {startDate.toLocaleDateString()} to {endDate.toLocaleDateString()}
         </div>
       </div>
 
       {/* Total Impressions Card */}
       {!loading && totalImpressions > 0 && (
-        <div className="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 border border-indigo-200 dark:border-indigo-800 rounded-lg p-6">
-          <div className="flex items-center justify-between">
+        <div className="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 border border-indigo-200 dark:border-indigo-800 rounded-lg p-4 sm:p-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="p-3 bg-indigo-600 dark:bg-indigo-500 rounded-lg">
-                <Eye className="h-6 w-6 text-white" />
+              <div className="p-2 sm:p-3 bg-indigo-600 dark:bg-indigo-500 rounded-lg">
+                <Eye className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Impressions</p>
-                <p className="text-3xl font-bold text-gray-900 dark:text-gray-50">
+                <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400">Total Impressions</p>
+                <p className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-50">
                   {totalImpressions.toLocaleString()}
                 </p>
               </div>
             </div>
-            <div className="text-right">
-              <p className="text-sm text-gray-500 dark:text-gray-400">Top {totalReceived} Creators</p>
+            <div className="text-left sm:text-right">
+              <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Top {totalReceived} Creators</p>
               <p className="text-xs text-gray-400 dark:text-gray-500">
                 {startDate.toLocaleDateString()} - {endDate.toLocaleDateString()}
               </p>
@@ -287,60 +287,61 @@ export default function Kaito() {
           </div>
         ) : (
           <>
-            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
               <thead className="bg-gray-50 dark:bg-gray-900">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Rank</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Creator</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Category</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Impressions</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Tweets</th>
+                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Rank</th>
+                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Creator</th>
+                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Category</th>
+                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Impressions</th>
+                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Tweets</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                 {filteredLeaderboard.map((creator) => (
                   <>
                     <tr key={creator.rank} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className={`inline-flex items-center justify-center w-8 h-8 rounded-full ${getRankBadgeColor(creator.rank)} font-bold text-sm`}>
+                      <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
+                        <div className={`inline-flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-full ${getRankBadgeColor(creator.rank)} font-bold text-xs sm:text-sm`}>
                           {creator.rank <= 3 ? (
-                            <Award className="h-4 w-4" />
+                            <Award className="h-3 w-3 sm:h-4 sm:w-4" />
                           ) : (
                             creator.rank
                           )}
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
                         <div>
-                          <div className="text-sm font-medium text-gray-900 dark:text-gray-50">{creator.name}</div>
-                          <div className="text-sm text-gray-500 dark:text-gray-400">{creator.handle}</div>
+                          <div className="text-xs sm:text-sm font-medium text-gray-900 dark:text-gray-50">{creator.name}</div>
+                          <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">{creator.handle}</div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
                         <span className="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200">
                           {creator.category}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center text-sm text-gray-900 dark:text-gray-50">
-                          <Eye className="h-4 w-4 mr-1 text-gray-400" />
+                      <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
+                        <div className="flex items-center text-xs sm:text-sm text-gray-900 dark:text-gray-50">
+                          <Eye className="h-3 w-3 sm:h-4 sm:w-4 mr-1 text-gray-400" />
                           {creator.impressions.toLocaleString()}
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
                         <button
                           onClick={() => setExpandedCreatorId(expandedCreatorId === creator.userId ? null : creator.userId)}
-                          className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 transition-colors"
+                          className="inline-flex items-center px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 transition-colors"
                         >
                           {expandedCreatorId === creator.userId ? (
                             <>
-                              <ChevronUp className="h-4 w-4 mr-1" />
-                              Hide
+                              <ChevronUp className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                              <span className="hidden sm:inline">Hide</span>
                             </>
                           ) : (
                             <>
-                              <ChevronDown className="h-4 w-4 mr-1" />
-                              View {creator.tweetCount}
+                              <ChevronDown className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                              <span className="hidden sm:inline">View</span> {creator.tweetCount}
                             </>
                           )}
                         </button>
@@ -348,7 +349,7 @@ export default function Kaito() {
                     </tr>
                     {expandedCreatorId === creator.userId && (
                       <tr key={`${creator.rank}-tweets`} className="bg-gray-50 dark:bg-gray-900">
-                        <td colSpan="5" className="px-6 py-4">
+                        <td colSpan="5" className="px-3 sm:px-6 py-3 sm:py-4">
                           <div className="space-y-2">
                             <h4 className="text-sm font-medium text-gray-900 dark:text-gray-50 mb-3">
                               Tweets from {creator.name} ({creator.tweetUrls.length} tweets)
@@ -381,6 +382,7 @@ export default function Kaito() {
                 ))}
               </tbody>
             </table>
+            </div>
 
             {!loading && filteredLeaderboard.length === 0 && (
               <div className="text-center py-12">

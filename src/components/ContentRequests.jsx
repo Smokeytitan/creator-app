@@ -451,7 +451,7 @@ const ContentRequests = ({ creators }) => {
       <div className="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden">
         <ul className="divide-y divide-gray-200 dark:divide-gray-700">
           {filteredRequests.map((request) => (
-            <li key={request.id} className="p-6 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+            <li key={request.id} className="p-4 sm:p-6 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
               {editingRequestId === request.id ? (
                 <div className="space-y-4">
                   <div>

@@ -362,54 +362,54 @@ export default function Analytics({ creators, requests = [] }) {
       </div>
 
       {/* Top Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg p-6 text-white shadow-lg">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+        <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg p-4 sm:p-6 text-white shadow-lg">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-purple-100 text-sm font-medium mb-1">Total Influencers</p>
-              <p className="text-3xl font-bold">{analytics.totalCreators}</p>
+              <p className="text-purple-100 text-xs sm:text-sm font-medium mb-1">Total Influencers</p>
+              <p className="text-2xl sm:text-3xl font-bold">{analytics.totalCreators}</p>
             </div>
-            <Users className="h-12 w-12 text-purple-200 opacity-80" />
+            <Users className="h-10 w-10 sm:h-12 sm:w-12 text-purple-200 opacity-80" />
           </div>
         </div>
 
-        <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg p-6 text-white shadow-lg">
+        <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg p-4 sm:p-6 text-white shadow-lg">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-blue-100 text-sm font-medium mb-1">Total Spend</p>
-              <p className="text-3xl font-bold">{formatCurrency(analytics.totalSpend)}</p>
+              <p className="text-blue-100 text-xs sm:text-sm font-medium mb-1">Total Spend</p>
+              <p className="text-2xl sm:text-3xl font-bold">{formatCurrency(analytics.totalSpend)}</p>
             </div>
-            <DollarSign className="h-12 w-12 text-blue-200 opacity-80" />
+            <DollarSign className="h-10 w-10 sm:h-12 sm:w-12 text-blue-200 opacity-80" />
           </div>
         </div>
 
-        <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-lg p-6 text-white shadow-lg">
+        <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-lg p-4 sm:p-6 text-white shadow-lg">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-green-100 text-sm font-medium mb-1">Total Impressions</p>
-              <p className="text-3xl font-bold">{formatNumber(analytics.totalImpressions)}</p>
+              <p className="text-green-100 text-xs sm:text-sm font-medium mb-1">Total Impressions</p>
+              <p className="text-2xl sm:text-3xl font-bold">{formatNumber(analytics.totalImpressions)}</p>
             </div>
-            <Eye className="h-12 w-12 text-green-200 opacity-80" />
+            <Eye className="h-10 w-10 sm:h-12 sm:w-12 text-green-200 opacity-80" />
           </div>
         </div>
 
-        <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg p-6 text-white shadow-lg">
+        <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg p-4 sm:p-6 text-white shadow-lg">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-orange-100 text-sm font-medium mb-1">Total Posts</p>
-              <p className="text-3xl font-bold">{analytics.totalPosts}</p>
+              <p className="text-orange-100 text-xs sm:text-sm font-medium mb-1">Total Posts</p>
+              <p className="text-2xl sm:text-3xl font-bold">{analytics.totalPosts}</p>
             </div>
-            <FileText className="h-12 w-12 text-orange-200 opacity-80" />
+            <FileText className="h-10 w-10 sm:h-12 sm:w-12 text-orange-200 opacity-80" />
           </div>
         </div>
       </div>
 
       {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* CPM by Influencer */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-50 mb-4 flex items-center gap-2">
-            <BarChart3 className="h-5 w-5 text-indigo-600" />
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-50 mb-3 sm:mb-4 flex items-center gap-2">
+            <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5 text-indigo-600" />
             CPM by Influencer
           </h3>
           <ResponsiveContainer width="100%" height={300}>
@@ -542,9 +542,9 @@ export default function Analytics({ creators, requests = [] }) {
 
       {/* Top Performers Table */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-50 flex items-center gap-2">
-            <Award className="h-5 w-5 text-yellow-500" />
+        <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200 dark:border-gray-700">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-50 flex items-center gap-2">
+            <Award className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-500" />
             Top Performers by ROI
           </h3>
         </div>
@@ -552,22 +552,22 @@ export default function Analytics({ creators, requests = [] }) {
           <table className="w-full">
             <thead className="bg-gray-50 dark:bg-gray-900">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Rank
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Influencer
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Posts
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Spend
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Impressions
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   CPM
                 </th>
               </tr>
@@ -576,32 +576,32 @@ export default function Analytics({ creators, requests = [] }) {
               {analytics.topByROI.length > 0 ? (
                 analytics.topByROI.map((creator, index) => (
                   <tr key={creator.id} className="hover:bg-gray-50 dark:hover:bg-gray-900/50 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
                       <div className="flex items-center">
-                        <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full ${
+                        <span className={`inline-flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-full ${
                           index === 0 ? 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200' :
                           index === 1 ? 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200' :
                           index === 2 ? 'bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200' :
                           'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
-                        } font-bold text-sm`}>
+                        } font-bold text-xs sm:text-sm`}>
                           #{index + 1}
                         </span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900 dark:text-gray-50">{creator.name}</div>
+                    <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
+                      <div className="text-xs sm:text-sm font-medium text-gray-900 dark:text-gray-50">{creator.name}</div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-700 dark:text-gray-300">{creator.posts}</div>
+                    <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
+                      <div className="text-xs sm:text-sm text-gray-700 dark:text-gray-300">{creator.posts}</div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900 dark:text-gray-50">{formatCurrency(creator.spend)}</div>
+                    <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
+                      <div className="text-xs sm:text-sm font-medium text-gray-900 dark:text-gray-50">{formatCurrency(creator.spend)}</div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-700 dark:text-gray-300">{formatNumber(creator.impressions)}</div>
+                    <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
+                      <div className="text-xs sm:text-sm text-gray-700 dark:text-gray-300">{formatNumber(creator.impressions)}</div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-semibold text-green-600 dark:text-green-400">
+                    <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
+                      <div className="text-xs sm:text-sm font-semibold text-green-600 dark:text-green-400">
                         ${(creator.cpi * 1000).toFixed(2)}
                       </div>
                     </td>
@@ -609,7 +609,7 @@ export default function Analytics({ creators, requests = [] }) {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="6" className="px-6 py-8 text-center text-sm text-gray-500 dark:text-gray-400">
+                  <td colSpan="6" className="px-3 sm:px-6 py-6 sm:py-8 text-center text-xs sm:text-sm text-gray-500 dark:text-gray-400">
                     No performance data available yet
                   </td>
                 </tr>

@@ -397,15 +397,16 @@ export default function CreatorRoster({ creators, setCreators }) {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
         <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-50">Creator Roster</h2>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2 w-full sm:w-auto">
           <button
             onClick={startAdd}
-            className="inline-flex items-center px-4 py-2 bg-green-600 dark:bg-green-500 text-white rounded-lg hover:bg-green-700 dark:hover:bg-green-600 transition-colors"
+            className="inline-flex items-center px-3 sm:px-4 py-2 bg-green-600 dark:bg-green-500 text-white rounded-lg hover:bg-green-700 dark:hover:bg-green-600 transition-colors text-sm"
           >
-            <Plus className="w-4 h-4 mr-2" />
-            New Creator
+            <Plus className="w-4 h-4 mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">New Creator</span>
+            <span className="sm:hidden">New</span>
           </button>
           <input
             ref={fileInputRef}
@@ -416,31 +417,34 @@ export default function CreatorRoster({ creators, setCreators }) {
           />
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="inline-flex items-center px-4 py-2 bg-indigo-600 dark:bg-indigo-500 text-white rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-colors"
+            className="inline-flex items-center px-3 sm:px-4 py-2 bg-indigo-600 dark:bg-indigo-500 text-white rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-colors text-sm"
           >
-            <Upload className="w-4 h-4 mr-2" />
-            Import CSV
+            <Upload className="w-4 h-4 mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">Import CSV</span>
+            <span className="sm:hidden">Import</span>
           </button>
           <button
             onClick={exportToCSV}
-            className="inline-flex items-center px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors"
+            className="inline-flex items-center px-3 sm:px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors text-sm"
           >
-            <Download className="w-4 h-4 mr-2" />
-            Export CSV
+            <Download className="w-4 h-4 mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">Export CSV</span>
+            <span className="sm:hidden">Export</span>
           </button>
           <button
             onClick={resetToImportedData}
-            className="inline-flex items-center px-4 py-2 bg-orange-600 dark:bg-orange-500 text-white rounded-lg hover:bg-orange-700 dark:hover:bg-orange-600 transition-colors"
+            className="inline-flex items-center px-3 sm:px-4 py-2 bg-orange-600 dark:bg-orange-500 text-white rounded-lg hover:bg-orange-700 dark:hover:bg-orange-600 transition-colors text-sm"
             title="Reset to Google Sheets data"
           >
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Reset Data
+            <RefreshCw className="w-4 h-4 mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">Reset Data</span>
+            <span className="sm:hidden">Reset</span>
           </button>
         </div>
       </div>
 
       {/* Search and Filter Section */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-4 mb-4 space-y-4">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-3 sm:p-4 mb-4 space-y-3 sm:space-y-4">
         {/* Search Bar */}
         <div className="flex items-center gap-2">
           <div className="relative flex-1">
@@ -592,7 +596,7 @@ export default function CreatorRoster({ creators, setCreators }) {
         {filteredCreators.map((c) => (
           <div
             key={c.id}
-            className="bg-white dark:bg-gray-800 rounded-xl shadow p-6 hover:shadow-lg transition-shadow cursor-pointer min-h-[400px] flex flex-col"
+            className="bg-white dark:bg-gray-800 rounded-xl shadow p-4 sm:p-6 hover:shadow-lg transition-shadow cursor-pointer min-h-[300px] sm:min-h-[400px] flex flex-col"
             onClick={() => !isAdding && editingId !== c.id && startEdit(c)}
           >
             {editingId === c.id ? (

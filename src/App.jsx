@@ -190,7 +190,7 @@ export default function App() {
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 p-6">
+        <div className="flex-1 p-3 sm:p-6">
           {loading ? (
             <div className="flex items-center justify-center py-12">
               <div className="text-center">
