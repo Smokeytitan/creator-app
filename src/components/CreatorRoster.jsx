@@ -1,14 +1,37 @@
 import { useState, useRef, useMemo } from 'react';
-import { Upload, Plus, Trash2, FileText, X, DollarSign, Edit2, Search, Filter, SortAsc, Download, Eye, RefreshCw, Calendar } from 'lucide-react';
+import { Upload, Plus, Trash2, FileText, X, DollarSign, Edit2, Search, Filter, SortAsc, Download, Eye, RefreshCw, Calendar, TrendingUp } from 'lucide-react';
 import { IMPORTED_CREATORS } from '../data/importedCreators';
+import { KaitoService } from '../services/kaitoService';
 
 export default function CreatorRoster({ creators, setCreators }) {
+  const [fetchingKaito, setFetchingKaito] = useState(false);
+
   const resetToImportedData = () => {
     if (confirm('This will replace all current creator data with the data from Google Sheets. Are you sure?')) {
       setCreators(IMPORTED_CREATORS);
       alert('Creator data has been reset to imported data from Google Sheets!');
     }
   };
+
+  const fetchKaitoLeaderboard = async () => {
+    setFetchingKaito(true);
+    try {
+      const kaitoService = new KaitoService();
+      const leaderboardData = await kaitoService.fetchLeaderboard();
+
+      console.log('Kaito Leaderboard Data:', leaderboardData);
+      alert(`Successfully fetched Kaito leaderboard data! Check console for details.`);
+
+      // TODO: You can process and display this data as needed
+      // For now, it's logged to console
+    } catch (error) {
+      console.error('Failed to fetch Kaito data:', error);
+      alert('Failed to fetch Kaito leaderboard. Check console for details.');
+    } finally {
+      setFetchingKaito(false);
+    }
+  };
+
   const [editingId, setEditingId] = useState(null);
   const [isAdding, setIsAdding] = useState(false);
   const [editForm, setEditForm] = useState({ name: '', handle: '', notes: '', costPerPost: '', platforms: [] });
@@ -434,6 +457,15 @@ export default function CreatorRoster({ creators, setCreators }) {
           >
             <RefreshCw className="w-4 h-4 mr-2" />
             Reset Data
+          </button>
+          <button
+            onClick={fetchKaitoLeaderboard}
+            disabled={fetchingKaito}
+            className="inline-flex items-center px-4 py-2 bg-purple-600 dark:bg-purple-500 text-white rounded-lg hover:bg-purple-700 dark:hover:bg-purple-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            title="Fetch Kaito Leaderboard"
+          >
+            <TrendingUp className="w-4 h-4 mr-2" />
+            {fetchingKaito ? 'Fetching...' : 'Fetch Kaito Data'}
           </button>
         </div>
       </div>
