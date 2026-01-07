@@ -139,7 +139,7 @@ export default function Kaito() {
       <div>
         <h2 className="text-xl font-medium text-gray-900 dark:text-gray-50">Kaito Creator Leaderboard</h2>
         <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-          Discover top Web3 creators ranked by influence and engagement
+          Discover top 115 Web3 creators ranked by influence and engagement
         </p>
       </div>
 
