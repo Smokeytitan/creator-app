@@ -492,7 +492,7 @@ export default function CreatorRoster({ creators, setCreators }) {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {isAdding && (
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6 border-2 border-green-500 dark:border-green-400">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6 border-2 border-green-500 dark:border-green-400 min-h-[400px]">
             <div className="space-y-4">
               <div>
                 <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Name *</label>
@@ -558,7 +558,7 @@ export default function CreatorRoster({ creators, setCreators }) {
         {filteredCreators.map((c) => (
           <div
             key={c.id}
-            className="bg-white dark:bg-gray-800 rounded-xl shadow p-6 hover:shadow-lg transition-shadow cursor-pointer"
+            className="bg-white dark:bg-gray-800 rounded-xl shadow p-6 hover:shadow-lg transition-shadow cursor-pointer min-h-[400px] flex flex-col"
             onClick={() => !isAdding && editingId !== c.id && startEdit(c)}
           >
             {editingId === c.id ? (
@@ -624,7 +624,7 @@ export default function CreatorRoster({ creators, setCreators }) {
                 </div>
               </div>
             ) : (
-              <div>
+              <div className="flex flex-col h-full">
                 <div className="flex items-start justify-between mb-3">
                   <div>
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-50">{c.name}</h3>
@@ -638,35 +638,87 @@ export default function CreatorRoster({ creators, setCreators }) {
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">{c.notes}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">{c.notes}</p>
 
                 {/* Stats */}
                 {(c.posts || []).length > 0 && (() => {
                   const posts = c.posts || [];
-                  const totalImpressions = posts.reduce((sum, post) => {
+                  let totalImpressions = 0;
+                  let totalCost = 0;
+
+                  posts.forEach(post => {
                     if (post.impressions) {
                       const impressions = parseFloat(post.impressions.replace(/[^0-9.-]+/g, ''));
                       if (!isNaN(impressions)) {
-                        return sum + impressions;
+                        totalImpressions += impressions;
                       }
                     }
-                    return sum;
-                  }, 0);
+                    if (post.cost) {
+                      const cost = parseFloat(post.cost.replace(/[^0-9.-]+/g, ''));
+                      if (!isNaN(cost)) {
+                        totalCost += cost;
+                      }
+                    }
+                  });
+
                   const avgImpressions = posts.length > 0 ? Math.round(totalImpressions / posts.length) : 0;
+                  const cpm = totalImpressions > 0 ? (totalCost / totalImpressions) * 1000 : 0;
+                  const avgCostPerPost = posts.length > 0 && totalCost > 0 ? totalCost / posts.length : 0;
 
                   return (
-                    <div className="mt-3 flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
-                      {avgImpressions > 0 && (
-                        <div className="flex items-center gap-1">
-                          <Eye className="h-3 w-3" />
-                          <span>{avgImpressions.toLocaleString()} avg impressions</span>
+                    <div className="space-y-3 mb-4">
+                      {/* Metrics Grid */}
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
+                          <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Total Impressions</div>
+                          <div className="text-lg font-bold text-gray-900 dark:text-gray-50">
+                            {totalImpressions.toLocaleString()}
+                          </div>
                         </div>
-                      )}
+
+                        <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
+                          <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Avg Impressions</div>
+                          <div className="text-lg font-bold text-gray-900 dark:text-gray-50">
+                            {avgImpressions.toLocaleString()}
+                          </div>
+                        </div>
+
+                        {totalCost > 0 && (
+                          <>
+                            <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
+                              <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Total Cost</div>
+                              <div className="text-lg font-bold text-green-600 dark:text-green-400">
+                                ${totalCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                              </div>
+                            </div>
+
+                            {avgCostPerPost > 0 && (
+                              <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
+                                <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Avg Cost/Post</div>
+                                <div className="text-lg font-bold text-green-600 dark:text-green-400">
+                                  ${avgCostPerPost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                </div>
+                              </div>
+                            )}
+                          </>
+                        )}
+
+                        {cpm > 0 && (
+                          <div className="bg-indigo-50 dark:bg-indigo-900/20 rounded-lg p-3 border-2 border-indigo-200 dark:border-indigo-700">
+                            <div className="text-xs text-indigo-600 dark:text-indigo-400 font-medium mb-1">CPM (Cost/1K)</div>
+                            <div className="text-lg font-bold text-indigo-700 dark:text-indigo-300">
+                              ${cpm.toFixed(2)}
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   );
                 })()}
 
-                <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+                <div className="flex-grow"></div>
+
+                <div className="mt-auto pt-4 border-t border-gray-100 dark:border-gray-700">
                   <button
                     onClick={(e) => toggleViewPosts(c.id, e)}
                     className="inline-flex items-center px-3 py-2 text-sm bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 rounded-lg font-medium transition-colors w-full justify-center"
@@ -679,7 +731,7 @@ export default function CreatorRoster({ creators, setCreators }) {
                 {viewingPostsId === c.id && (
                   <div className="mt-4 space-y-3" onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-center justify-between">
-                      <h4 className="text-sm font-semibold text-gray-700">Posts</h4>
+                      <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Posts</h4>
                       <button
                         onClick={(e) => startAddPost(c.id, e)}
                         className="inline-flex items-center px-2 py-1 text-xs bg-indigo-600 text-white rounded hover:bg-indigo-700"
@@ -860,8 +912,6 @@ export default function CreatorRoster({ creators, setCreators }) {
                     </div>
                   </div>
                 )}
-
-                <p className="text-xs text-gray-400 mt-3">Click to edit</p>
               </div>
             )}
           </div>
