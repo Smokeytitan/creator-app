@@ -569,24 +569,22 @@ const ContentRequests = ({ creators }) => {
                         // For pending requests, show estimated metrics
                         if (request.status === 'pending') {
                           const estimated = getEstimatedMetrics(request);
-                          if (estimated.estimatedImpressions > 0 || estimated.estimatedCost > 0) {
-                            return (
-                              <div className="flex items-center gap-4 text-sm font-medium">
-                                {estimated.estimatedImpressions > 0 && (
-                                  <div className="flex items-center text-indigo-600 dark:text-indigo-400">
-                                    <Eye className="h-4 w-4 mr-1" />
-                                    ~{estimated.estimatedImpressions.toLocaleString()} est. impressions
-                                  </div>
-                                )}
-                                {estimated.estimatedCost > 0 && (
-                                  <div className="flex items-center text-green-600 dark:text-green-400">
-                                    <DollarSign className="h-4 w-4 mr-1" />
-                                    ~${estimated.estimatedCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} est. cost
-                                  </div>
-                                )}
+                          return (
+                            <div className="flex items-center gap-4 text-sm font-medium">
+                              <div className="flex items-center text-indigo-600 dark:text-indigo-400">
+                                <Eye className="h-4 w-4 mr-1" />
+                                {estimated.estimatedImpressions > 0
+                                  ? `~${estimated.estimatedImpressions.toLocaleString()} est. impressions`
+                                  : 'N/A est. impressions'}
                               </div>
-                            );
-                          }
+                              {estimated.estimatedCost > 0 && (
+                                <div className="flex items-center text-green-600 dark:text-green-400">
+                                  <DollarSign className="h-4 w-4 mr-1" />
+                                  ~${estimated.estimatedCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} est. cost
+                                </div>
+                              )}
+                            </div>
+                          );
                         } else {
                           // For other statuses, show actual metrics
                           const metrics = getCampaignMetrics(request);
