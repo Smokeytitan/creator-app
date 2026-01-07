@@ -97,6 +97,11 @@ export default function Kaito() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Calculate total impressions across all creators
+  const totalImpressions = useMemo(() => {
+    return leaderboardData.reduce((sum, creator) => sum + (creator.impressions || 0), 0);
+  }, [leaderboardData]);
+
   const categories = useMemo(() => {
     const cats = new Set(leaderboardData.map(c => c.category));
     return ['all', ...Array.from(cats)];
@@ -131,25 +136,11 @@ export default function Kaito() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-medium text-gray-900 dark:text-gray-50">Kaito Creator Leaderboard</h2>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            {totalReceived > 0
-              ? `Showing ${totalReceived} top Web3 creators ranked by influence and engagement`
-              : 'Discover top Web3 creators ranked by influence and engagement'
-            }
-          </p>
-        </div>
-        <button
-          onClick={fetchLeaderboard}
-          disabled={loading}
-          className="inline-flex items-center px-4 py-2 bg-indigo-600 dark:bg-indigo-500 text-white rounded hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-          title="Refresh leaderboard from Kaito API"
-        >
-          <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-          {loading ? 'Refreshing...' : 'Refresh Leaderboard'}
-        </button>
+      <div>
+        <h2 className="text-xl font-medium text-gray-900 dark:text-gray-50">Kaito Creator Leaderboard</h2>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+          Discover top Web3 creators ranked by influence and engagement
+        </p>
       </div>
 
       {/* Date Range Filters */}
@@ -203,6 +194,31 @@ export default function Kaito() {
           </div>
         </div>
       </div>
+
+      {/* Total Impressions Card */}
+      {!loading && totalImpressions > 0 && (
+        <div className="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 border border-indigo-200 dark:border-indigo-800 rounded-lg p-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-indigo-600 dark:bg-indigo-500 rounded-lg">
+                <Eye className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Impressions</p>
+                <p className="text-3xl font-bold text-gray-900 dark:text-gray-50">
+                  {totalImpressions.toLocaleString()}
+                </p>
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="text-sm text-gray-500 dark:text-gray-400">Top {totalReceived} Creators</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500">
+                {startDate.toLocaleDateString()} - {endDate.toLocaleDateString()}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Error Status */}
       {error && (
