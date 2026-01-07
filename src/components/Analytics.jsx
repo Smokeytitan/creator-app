@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { TrendingUp, DollarSign, FileText, Eye, Award, Download, Calendar, X, Target, Users } from 'lucide-react';
+import { TrendingUp, DollarSign, FileText, Eye, Award, Download, Calendar, X, Target, Users, BarChart3 } from 'lucide-react';
 import {
   BarChart,
   Bar,
@@ -15,9 +15,7 @@ import {
 } from 'recharts';
 
 export default function Analytics({ creators, requests = [] }) {
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
-  const [viewMode, setViewMode] = useState('creators'); // 'creators' or 'campaigns'
+  const [viewMode] = useState('creators'); // Keep for export functionality
 
   // Calculate analytics metrics
   const analytics = useMemo(() => {
@@ -30,22 +28,7 @@ export default function Analytics({ creators, requests = [] }) {
     };
 
     creators.forEach(creator => {
-      const allPosts = creator.posts || [];
-
-      // Filter posts by date range
-      const posts = allPosts.filter(post => {
-        if (!post.date) return true; // Include posts without dates
-
-        const postDate = new Date(post.date);
-        const start = startDate ? new Date(startDate) : null;
-        const end = endDate ? new Date(endDate) : null;
-
-        if (start && postDate < start) return false;
-        if (end && postDate > end) return false;
-
-        return true;
-      });
-
+      const posts = creator.posts || [];
       const postCount = posts.length;
       let creatorSpend = 0;
       let creatorImpressions = 0;
@@ -111,14 +94,6 @@ export default function Analytics({ creators, requests = [] }) {
     stats.campaignStats = [];
 
     requests.forEach(request => {
-      // Filter by date if needed
-      const requestDate = new Date(request.dueDate);
-      const start = startDate ? new Date(startDate) : null;
-      const end = endDate ? new Date(endDate) : null;
-
-      if (start && requestDate < start) return;
-      if (end && requestDate > end) return;
-
       let campaignImpressions = 0;
       let campaignCost = 0;
       let postCount = 0;
@@ -189,7 +164,7 @@ export default function Analytics({ creators, requests = [] }) {
     ].filter(s => s.value > 0);
 
     return stats;
-  }, [creators, requests, startDate, endDate]);
+  }, [creators, requests]);
 
   const formatCurrency = (value) => {
     return new Intl.NumberFormat('en-US', {
@@ -205,489 +180,511 @@ export default function Analytics({ creators, requests = [] }) {
   };
 
   const exportToCSV = () => {
-    // Prepare creator-level data
-    const creatorRows = analytics.creatorStats
-      .sort((a, b) => b.spend - a.spend)
-      .map(creator => ({
-        'Creator Name': creator.name,
-        'Total Posts': creator.posts,
-        'Total Spend': `$${creator.spend.toFixed(2)}`,
-        'Total Impressions': creator.impressions,
-        'Avg Cost Per Post': creator.avgCost > 0 ? `$${creator.avgCost.toFixed(2)}` : '$0.00',
-        'CPM': creator.cpi > 0 ? `$${(creator.cpi * 1000).toFixed(2)}` : '$0.00'
-      }));
+    let csv = '';
+    const timestamp = new Date().toISOString().split('T')[0];
+    let filename = '';
 
-    // Prepare overall summary
-    const overallRow = {
-      'Summary Type': 'OVERALL TOTAL',
-      'Creators': analytics.totalCreators,
-      'Posts': analytics.totalPosts,
-      'Spend': `$${analytics.totalSpend.toFixed(2)}`,
-      'Impressions': analytics.totalImpressions,
-      'CPM': analytics.totalImpressions > 0 ? `$${(analytics.totalSpend / analytics.totalImpressions * 1000).toFixed(2)}` : '$0.00'
-    };
-
-    // Convert to CSV
-    let csv = 'CREATOR ANALYTICS\n';
-    if (startDate || endDate) {
-      csv += `Date Range: ${startDate || 'Beginning'} to ${endDate || 'Present'}\n`;
-    } else {
+    if (viewMode === 'creators') {
+      // Creator Analytics Export
+      csv = 'CREATOR ANALYTICS\n';
       csv += 'Date Range: All Time\n';
-    }
-    csv += '\n';
+      csv += '\n';
 
-    // Creator data section
-    csv += 'Creator-Level Performance\n';
-    if (creatorRows.length > 0) {
-      const creatorHeaders = Object.keys(creatorRows[0]);
-      csv += creatorHeaders.join(',') + '\n';
-      creatorRows.forEach(row => {
-        csv += creatorHeaders.map(header => `"${row[header]}"`).join(',') + '\n';
+      // Overall Summary
+      csv += 'Overall Summary\n';
+      csv += 'Total Creators,Total Posts,Total Spend,Total Impressions,Overall CPM\n';
+      const overallCPM = analytics.totalImpressions > 0 ? (analytics.totalSpend / analytics.totalImpressions * 1000).toFixed(2) : '0.00';
+      csv += `${analytics.totalCreators},${analytics.totalPosts},"$${analytics.totalSpend.toFixed(2)}",${analytics.totalImpressions},"$${overallCPM}"\n\n`;
+
+      // Creator-Level Performance
+      csv += 'Creator-Level Performance\n';
+      csv += 'Creator Name,Total Posts,Total Spend,Total Impressions,Avg Cost Per Post,CPM\n';
+
+      const creatorRows = analytics.creatorStats
+        .sort((a, b) => b.spend - a.spend);
+
+      creatorRows.forEach(creator => {
+        const avgCost = creator.avgCost > 0 ? creator.avgCost.toFixed(2) : '0.00';
+        const cpm = creator.cpi > 0 ? (creator.cpi * 1000).toFixed(2) : '0.00';
+        csv += `"${creator.name}",${creator.posts},"$${creator.spend.toFixed(2)}",${creator.impressions},"$${avgCost}","$${cpm}"\n`;
       });
-    } else {
-      csv += 'No creator data available\n';
-    }
 
-    // Overall summary
-    csv += '\nOverall Summary\n';
-    const overallHeaders = Object.keys(overallRow);
-    csv += overallHeaders.join(',') + '\n';
-    csv += overallHeaders.map(header => `"${overallRow[header]}"`).join(',') + '\n';
+      // Top Performers
+      csv += '\nTop Performers by Posts\n';
+      csv += 'Rank,Creator Name,Total Posts\n';
+      analytics.topByPosts.forEach((creator, index) => {
+        csv += `${index + 1},"${creator.name}",${creator.posts}\n`;
+      });
+
+      csv += '\nTop Performers by Spend\n';
+      csv += 'Rank,Creator Name,Total Spend\n';
+      analytics.topBySpend.forEach((creator, index) => {
+        csv += `${index + 1},"${creator.name}","$${creator.spend.toFixed(2)}"\n`;
+      });
+
+      csv += '\nTop Performers by Impressions\n';
+      csv += 'Rank,Creator Name,Total Impressions\n';
+      analytics.topByImpressions.forEach((creator, index) => {
+        csv += `${index + 1},"${creator.name}",${creator.impressions}\n`;
+      });
+
+      csv += '\nBest ROI (Lowest CPM)\n';
+      csv += 'Rank,Creator Name,CPM\n';
+      analytics.topByROI.forEach((creator, index) => {
+        csv += `${index + 1},"${creator.name}","$${(creator.cpi * 1000).toFixed(2)}"\n`;
+      });
+
+      filename = `creator_analytics_${timestamp}.csv`;
+    } else {
+      // Campaign Analytics Export
+      csv = 'CAMPAIGN ANALYTICS\n';
+      if (startDate || endDate) {
+        csv += `Date Range: ${startDate || 'Beginning'} to ${endDate || 'Present'}\n`;
+      } else {
+        csv += 'Date Range: All Time\n';
+      }
+      csv += '\n';
+
+      // Overall Summary
+      csv += 'Overall Summary\n';
+      const totalCampaignCost = analytics.campaignStats.reduce((sum, c) => sum + c.cost, 0);
+      const totalCampaignImpressions = analytics.campaignStats.reduce((sum, c) => sum + c.impressions, 0);
+      const overallCPM = totalCampaignImpressions > 0 ? (totalCampaignCost / totalCampaignImpressions * 1000).toFixed(2) : '0.00';
+      csv += 'Total Campaigns,Completed Campaigns,Total Cost,Total Impressions,Overall CPM\n';
+      csv += `${analytics.totalCampaigns},${analytics.completedCampaigns},"$${totalCampaignCost.toFixed(2)}",${totalCampaignImpressions},"$${overallCPM}"\n\n`;
+
+      // All Campaigns
+      csv += 'Campaign Performance\n';
+      csv += 'Campaign Title,Status,Creators,Posts,Total Cost,Total Impressions,CPM,Due Date\n';
+
+      analytics.campaignStats
+        .sort((a, b) => b.cost - a.cost)
+        .forEach(campaign => {
+          const cpm = campaign.cpm > 0 ? campaign.cpm.toFixed(2) : '0.00';
+          const dueDate = new Date(campaign.dueDate).toLocaleDateString();
+          csv += `"${campaign.title}","${campaign.status}",${campaign.creatorCount},${campaign.postCount},"$${campaign.cost.toFixed(2)}",${campaign.impressions},"$${cpm}","${dueDate}"\n`;
+        });
+
+      // Top Campaigns by Impressions
+      csv += '\nTop Campaigns by Impressions\n';
+      csv += 'Rank,Campaign Title,Total Impressions,Posts\n';
+      analytics.topCampaignsByImpressions.forEach((campaign, index) => {
+        csv += `${index + 1},"${campaign.title}",${campaign.impressions},${campaign.postCount}\n`;
+      });
+
+      // Top Campaigns by Cost
+      csv += '\nTop Campaigns by Cost\n';
+      csv += 'Rank,Campaign Title,Total Cost,Creators\n';
+      analytics.topCampaignsByCost.forEach((campaign, index) => {
+        csv += `${index + 1},"${campaign.title}","$${campaign.cost.toFixed(2)}",${campaign.creatorCount}\n`;
+      });
+
+      // Best Campaign ROI
+      csv += '\nBest Campaign ROI (Lowest CPM)\n';
+      csv += 'Rank,Campaign Title,CPM,Impressions\n';
+      analytics.topCampaignsByROI.forEach((campaign, index) => {
+        csv += `${index + 1},"${campaign.title}","$${campaign.cpm.toFixed(2)}",${campaign.impressions}\n`;
+      });
+
+      // Status Distribution
+      csv += '\nCampaign Status Distribution\n';
+      csv += 'Status,Count\n';
+      analytics.statusDistribution.forEach(status => {
+        csv += `"${status.name}",${status.value}\n`;
+      });
+
+      filename = `campaign_analytics_${timestamp}.csv`;
+    }
 
     // Create download
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
-    const timestamp = new Date().toISOString().split('T')[0];
     link.setAttribute('href', url);
-    link.setAttribute('download', `creator_analytics_${timestamp}.csv`);
+    link.setAttribute('download', filename);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
 
-  const clearDateFilter = () => {
-    setStartDate('');
-    setEndDate('');
-  };
+  // Calculate platform distribution (based on creator handles/platforms)
+  const platformData = useMemo(() => {
+    const platforms = {};
+    creators.forEach(creator => {
+      // Simple platform detection based on handle prefix or assume Twitter/X
+      const platform = 'Twitter/X'; // Could be enhanced with actual platform data
+      if (!platforms[platform]) {
+        platforms[platform] = { spend: 0, impressions: 0 };
+      }
+
+      const creatorStat = analytics.creatorStats.find(c => c.id === creator.id);
+      if (creatorStat) {
+        platforms[platform].spend += creatorStat.spend;
+        platforms[platform].impressions += creatorStat.impressions;
+      }
+    });
+
+    return Object.entries(platforms).map(([name, data]) => ({
+      name,
+      value: data.spend,
+      impressions: data.impressions
+    }));
+  }, [creators, analytics.creatorStats]);
+
+  // Calculate progress metrics
+  const avgImpressionsPerPost = analytics.totalPosts > 0
+    ? analytics.totalImpressions / analytics.totalPosts
+    : 0;
+
+  const creatorsWithActivity = analytics.creatorStats.filter(c => c.posts > 0).length;
+  const activityPercentage = analytics.totalCreators > 0
+    ? (creatorsWithActivity / analytics.totalCreators) * 100
+    : 0;
+
+  const COLORS = ['#8B5CF6', '#3B82F6', '#10B981', '#F59E0B', '#EF4444'];
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-medium text-gray-900 dark:text-gray-50">Analytics</h2>
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-50">Analytics Dashboard</h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Track influencer performance and campaign metrics</p>
+        </div>
         <button
           onClick={exportToCSV}
-          className="inline-flex items-center px-4 py-2 bg-green-600 dark:bg-green-500 text-white rounded hover:bg-green-700 dark:hover:bg-green-600 transition-colors text-sm font-medium"
+          className="inline-flex items-center px-4 py-2 bg-indigo-600 dark:bg-indigo-500 text-white rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-colors text-sm font-medium shadow-sm"
         >
           <Download className="w-4 h-4 mr-2" />
-          Export CSV
+          Export
         </button>
       </div>
 
-      {/* Date Range Filter */}
-      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded p-4">
-        <div className="flex flex-wrap items-center gap-4">
-          <div className="flex items-center gap-2">
-            <Calendar className="h-5 w-5 text-gray-500 dark:text-gray-400" />
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Filter by Date:</span>
+      {/* Top Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg p-6 text-white shadow-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-purple-100 text-sm font-medium mb-1">Total Influencers</p>
+              <p className="text-3xl font-bold">{analytics.totalCreators}</p>
+            </div>
+            <Users className="h-12 w-12 text-purple-200 opacity-80" />
           </div>
+        </div>
 
-          <div className="flex items-center gap-2">
-            <label className="text-sm text-gray-600 dark:text-gray-400">From:</label>
-            <input
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-50"
-            />
+        <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg p-6 text-white shadow-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-blue-100 text-sm font-medium mb-1">Total Spend</p>
+              <p className="text-3xl font-bold">{formatCurrency(analytics.totalSpend)}</p>
+            </div>
+            <DollarSign className="h-12 w-12 text-blue-200 opacity-80" />
           </div>
+        </div>
 
-          <div className="flex items-center gap-2">
-            <label className="text-sm text-gray-600 dark:text-gray-400">To:</label>
-            <input
-              type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-50"
-            />
+        <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-lg p-6 text-white shadow-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-green-100 text-sm font-medium mb-1">Total Impressions</p>
+              <p className="text-3xl font-bold">{formatNumber(analytics.totalImpressions)}</p>
+            </div>
+            <Eye className="h-12 w-12 text-green-200 opacity-80" />
           </div>
+        </div>
 
-          {(startDate || endDate) && (
-            <button
-              onClick={clearDateFilter}
-              className="inline-flex items-center px-3 py-1.5 text-sm bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+        <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg p-6 text-white shadow-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-orange-100 text-sm font-medium mb-1">Total Posts</p>
+              <p className="text-3xl font-bold">{analytics.totalPosts}</p>
+            </div>
+            <FileText className="h-12 w-12 text-orange-200 opacity-80" />
+          </div>
+        </div>
+      </div>
+
+      {/* Charts Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* CPM by Influencer */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-50 mb-4 flex items-center gap-2">
+            <BarChart3 className="h-5 w-5 text-indigo-600" />
+            CPM by Influencer
+          </h3>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart
+              data={analytics.topByROI.slice(0, 5)}
+              margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
             >
-              <X className="h-4 w-4 mr-1" />
-              Clear Filter
-            </button>
-          )}
+              <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.2} />
+              <XAxis
+                dataKey="name"
+                stroke="#9CA3AF"
+                tick={{ fill: '#9CA3AF' }}
+                angle={-45}
+                textAnchor="end"
+                height={80}
+              />
+              <YAxis stroke="#9CA3AF" tick={{ fill: '#9CA3AF' }} />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: '#1F2937',
+                  border: 'none',
+                  borderRadius: '0.5rem',
+                  color: '#F9FAFB'
+                }}
+                formatter={(value) => [`$${(value * 1000).toFixed(2)}`, 'CPM']}
+              />
+              <Bar dataKey="cpi" fill="#8B5CF6" radius={[8, 8, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
 
-          {(startDate || endDate) && (
-            <span className="text-sm text-indigo-600 dark:text-indigo-400 font-medium">
-              {startDate && endDate
-                ? `${startDate} to ${endDate}`
-                : startDate
-                ? `From ${startDate}`
-                : `Until ${endDate}`}
+        {/* Budget by Platform */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-50 mb-4">Budget by Platform</h3>
+          {platformData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie
+                  data={platformData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={({ name, value }) => `${name}: ${formatCurrency(value)}`}
+                  outerRadius={100}
+                  fill="#8884d8"
+                  dataKey="value"
+                >
+                  {platformData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: '#1F2937',
+                    border: 'none',
+                    borderRadius: '0.5rem',
+                    color: '#F9FAFB'
+                  }}
+                  formatter={(value) => formatCurrency(value)}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="flex items-center justify-center h-[300px] text-gray-500 dark:text-gray-400">
+              No platform data available
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Progress Metrics */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Q4 Budget Used */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+          <div className="flex items-center justify-between mb-2">
+            <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">Total Budget Used</h4>
+            <span className="text-sm font-semibold text-gray-900 dark:text-gray-50">
+              {analytics.totalSpend > 0 ? '100%' : '0%'}
             </span>
-          )}
+          </div>
+          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
+            <div
+              className="bg-gradient-to-r from-blue-500 to-blue-600 h-3 rounded-full transition-all duration-500"
+              style={{ width: analytics.totalSpend > 0 ? '100%' : '0%' }}
+            ></div>
+          </div>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+            {formatCurrency(analytics.totalSpend)} spent
+          </p>
+        </div>
+
+        {/* Avg Impressions per Post */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+          <div className="flex items-center justify-between mb-2">
+            <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">Avg Impressions per Post</h4>
+            <span className="text-sm font-semibold text-gray-900 dark:text-gray-50">
+              {formatNumber(avgImpressionsPerPost)}
+            </span>
+          </div>
+          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
+            <div
+              className="bg-gradient-to-r from-green-500 to-green-600 h-3 rounded-full transition-all duration-500"
+              style={{ width: avgImpressionsPerPost > 0 ? '85%' : '0%' }}
+            ></div>
+          </div>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+            Across {analytics.totalPosts} posts
+          </p>
+        </div>
+
+        {/* Influencers with Activity */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+          <div className="flex items-center justify-between mb-2">
+            <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">Influencers with Activity</h4>
+            <span className="text-sm font-semibold text-gray-900 dark:text-gray-50">
+              {activityPercentage.toFixed(0)}%
+            </span>
+          </div>
+          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
+            <div
+              className="bg-gradient-to-r from-purple-500 to-purple-600 h-3 rounded-full transition-all duration-500"
+              style={{ width: `${activityPercentage}%` }}
+            ></div>
+          </div>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+            {creatorsWithActivity} of {analytics.totalCreators} active
+          </p>
         </div>
       </div>
 
-      {/* View Mode Toggle */}
-      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded p-2">
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setViewMode('creators')}
-            className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded transition-colors ${
-              viewMode === 'creators'
-                ? 'bg-indigo-600 dark:bg-indigo-500 text-white'
-                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-            }`}
-          >
-            <Users className="h-4 w-4" />
-            Creator Performance
-          </button>
-          <button
-            onClick={() => setViewMode('campaigns')}
-            className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded transition-colors ${
-              viewMode === 'campaigns'
-                ? 'bg-indigo-600 dark:bg-indigo-500 text-white'
-                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-            }`}
-          >
-            <Target className="h-4 w-4" />
-            Campaign Performance
-          </button>
-        </div>
-      </div>
-
-      {viewMode === 'creators' ? (
-        <>
-          {/* Creator Overview Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded p-4">
-          <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Total Creators</div>
-          <div className="text-4xl font-bold text-gray-900 dark:text-gray-50">{analytics.totalCreators}</div>
-        </div>
-
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded p-4">
-          <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Total Posts</div>
-          <div className="text-4xl font-bold text-gray-900 dark:text-gray-50">{analytics.totalPosts}</div>
-        </div>
-
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded p-4">
-          <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Total Spend</div>
-          <div className="text-4xl font-bold text-gray-900 dark:text-gray-50">{formatCurrency(analytics.totalSpend)}</div>
-        </div>
-
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded p-4">
-          <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Total Impressions</div>
-          <div className="text-4xl font-bold text-gray-900 dark:text-gray-50">{formatNumber(analytics.totalImpressions)}</div>
-        </div>
-      </div>
-
-      {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Top Creators by Spend */}
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded p-6">
-          <h3 className="text-base font-medium text-gray-900 dark:text-gray-50 mb-4">Top Creators by Spend</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart
-              data={analytics.topBySpend.slice(0, 5).reverse()}
-              layout="vertical"
-            >
-              <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.2} />
-              <XAxis type="number" stroke="#9CA3AF" />
-              <YAxis dataKey="name" type="category" width={120} stroke="#9CA3AF" />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: '#1F2937',
-                  border: 'none',
-                  borderRadius: '0.5rem',
-                  color: '#F9FAFB'
-                }}
-                formatter={(value) => [`$${value.toLocaleString()}`, 'Spend']}
-              />
-              <Bar dataKey="spend" fill="#3B82F6" />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-
-        {/* Top Creators by Impressions */}
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded p-6">
-          <h3 className="text-base font-medium text-gray-900 dark:text-gray-50 mb-4">Top Creators by Impressions</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart
-              data={analytics.topByImpressions.slice(0, 5).reverse()}
-              layout="vertical"
-            >
-              <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.2} />
-              <XAxis type="number" stroke="#9CA3AF" />
-              <YAxis dataKey="name" type="category" width={120} stroke="#9CA3AF" />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: '#1F2937',
-                  border: 'none',
-                  borderRadius: '0.5rem',
-                  color: '#F9FAFB'
-                }}
-                formatter={(value) => [value.toLocaleString(), 'Impressions']}
-              />
-              <Bar dataKey="impressions" fill="#8B5CF6" />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-
-      {/* Top Performers */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Top by Posts */}
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded p-6">
-          <h3 className="text-base font-medium text-gray-900 dark:text-gray-50 mb-4 flex items-center gap-2">
-            <TrendingUp className="h-5 w-5 text-green-600" />
-            Top by Posts
+      {/* Top Performers Table */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-50 flex items-center gap-2">
+            <Award className="h-5 w-5 text-yellow-500" />
+            Top Performers by ROI
           </h3>
-          <div className="space-y-3">
-            {analytics.topByPosts.length > 0 ? (
-              analytics.topByPosts.map((creator, index) => (
-                <div key={creator.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900 rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <span className="text-lg font-bold text-gray-400 dark:text-gray-600 w-6">#{index + 1}</span>
-                    <div>
-                      <p className="font-medium text-gray-900 dark:text-gray-50">{creator.name}</p>
-                    </div>
-                  </div>
-                  <span className="text-lg font-bold text-green-600 dark:text-green-400">{creator.posts}</span>
-                </div>
-              ))
-            ) : (
-              <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">No post data yet</p>
-            )}
-          </div>
         </div>
-
-        {/* Top by Spend */}
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded p-6">
-          <h3 className="text-base font-medium text-gray-900 dark:text-gray-50 mb-4 flex items-center gap-2">
-            <DollarSign className="h-5 w-5 text-blue-600" />
-            Top by Spend
-          </h3>
-          <div className="space-y-3">
-            {analytics.topBySpend.length > 0 ? (
-              analytics.topBySpend.map((creator, index) => (
-                <div key={creator.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900 rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <span className="text-lg font-bold text-gray-400 dark:text-gray-600 w-6">#{index + 1}</span>
-                    <div>
-                      <p className="font-medium text-gray-900 dark:text-gray-50">{creator.name}</p>
-                    </div>
-                  </div>
-                  <span className="text-lg font-bold text-blue-600 dark:text-blue-400">{formatCurrency(creator.spend)}</span>
-                </div>
-              ))
-            ) : (
-              <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">No spend data yet</p>
-            )}
-          </div>
-        </div>
-
-        {/* Top by Impressions */}
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded p-6">
-          <h3 className="text-base font-medium text-gray-900 dark:text-gray-50 mb-4 flex items-center gap-2">
-            <Eye className="h-5 w-5 text-purple-600" />
-            Top by Impressions
-          </h3>
-          <div className="space-y-3">
-            {analytics.topByImpressions.length > 0 ? (
-              analytics.topByImpressions.map((creator, index) => (
-                <div key={creator.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900 rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <span className="text-lg font-bold text-gray-400 dark:text-gray-600 w-6">#{index + 1}</span>
-                    <div>
-                      <p className="font-medium text-gray-900 dark:text-gray-50">{creator.name}</p>
-                    </div>
-                  </div>
-                  <span className="text-lg font-bold text-purple-600 dark:text-purple-400">{formatNumber(creator.impressions)}</span>
-                </div>
-              ))
-            ) : (
-              <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">No impression data yet</p>
-            )}
-          </div>
-        </div>
-
-        {/* Best ROI */}
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded p-6">
-          <h3 className="text-base font-medium text-gray-900 dark:text-gray-50 mb-4 flex items-center gap-2">
-            <Award className="h-5 w-5 text-yellow-600" />
-            Best ROI (Lowest CPM)
-          </h3>
-          <div className="space-y-3">
-            {analytics.topByROI.length > 0 ? (
-              analytics.topByROI.map((creator, index) => (
-                <div key={creator.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900 rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <span className="text-lg font-bold text-gray-400 dark:text-gray-600 w-6">#{index + 1}</span>
-                    <div>
-                      <p className="font-medium text-gray-900 dark:text-gray-50">{creator.name}</p>
-                    </div>
-                  </div>
-                  <span className="text-lg font-bold text-yellow-600 dark:text-yellow-400">
-                    ${(creator.cpi * 1000).toFixed(2)}
-                  </span>
-                </div>
-              ))
-            ) : (
-              <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">No ROI data yet</p>
-            )}
-          </div>
-        </div>
-      </div>
-        </>
-      ) : (
-        <>
-          {/* Campaign Overview Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded p-4">
-              <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Total Campaigns</div>
-              <div className="text-4xl font-bold text-gray-900 dark:text-gray-50">{analytics.totalCampaigns}</div>
-            </div>
-
-            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded p-4">
-              <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Completed</div>
-              <div className="text-4xl font-bold text-gray-900 dark:text-gray-50">{analytics.completedCampaigns}</div>
-            </div>
-
-            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded p-4">
-              <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Total Cost</div>
-              <div className="text-4xl font-bold text-gray-900 dark:text-gray-50">
-                {formatCurrency(analytics.campaignStats.reduce((sum, c) => sum + c.cost, 0))}
-              </div>
-            </div>
-
-            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded p-4">
-              <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Total Impressions</div>
-              <div className="text-4xl font-bold text-gray-900 dark:text-gray-50">
-                {formatNumber(analytics.campaignStats.reduce((sum, c) => sum + c.impressions, 0))}
-              </div>
-            </div>
-          </div>
-
-          {/* Campaign Performance Tables */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Top Campaigns by Impressions */}
-            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded p-6">
-              <h3 className="text-base font-medium text-gray-900 dark:text-gray-50 mb-4 flex items-center gap-2">
-                <Eye className="h-5 w-5 text-purple-600" />
-                Top Campaigns by Impressions
-              </h3>
-              <div className="space-y-3">
-                {analytics.topCampaignsByImpressions.length > 0 ? (
-                  analytics.topCampaignsByImpressions.map((campaign, index) => (
-                    <div key={campaign.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900 rounded-lg">
-                      <div className="flex items-center gap-3">
-                        <span className="text-lg font-bold text-gray-400 dark:text-gray-600 w-6">#{index + 1}</span>
-                        <div>
-                          <p className="font-medium text-gray-900 dark:text-gray-50">{campaign.title}</p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">{campaign.postCount} posts</p>
-                        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-50 dark:bg-gray-900">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Rank
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Influencer
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Posts
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Spend
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Impressions
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  CPM
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+              {analytics.topByROI.length > 0 ? (
+                analytics.topByROI.map((creator, index) => (
+                  <tr key={creator.id} className="hover:bg-gray-50 dark:hover:bg-gray-900/50 transition-colors">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full ${
+                          index === 0 ? 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200' :
+                          index === 1 ? 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200' :
+                          index === 2 ? 'bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200' :
+                          'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
+                        } font-bold text-sm`}>
+                          #{index + 1}
+                        </span>
                       </div>
-                      <span className="text-lg font-bold text-purple-600 dark:text-purple-400">{formatNumber(campaign.impressions)}</span>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">No campaign data yet</p>
-                )}
-              </div>
-            </div>
-
-            {/* Top Campaigns by Cost */}
-            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded p-6">
-              <h3 className="text-base font-medium text-gray-900 dark:text-gray-50 mb-4 flex items-center gap-2">
-                <DollarSign className="h-5 w-5 text-blue-600" />
-                Top Campaigns by Cost
-              </h3>
-              <div className="space-y-3">
-                {analytics.topCampaignsByCost.length > 0 ? (
-                  analytics.topCampaignsByCost.map((campaign, index) => (
-                    <div key={campaign.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900 rounded-lg">
-                      <div className="flex items-center gap-3">
-                        <span className="text-lg font-bold text-gray-400 dark:text-gray-600 w-6">#{index + 1}</span>
-                        <div>
-                          <p className="font-medium text-gray-900 dark:text-gray-50">{campaign.title}</p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">{campaign.creatorCount} creators</p>
-                        </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900 dark:text-gray-50">{creator.name}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-700 dark:text-gray-300">{creator.posts}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900 dark:text-gray-50">{formatCurrency(creator.spend)}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-700 dark:text-gray-300">{formatNumber(creator.impressions)}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-semibold text-green-600 dark:text-green-400">
+                        ${(creator.cpi * 1000).toFixed(2)}
                       </div>
-                      <span className="text-lg font-bold text-blue-600 dark:text-blue-400">{formatCurrency(campaign.cost)}</span>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">No campaign data yet</p>
-                )}
-              </div>
-            </div>
-
-            {/* Best Campaign ROI */}
-            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded p-6">
-              <h3 className="text-base font-medium text-gray-900 dark:text-gray-50 mb-4 flex items-center gap-2">
-                <Award className="h-5 w-5 text-yellow-600" />
-                Best Campaign ROI (Lowest CPM)
-              </h3>
-              <div className="space-y-3">
-                {analytics.topCampaignsByROI.length > 0 ? (
-                  analytics.topCampaignsByROI.map((campaign, index) => (
-                    <div key={campaign.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900 rounded-lg">
-                      <div className="flex items-center gap-3">
-                        <span className="text-lg font-bold text-gray-400 dark:text-gray-600 w-6">#{index + 1}</span>
-                        <div>
-                          <p className="font-medium text-gray-900 dark:text-gray-50">{campaign.title}</p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">{formatNumber(campaign.impressions)} impressions</p>
-                        </div>
-                      </div>
-                      <span className="text-lg font-bold text-yellow-600 dark:text-yellow-400">
-                        ${campaign.cpm.toFixed(2)}
-                      </span>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">No campaign ROI data yet</p>
-                )}
-              </div>
-            </div>
-
-            {/* Campaign Status Distribution */}
-            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded p-6">
-              <h3 className="text-base font-medium text-gray-900 dark:text-gray-50 mb-4">Campaign Status</h3>
-              {analytics.statusDistribution.length > 0 ? (
-                <ResponsiveContainer width="100%" height={250}>
-                  <PieChart>
-                    <Pie
-                      data={analytics.statusDistribution}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ name, value }) => `${name}: ${value}`}
-                      outerRadius={80}
-                      fill="#8884d8"
-                      dataKey="value"
-                    >
-                      {analytics.statusDistribution.map((entry, index) => {
-                        const colors = ['#10B981', '#F59E0B', '#6B7280', '#EF4444'];
-                        return <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />;
-                      })}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
+                    </td>
+                  </tr>
+                ))
               ) : (
-                <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">No campaign status data</p>
+                <tr>
+                  <td colSpan="6" className="px-6 py-8 text-center text-sm text-gray-500 dark:text-gray-400">
+                    No performance data available yet
+                  </td>
+                </tr>
               )}
-            </div>
-          </div>
-        </>
-      )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Additional Charts Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Performance by Category (Top Spend) */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-50 mb-4">Performance by Spend</h3>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart
+              data={analytics.topBySpend.slice(0, 5)}
+              margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.2} />
+              <XAxis
+                dataKey="name"
+                stroke="#9CA3AF"
+                tick={{ fill: '#9CA3AF' }}
+                angle={-45}
+                textAnchor="end"
+                height={80}
+              />
+              <YAxis stroke="#9CA3AF" tick={{ fill: '#9CA3AF' }} />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: '#1F2937',
+                  border: 'none',
+                  borderRadius: '0.5rem',
+                  color: '#F9FAFB'
+                }}
+                formatter={(value) => [formatCurrency(value), 'Spend']}
+              />
+              <Bar dataKey="spend" fill="#3B82F6" radius={[8, 8, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* Impressions by Influencer */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-50 mb-4">Impressions by Influencer</h3>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart
+              data={analytics.topByImpressions.slice(0, 5)}
+              margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.2} />
+              <XAxis
+                dataKey="name"
+                stroke="#9CA3AF"
+                tick={{ fill: '#9CA3AF' }}
+                angle={-45}
+                textAnchor="end"
+                height={80}
+              />
+              <YAxis stroke="#9CA3AF" tick={{ fill: '#9CA3AF' }} />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: '#1F2937',
+                  border: 'none',
+                  borderRadius: '0.5rem',
+                  color: '#F9FAFB'
+                }}
+                formatter={(value) => [formatNumber(value), 'Impressions']}
+              />
+              <Bar dataKey="impressions" fill="#10B981" radius={[8, 8, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
     </div>
   );
 }

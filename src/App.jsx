@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
+import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/clerk-react';
 import CreatorRoster from './components/CreatorRoster';
 import ContentRequests from './components/ContentRequests';
 import Analytics from './components/Analytics';
 import Kaito from './components/Kaito';
-import { KaitoService } from './services/kaitoService';
 import { GoogleSheetsService } from './services/googleSheetsService';
 import ThemeToggle from './components/ThemeToggle';
 import { IMPORTED_CREATORS } from './data/importedCreators';
@@ -100,29 +100,38 @@ export default function App() {
     localStorage.setItem('activeTab', activeTab);
   }, [activeTab]);
 
-  useEffect(() => {
-    const kaito = new KaitoService();
-
-    // initial pull
-    kaito.updateCreatorData(creators);
-
-    // weekly pull (7 days)
-    const id = setInterval(() => {
-      kaito.updateCreatorData(creators);
-    }, 7 * 24 * 60 * 60 * 1000);
-
-    return () => clearInterval(id);
-  }, [creators]);
-
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
       {/* Header */}
       <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-3">
         <div className="flex items-center justify-between">
           <h1 className="text-xl font-medium text-gray-900 dark:text-gray-50">Creator Platform</h1>
-          <ThemeToggle />
+          <div className="flex items-center gap-4">
+            <ThemeToggle />
+            <SignedIn>
+              <UserButton afterSignOutUrl="/" />
+            </SignedIn>
+          </div>
         </div>
       </div>
+
+      {/* Sign-in screen for unauthenticated users */}
+      <SignedOut>
+        <div className="flex items-center justify-center min-h-[calc(100vh-60px)]">
+          <div className="text-center">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-50 mb-4">Welcome to Creator Platform</h2>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">Please sign in to access the platform</p>
+            <SignInButton mode="modal">
+              <button className="px-6 py-3 bg-indigo-600 dark:bg-indigo-500 text-white rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-colors font-medium">
+                Sign In
+              </button>
+            </SignInButton>
+          </div>
+        </div>
+      </SignedOut>
+
+      {/* Main app content for authenticated users */}
+      <SignedIn>
 
       <div className="flex">
         {/* Sidebar */}
@@ -180,11 +189,12 @@ export default function App() {
               {activeTab === 'roster' && <CreatorRoster creators={creators} setCreators={setCreators} />}
               {activeTab === 'requests' && <ContentRequests creators={creators} />}
               {activeTab === 'analytics' && <Analytics creators={creators} requests={requests} />}
-              {activeTab === 'kaito' && <Kaito creators={creators} />}
+              {activeTab === 'kaito' && <Kaito />}
             </>
           )}
         </div>
       </div>
+      </SignedIn>
     </div>
   );
 }

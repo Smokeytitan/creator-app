@@ -2,7 +2,7 @@ import axios from 'axios';
 
 export class KaitoService {
   constructor() {
-    this.apiKey = 'l5WWSDoert2mCtOH7dfDz5Ni5l7eGJMk4OCJZKXi';
+    this.apiKey = import.meta.env.VITE_KAITO_API_KEY;
     // Use proxy in development, direct API in production
     this.baseUrl = import.meta.env.DEV ? '/api/kaito' : 'https://api.kaito.ai/api/v1';
   }
