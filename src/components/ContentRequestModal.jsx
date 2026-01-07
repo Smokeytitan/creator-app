@@ -75,16 +75,16 @@ export default function ContentRequestModal({ creators, onClose, onSubmit }) {
   }, [estimatedImpressions, estimatedCost]);
 
   return (
-    <div className="fixed inset-0 bg-black/40 dark:bg-black/60 flex items-center justify-center p-4">
-      <div className="bg-white dark:bg-gray-800 w-full max-w-lg rounded-lg shadow p-6 space-y-4">
-        <div className="flex items-center justify-between">
+    <div className="fixed inset-0 bg-black/40 dark:bg-black/60 flex items-center justify-center p-4 z-50" onClick={onClose}>
+      <div className="bg-white dark:bg-gray-800 w-full max-w-lg rounded-lg shadow flex flex-col max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between p-6 pb-4 border-b border-gray-200 dark:border-gray-700">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-50">New Content Request</h3>
           <button className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300" onClick={onClose}>
             ✕
           </button>
         </div>
 
-        <div className="space-y-3">
+        <div className="space-y-3 overflow-y-auto p-6 flex-1">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Title</label>
             <input
