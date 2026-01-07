@@ -15,8 +15,8 @@ export function ThemeProvider({ children }) {
       return true;
     }
 
-    // Default to light mode
-    return false;
+    // Default to dark mode
+    return true;
   });
 
   useEffect(() => {
