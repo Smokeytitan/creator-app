@@ -109,8 +109,8 @@ export default function App() {
         </div>
       </div>
 
-      {/* Mobile Navigation - visible on small screens */}
-      <div className="md:hidden bg-white dark:bg-gray-800 border-b-2 border-gray-200 dark:border-gray-700 px-2">
+      {/* Mobile Navigation - visible on small/medium screens */}
+      <div className="lg:hidden bg-white dark:bg-gray-800 border-b-2 border-gray-200 dark:border-gray-700 px-2">
         <nav className="flex gap-2 overflow-x-auto">
           <button
             onClick={() => setActiveTab('roster')}
@@ -148,8 +148,8 @@ export default function App() {
       </div>
 
       <div className="flex">
-        {/* Sidebar - hidden on small screens, visible on medium+ */}
-        <div className="hidden md:block w-60 h-screen sticky top-0 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 py-3 overflow-y-auto">
+        {/* Sidebar - hidden on small/medium screens, visible on large+ */}
+        <div className="hidden lg:block w-60 h-screen sticky top-0 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 py-3 overflow-y-auto">
           <nav className="flex flex-col gap-1">
             <button
               onClick={() => setActiveTab('roster')}
