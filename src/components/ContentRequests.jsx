@@ -1,0 +1,326 @@
+import { useState, useMemo, useEffect } from 'react';
+import { Plus, Calendar, User, CheckCircle, Clock, XCircle, Trash2, Edit2, Save, X } from 'lucide-react';
+import ContentRequestModal from './ContentRequestModal';
+
+const ContentRequests = ({ creators }) => {
+  const [requests, setRequests] = useState(() => {
+    const stored = localStorage.getItem('requests');
+    if (stored) {
+      try {
+        return JSON.parse(stored);
+      } catch (e) {
+        console.error('Failed to parse requests from localStorage:', e);
+        return [];
+      }
+    }
+    return [];
+  });
+  const [showModal, setShowModal] = useState(false);
+  const [filterStatus, setFilterStatus] = useState('all');
+  const [editingRequestId, setEditingRequestId] = useState(null);
+  const [editRequestForm, setEditRequestForm] = useState({
+    title: '',
+    description: '',
+    creatorId: '',
+    creatorName: '',
+    dueDate: '',
+    status: 'pending'
+  });
+
+  // Save requests to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('requests', JSON.stringify(requests));
+  }, [requests]);
+
+  const startEditRequest = (request) => {
+    setEditingRequestId(request.id);
+    setEditRequestForm({
+      title: request.title,
+      description: request.description,
+      creatorId: request.creatorId || '',
+      creatorName: request.creatorName,
+      dueDate: new Date(request.dueDate).toISOString().slice(0, 10),
+      status: request.status
+    });
+  };
+
+  const saveEditRequest = () => {
+    if (!editRequestForm.title.trim()) {
+      alert('Title is required');
+      return;
+    }
+
+    const creator = creators.find(c => String(c.id) === String(editRequestForm.creatorId));
+
+    setRequests(requests.map(req =>
+      req.id === editingRequestId
+        ? {
+            ...req,
+            title: editRequestForm.title,
+            description: editRequestForm.description,
+            creatorId: editRequestForm.creatorId,
+            creatorName: creator?.name || editRequestForm.creatorName,
+            dueDate: new Date(editRequestForm.dueDate).toISOString(),
+            status: editRequestForm.status
+          }
+        : req
+    ));
+    setEditingRequestId(null);
+  };
+
+  const cancelEditRequest = () => {
+    setEditingRequestId(null);
+    setEditRequestForm({
+      title: '',
+      description: '',
+      creatorId: '',
+      creatorName: '',
+      dueDate: '',
+      status: 'pending'
+    });
+  };
+
+  const deleteRequest = (requestId) => {
+    if (confirm('Are you sure you want to delete this request?')) {
+      setRequests(requests.filter(req => req.id !== requestId));
+    }
+  };
+
+  const filteredRequests = useMemo(() => {
+    if (filterStatus === 'all') return requests;
+    return requests.filter(req => req.status === filterStatus);
+  }, [requests, filterStatus]);
+
+  const statusCounts = useMemo(() => {
+    return {
+      pending: requests.filter(r => r.status === 'pending').length,
+      inProgress: requests.filter(r => r.status === 'in-progress').length,
+      completed: requests.filter(r => r.status === 'completed').length,
+      cancelled: requests.filter(r => r.status === 'cancelled').length,
+    };
+  }, [requests]);
+
+  const getStatusIcon = (status) => {
+    switch (status) {
+      case 'completed':
+        return <CheckCircle className="h-5 w-5 text-green-500" />;
+      case 'in-progress':
+        return <Clock className="h-5 w-5 text-yellow-500" />;
+      case 'cancelled':
+        return <XCircle className="h-5 w-5 text-red-500" />;
+      default:
+        return <Clock className="h-5 w-5 text-gray-400" />;
+    }
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'completed':
+        return 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200';
+      case 'in-progress':
+        return 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200';
+      case 'cancelled':
+        return 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200';
+      default:
+        return 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200';
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Stats Overview */}
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-4">
+        <div className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg p-5">
+          <div className="text-sm font-medium text-gray-500 dark:text-gray-400">Pending</div>
+          <div className="mt-1 text-3xl font-semibold text-gray-900 dark:text-gray-50">{statusCounts.pending}</div>
+        </div>
+        <div className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg p-5">
+          <div className="text-sm font-medium text-gray-500 dark:text-gray-400">In Progress</div>
+          <div className="mt-1 text-3xl font-semibold text-yellow-600 dark:text-yellow-500">{statusCounts.inProgress}</div>
+        </div>
+        <div className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg p-5">
+          <div className="text-sm font-medium text-gray-500 dark:text-gray-400">Completed</div>
+          <div className="mt-1 text-3xl font-semibold text-green-600 dark:text-green-500">{statusCounts.completed}</div>
+        </div>
+        <div className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg p-5">
+          <div className="text-sm font-medium text-gray-500 dark:text-gray-400">Cancelled</div>
+          <div className="mt-1 text-3xl font-semibold text-red-600 dark:text-red-500">{statusCounts.cancelled}</div>
+        </div>
+      </div>
+
+      {/* Filters and Create Button */}
+      <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-4">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="flex gap-2">
+            {['all', 'pending', 'in-progress', 'completed', 'cancelled'].map((status) => (
+              <button
+                key={status}
+                onClick={() => setFilterStatus(status)}
+                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                  filterStatus === status
+                    ? 'bg-indigo-600 dark:bg-indigo-500 text-white'
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                }`}
+              >
+                {status.charAt(0).toUpperCase() + status.slice(1).replace('-', ' ')}
+              </button>
+            ))}
+          </div>
+          <button
+            onClick={() => setShowModal(true)}
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 dark:bg-indigo-500 hover:bg-indigo-700 dark:hover:bg-indigo-600"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            New Request
+          </button>
+        </div>
+      </div>
+
+      {/* Requests List */}
+      <div className="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden">
+        <ul className="divide-y divide-gray-200 dark:divide-gray-700">
+          {filteredRequests.map((request) => (
+            <li key={request.id} className="p-6 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+              {editingRequestId === request.id ? (
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Title</label>
+                    <input
+                      type="text"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-50"
+                      value={editRequestForm.title}
+                      onChange={(e) => setEditRequestForm({ ...editRequestForm, title: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
+                    <textarea
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-50"
+                      value={editRequestForm.description}
+                      onChange={(e) => setEditRequestForm({ ...editRequestForm, description: e.target.value })}
+                      rows={3}
+                    />
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Creator</label>
+                      <select
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-50"
+                        value={editRequestForm.creatorId}
+                        onChange={(e) => setEditRequestForm({ ...editRequestForm, creatorId: e.target.value })}
+                      >
+                        {creators.map((c) => (
+                          <option key={c.id} value={c.id}>
+                            {c.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Due Date</label>
+                      <input
+                        type="date"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-50"
+                        value={editRequestForm.dueDate}
+                        onChange={(e) => setEditRequestForm({ ...editRequestForm, dueDate: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
+                      <select
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-50"
+                        value={editRequestForm.status}
+                        onChange={(e) => setEditRequestForm({ ...editRequestForm, status: e.target.value })}
+                      >
+                        <option value="pending">Pending</option>
+                        <option value="in-progress">In Progress</option>
+                        <option value="completed">Completed</option>
+                        <option value="cancelled">Cancelled</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="flex gap-2 pt-2">
+                    <button
+                      onClick={saveEditRequest}
+                      className="inline-flex items-center px-4 py-2 bg-indigo-600 dark:bg-indigo-500 text-white rounded-md hover:bg-indigo-700 dark:hover:bg-indigo-600"
+                    >
+                      <Save className="h-4 w-4 mr-2" />
+                      Save
+                    </button>
+                    <button
+                      onClick={cancelEditRequest}
+                      className="inline-flex items-center px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600"
+                    >
+                      <X className="h-4 w-4 mr-2" />
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center justify-between">
+                  <div className="flex items-start space-x-4 flex-1">
+                    {getStatusIcon(request.status)}
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-lg font-medium text-gray-900 dark:text-gray-50 mb-1">
+                        {request.title}
+                      </h4>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">{request.description}</p>
+                      <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
+                        <div className="flex items-center">
+                          <User className="h-4 w-4 mr-1" />
+                          {request.creatorName}
+                        </div>
+                        <div className="flex items-center">
+                          <Calendar className="h-4 w-4 mr-1" />
+                          Due: {new Date(request.dueDate).toLocaleDateString()}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="ml-4 flex items-center gap-2">
+                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(request.status)}`}>
+                      {request.status}
+                    </span>
+                    <button
+                      onClick={() => startEditRequest(request)}
+                      className="p-2 text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded transition-colors"
+                      title="Edit request"
+                    >
+                      <Edit2 className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => deleteRequest(request.id)}
+                      className="p-2 text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
+                      title="Delete request"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              )}
+            </li>
+          ))}
+        </ul>
+        {filteredRequests.length === 0 && (
+          <div className="text-center py-12">
+            <p className="text-gray-500 dark:text-gray-400">No content requests found.</p>
+          </div>
+        )}
+      </div>
+
+      {/* Content Request Modal */}
+      {showModal && (
+        <ContentRequestModal
+          creators={creators}
+          onClose={() => setShowModal(false)}
+          onSubmit={(newRequest) => {
+            setRequests([...requests, { ...newRequest, id: Date.now() }]);
+            setShowModal(false);
+          }}
+        />
+      )}
+    </div>
+  );
+};
+
+export default ContentRequests;
