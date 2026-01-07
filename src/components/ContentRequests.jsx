@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { Plus, Calendar, User, CheckCircle, Clock, XCircle, Trash2, Edit2, Save, X, Search } from 'lucide-react';
 import ContentRequestModal from './ContentRequestModal';
+import { INITIAL_REQUESTS } from '../data/initialRequests';
 
 const ContentRequests = ({ creators }) => {
   const [requests, setRequests] = useState(() => {
@@ -23,10 +24,10 @@ const ContentRequests = ({ creators }) => {
         });
       } catch (e) {
         console.error('Failed to parse requests from localStorage:', e);
-        return [];
+        return INITIAL_REQUESTS;
       }
     }
-    return [];
+    return INITIAL_REQUESTS;
   });
   const [showModal, setShowModal] = useState(false);
   const [filterStatus, setFilterStatus] = useState('all');
@@ -117,8 +118,21 @@ const ContentRequests = ({ creators }) => {
       );
     }
 
+    // Filter by search term
+    if (searchTerm.trim()) {
+      const search = searchTerm.toLowerCase();
+      filtered = filtered.filter(req => {
+        const titleMatch = req.title?.toLowerCase().includes(search);
+        const descriptionMatch = req.description?.toLowerCase().includes(search);
+        const creatorMatch = (req.creators || []).some(c =>
+          c.name?.toLowerCase().includes(search)
+        );
+        return titleMatch || descriptionMatch || creatorMatch;
+      });
+    }
+
     return filtered;
-  }, [requests, filterStatus, filterCreatorId]);
+  }, [requests, filterStatus, filterCreatorId, searchTerm]);
 
   const statusCounts = useMemo(() => {
     return {
@@ -204,29 +218,52 @@ const ContentRequests = ({ creators }) => {
               New Request
             </button>
           </div>
-          <div className="flex items-center gap-2">
-            <User className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Filter by Creator:</label>
-            <select
-              value={filterCreatorId}
-              onChange={(e) => setFilterCreatorId(e.target.value)}
-              className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            >
-              <option value="all">All Creators</option>
-              {creators.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
-            {filterCreatorId !== 'all' && (
-              <button
-                onClick={() => setFilterCreatorId('all')}
-                className="inline-flex items-center px-2 py-1 text-xs bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-300 dark:hover:bg-gray-600"
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+            {/* Search Bar */}
+            <div className="relative flex-1 w-full sm:w-auto sm:min-w-[300px]">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search by title, description, or creator..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-10 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+              {searchTerm && (
+                <button
+                  onClick={() => setSearchTerm('')}
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+
+            {/* Creator Filter */}
+            <div className="flex items-center gap-2">
+              <User className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Creator:</label>
+              <select
+                value={filterCreatorId}
+                onChange={(e) => setFilterCreatorId(e.target.value)}
+                className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
-                <X className="h-3 w-3" />
-              </button>
-            )}
+                <option value="all">All Creators</option>
+                {creators.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+              {filterCreatorId !== 'all' && (
+                <button
+                  onClick={() => setFilterCreatorId('all')}
+                  className="inline-flex items-center px-2 py-1 text-xs bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-300 dark:hover:bg-gray-600"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>

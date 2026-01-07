@@ -1,5 +1,5 @@
 import { useState, useRef, useMemo } from 'react';
-import { Upload, Plus, Trash2, FileText, X, DollarSign, Edit2, Search, Filter, SortAsc, Download } from 'lucide-react';
+import { Upload, Plus, Trash2, FileText, X, DollarSign, Edit2, Search, Filter, SortAsc, Download, Eye } from 'lucide-react';
 
 export default function CreatorRoster({ creators, setCreators }) {
   const [editingId, setEditingId] = useState(null);
@@ -623,12 +623,38 @@ export default function CreatorRoster({ creators, setCreators }) {
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
-                <p className="text-sm text-gray-600">{c.notes}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">{c.notes}</p>
 
-                <div className="mt-4 pt-4 border-t border-gray-100">
+                {/* Stats */}
+                {(c.posts || []).length > 0 && (() => {
+                  const posts = c.posts || [];
+                  const totalImpressions = posts.reduce((sum, post) => {
+                    if (post.impressions) {
+                      const impressions = parseFloat(post.impressions.replace(/[^0-9.-]+/g, ''));
+                      if (!isNaN(impressions)) {
+                        return sum + impressions;
+                      }
+                    }
+                    return sum;
+                  }, 0);
+                  const avgImpressions = posts.length > 0 ? Math.round(totalImpressions / posts.length) : 0;
+
+                  return (
+                    <div className="mt-3 flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
+                      {avgImpressions > 0 && (
+                        <div className="flex items-center gap-1">
+                          <Eye className="h-3 w-3" />
+                          <span>{avgImpressions.toLocaleString()} avg impressions</span>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+
+                <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
                   <button
                     onClick={(e) => toggleViewPosts(c.id, e)}
-                    className="inline-flex items-center text-sm text-indigo-600 hover:text-indigo-700 font-medium"
+                    className="inline-flex items-center text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-medium"
                   >
                     <FileText className="h-4 w-4 mr-1" />
                     {(c.posts || []).length} Posts
