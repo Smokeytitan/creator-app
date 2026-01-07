@@ -8,10 +8,10 @@ export class KaitoService {
   }
 
   /**
-   * Fetch top 100 community members from Kaito community mindshare
+   * Fetch top community members from Kaito community mindshare
    * @param {Object} params - Parameters for the leaderboard query
-   * @param {number} params.limit - Optional limit for number of creators (default: 100)
-   * @returns {Promise<Array>} - Array of top community members (limited to 100 by default)
+   * @param {number} params.limit - Optional limit for number of creators (default: 115)
+   * @returns {Promise<Array>} - Array of top community members (limited to 115 by default)
    */
   async fetchLeaderboard(params = {}) {
     const defaultParams = {
@@ -62,9 +62,9 @@ export class KaitoService {
 
       console.log(`Kaito API: Received ${Array.isArray(results) ? results.length : 'unknown'} creators`);
 
-      // Apply local limit if specified, otherwise default to top 100
+      // Apply local limit if specified, otherwise default to top 115
       if (Array.isArray(results)) {
-        const limit = localLimit || 100;
+        const limit = localLimit || 115;
         const slicedResults = results.slice(0, limit);
         console.log(`Kaito API: Returning top ${slicedResults.length} creators`);
         return slicedResults;
