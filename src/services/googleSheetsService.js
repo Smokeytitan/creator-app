@@ -57,23 +57,24 @@ export class GoogleSheetsService {
       return [];
     }
 
-    const creatorNames = rawData[0]; // First row: Champion, Joshua Jake, Crypto Wendy, etc.
+    const creatorNames = rawData[0]; // First row: Champion, Picolas Cage, Jampzey, etc.
     const costPerPost = rawData[1]; // Second row: Cost/post values
     const numPosts = rawData[3]; // Fourth row: Number of Posts
     const totalCost = rawData[5]; // Sixth row: Cost Individual
 
     const creators = [];
+    let sequentialId = 1; // Use sequential IDs starting from 1
 
     // Start from index 1 to skip the label column
     for (let i = 1; i < creatorNames.length; i++) {
       const name = creatorNames[i]?.trim();
-      if (!name || name === '') continue;
+      if (!name || name === '' || name.toLowerCase() === 'champion') continue; // Skip empty and "Champion" label
 
       const posts = numPosts[i] || '0';
       const cost = totalCost[i] || '$0.00';
 
       creators.push({
-        id: i,
+        id: sequentialId++, // Assign sequential ID and increment
         name: name,
         handle: `@${name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '')}`,
         notes: `${posts} posts, ${cost} total`,
