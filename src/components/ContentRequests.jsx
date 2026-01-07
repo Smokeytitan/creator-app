@@ -185,18 +185,10 @@ const ContentRequests = ({ creators }) => {
     // Normalize campaign title for matching
     const campaignTitle = request.title.toLowerCase().trim();
 
-    console.log(`\n=== Campaign: ${request.title} ===`);
-    console.log('Campaign creator IDs:', campaignCreators.map(c => `${c.id}:${c.name}`));
-    console.log('Available creators:', creators.map(c => `${c.id}:${c.name} (${c.posts?.length || 0} posts)`));
-
     // For each creator in the campaign
     campaignCreators.forEach(campaignCreator => {
       // Find the creator in the full creators list
       const creator = creators.find(c => c.id === campaignCreator.id);
-
-      console.log(`\nLooking for creator ID ${campaignCreator.id} (${campaignCreator.name})`);
-      console.log('Found:', creator ? `${creator.name} with ${creator.posts?.length || 0} posts` : 'NOT FOUND');
-
       if (!creator || !creator.posts) return;
 
       // Find posts that match this campaign by exact description match
@@ -205,11 +197,6 @@ const ContentRequests = ({ creators }) => {
         const postDesc = post.description.toLowerCase().trim();
         // Try exact match first, then contains match
         return postDesc === campaignTitle || postDesc.includes(campaignTitle) || campaignTitle.includes(postDesc);
-      });
-
-      console.log(`  Matching posts: ${matchingPosts.length}`);
-      matchingPosts.forEach(post => {
-        console.log(`    - ${post.description}: ${post.cost}`);
       });
 
       // Sum up impressions and costs from matching posts
@@ -228,8 +215,6 @@ const ContentRequests = ({ creators }) => {
         }
       });
     });
-
-    console.log(`Total cost: $${totalCost}, Total impressions: ${totalImpressions}`);
 
     return {
       totalImpressions,
