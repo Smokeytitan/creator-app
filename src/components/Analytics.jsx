@@ -187,13 +187,13 @@ export default function Analytics({ creators }) {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-50">Analytics</h2>
+        <h2 className="text-xl font-medium text-gray-900 dark:text-gray-50">Analytics</h2>
         <button
           onClick={exportToCSV}
-          className="inline-flex items-center px-4 py-2 bg-green-600 dark:bg-green-500 text-white rounded-lg hover:bg-green-700 dark:hover:bg-green-600 transition-colors"
+          className="inline-flex items-center px-4 py-2 bg-green-600 dark:bg-green-500 text-white rounded hover:bg-green-700 dark:hover:bg-green-600 transition-colors text-sm font-medium"
         >
           <Download className="w-4 h-4 mr-2" />
-          Export to CSV
+          Export CSV
         </button>
       </div>
 
@@ -401,8 +401,8 @@ export default function Analytics({ creators }) {
         </div>
 
         {/* Best ROI */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-50 mb-4 flex items-center gap-2">
+        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded p-6">
+          <h3 className="text-base font-medium text-gray-900 dark:text-gray-50 mb-4 flex items-center gap-2">
             <Award className="h-5 w-5 text-yellow-600" />
             Best ROI (Lowest CPM)
           </h3>

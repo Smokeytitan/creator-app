@@ -61,7 +61,12 @@ const ContentRequests = ({ creators }) => {
       return;
     }
 
-    const creator = creators.find(c => String(c.id) === String(editRequestForm.creatorId));
+    if (editRequestForm.selectedCreatorIds.length === 0) {
+      alert('At least one creator is required');
+      return;
+    }
+
+    const selectedCreators = creators.filter(c => editRequestForm.selectedCreatorIds.includes(c.id));
 
     setRequests(requests.map(req =>
       req.id === editingRequestId
@@ -69,8 +74,7 @@ const ContentRequests = ({ creators }) => {
             ...req,
             title: editRequestForm.title,
             description: editRequestForm.description,
-            creatorId: editRequestForm.creatorId,
-            creatorName: creator?.name || editRequestForm.creatorName,
+            creators: selectedCreators.map(c => ({ id: c.id, name: c.name })),
             dueDate: new Date(editRequestForm.dueDate).toISOString(),
             status: editRequestForm.status
           }
@@ -84,8 +88,7 @@ const ContentRequests = ({ creators }) => {
     setEditRequestForm({
       title: '',
       description: '',
-      creatorId: '',
-      creatorName: '',
+      selectedCreatorIds: [],
       dueDate: '',
       status: 'pending'
     });
