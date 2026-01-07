@@ -7,39 +7,16 @@ import { GoogleSheetsService } from './services/googleSheetsService';
 import ThemeToggle from './components/ThemeToggle';
 
 // Google Sheets CSV export URL
-const GOOGLE_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1Ge4wZiL_grX_hFups8A50HawZ2GxXFyDmCc-kNDs_5A/export?format=csv&gid=1537582832';
+const GOOGLE_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1J75nBdYNyQivMdi7XihhpYr6aXOnCNcJIAjTQLwjkXk/export?format=csv&gid=1537582832';
 
 const DEFAULT_CREATORS = [
-  { id: 1, name: "Joshua Jake", handle: "@joshua_jake", notes: "0 posts, $0.00 total", costPerPost: '', posts: [] },
-  { id: 2, name: "Crypto Wendy", handle: "@crypto_wendy", notes: "4 posts, $15,000.00 total", costPerPost: '', posts: [] },
-  { id: 3, name: "Rise Up Morning Show", handle: "@rise_up_morning_show", notes: "15 posts, $6,000.00 total", costPerPost: '', posts: [] },
-  { id: 4, name: "Crypto with Leo", handle: "@crypto_with_leo", notes: "7 posts, $8,750.00 total", costPerPost: '', posts: [] },
-  { id: 5, name: "Jolly Green Investor", handle: "@jolly_green_investor", notes: "4 posts, $12,000.00 total", costPerPost: '', posts: [] },
-  { id: 6, name: "Bodoggos", handle: "@bodoggos", notes: "3 posts, $9,999.00 total", costPerPost: '', posts: [] },
-  { id: 7, name: "Wale.Moca", handle: "@walemoca", notes: "1 posts, $2,500.00 total", costPerPost: '', posts: [] },
-  { id: 8, name: "When Shift Happens", handle: "@when_shift_happens", notes: "0 posts, $0.00 total", costPerPost: '', posts: [] },
-  { id: 9, name: "Star Platinum", handle: "@star_platinum", notes: "1 posts, $2,500.00 total", costPerPost: '', posts: [] },
-  { id: 10, name: "Pix", handle: "@pix", notes: "1 posts, $2,500.00 total", costPerPost: '', posts: [] },
-  { id: 11, name: "Andrew Asks", handle: "@andrew_asks", notes: "2 posts, $2,500.00 total", costPerPost: '', posts: [] },
-  { id: 12, name: "Crypto Meg/Mason", handle: "@crypto_megmason", notes: "2 posts, $2,000.00 total", costPerPost: '', posts: [] },
-  { id: 13, name: "Coach Ty", handle: "@coach_ty", notes: "0 posts, $0.00 total", costPerPost: '', posts: [] },
-  { id: 14, name: "Crypto Ed", handle: "@crypto_ed", notes: "0 posts, $0.00 total", costPerPost: '', posts: [] },
-  { id: 15, name: "Youngsun", handle: "@youngsun", notes: "1 posts, $0.00 total", costPerPost: '', posts: [] },
-  { id: 16, name: "House of Crypto", handle: "@house_of_crypto", notes: "0 posts, $0.00 total", costPerPost: '', posts: [] },
-  { id: 17, name: "Crypto Banter", handle: "@crypto_banter", notes: "0 posts, $0.00 total", costPerPost: '', posts: [] },
-  { id: 18, name: "Crypto Kid", handle: "@crypto_kid", notes: "0 posts, $0.00 total", costPerPost: '', posts: [] },
-  { id: 19, name: "Virtual Bacon", handle: "@virtual_bacon", notes: "0 posts, $0.00 total", costPerPost: '', posts: [] },
-  { id: 20, name: "Lab of Crypto", handle: "@lab_of_crypto", notes: "0 posts, $0.00 total", costPerPost: '', posts: [] },
-  { id: 21, name: "Hustlepedia", handle: "@hustlepedia", notes: "0 posts, $0.00 total", costPerPost: '', posts: [] },
-  { id: 22, name: "No BS Crypto", handle: "@no_bs_crypto", notes: "0 posts, $0.00 total", costPerPost: '', posts: [] },
-  { id: 23, name: "Bitcoin Strategy", handle: "@bitcoin_strategy", notes: "0 posts, $0.00 total", costPerPost: '', posts: [] },
-  { id: 24, name: "The Crypto Lark", handle: "@the_crypto_lark", notes: "0 posts, $0.00 total", costPerPost: '', posts: [] },
-  { id: 25, name: "Tim Warren", handle: "@tim_warren", notes: "0 posts, $0.00 total", costPerPost: '', posts: [] },
-  { id: 26, name: "Ivan on Tech", handle: "@ivan_on_tech", notes: "0 posts, $0.00 total", costPerPost: '', posts: [] },
-  { id: 27, name: "Blockmates", handle: "@blockmates", notes: "0 posts, $0.00 total", costPerPost: '', posts: [] },
-  { id: 28, name: "Americana Crypto", handle: "@americana_crypto", notes: "0 posts, $0.00 total", costPerPost: '', posts: [] },
-  { id: 29, name: "Nifty Investor", handle: "@nifty_investor", notes: "0 posts, $0.00 total", costPerPost: '', posts: [] },
-  { id: 30, name: "Crypto Crush", handle: "@crypto_crush", notes: "0 posts, $0.00 total", costPerPost: '', posts: [] }
+  { id: 1, name: "Champion", handle: "@champion", tier: "A", notes: "9 posts, $900.00 total", costPerPost: '$100.00', posts: [] },
+  { id: 2, name: "Picolas Cage", handle: "@picolas_cage", tier: "A", notes: "9 posts, $9,000.00 total", costPerPost: '$1,000.00', posts: [] },
+  { id: 3, name: "Jampzey", handle: "@jampzey", tier: "B", notes: "1 post, $0.00 total", costPerPost: '$0.00', posts: [] },
+  { id: 4, name: "Xero", handle: "@xero", tier: "B", notes: "1 post, $375.00 total", costPerPost: '$375.00', posts: [] },
+  { id: 5, name: "Bawsa", handle: "@bawsa", tier: "B", notes: "8 posts, $150.00 total", costPerPost: '$150.00', posts: [] },
+  { id: 6, name: "R2D2", handle: "@r2d2", tier: "B", notes: "8 posts, $4,000.00 total", costPerPost: '$500.00', posts: [] },
+  { id: 7, name: "Eliza", handle: "@eliza", tier: "C", notes: "0 posts, $0.00 total", costPerPost: '', posts: [] }
 ];
 
 export default function App() {

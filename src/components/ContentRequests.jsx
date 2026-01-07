@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Plus, Calendar, User, CheckCircle, Clock, XCircle, Trash2, Edit2, Save, X } from 'lucide-react';
+import { Plus, Calendar, User, CheckCircle, Clock, XCircle, Trash2, Edit2, Save, X, Search } from 'lucide-react';
 import ContentRequestModal from './ContentRequestModal';
 
 const ContentRequests = ({ creators }) => {
@@ -30,6 +30,8 @@ const ContentRequests = ({ creators }) => {
   });
   const [showModal, setShowModal] = useState(false);
   const [filterStatus, setFilterStatus] = useState('all');
+  const [filterCreatorId, setFilterCreatorId] = useState('all');
+  const [searchTerm, setSearchTerm] = useState('');
   const [editingRequestId, setEditingRequestId] = useState(null);
   const [editRequestForm, setEditRequestForm] = useState({
     title: '',
@@ -101,9 +103,22 @@ const ContentRequests = ({ creators }) => {
   };
 
   const filteredRequests = useMemo(() => {
-    if (filterStatus === 'all') return requests;
-    return requests.filter(req => req.status === filterStatus);
-  }, [requests, filterStatus]);
+    let filtered = requests;
+
+    // Filter by status
+    if (filterStatus !== 'all') {
+      filtered = filtered.filter(req => req.status === filterStatus);
+    }
+
+    // Filter by creator
+    if (filterCreatorId !== 'all') {
+      filtered = filtered.filter(req =>
+        (req.creators || []).some(c => String(c.id) === String(filterCreatorId))
+      );
+    }
+
+    return filtered;
+  }, [requests, filterStatus, filterCreatorId]);
 
   const statusCounts = useMemo(() => {
     return {
@@ -164,29 +179,55 @@ const ContentRequests = ({ creators }) => {
 
       {/* Filters and Create Button */}
       <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-4">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div className="flex gap-2">
-            {['all', 'pending', 'in-progress', 'completed', 'cancelled'].map((status) => (
-              <button
-                key={status}
-                onClick={() => setFilterStatus(status)}
-                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                  filterStatus === status
-                    ? 'bg-indigo-600 dark:bg-indigo-500 text-white'
-                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                }`}
-              >
-                {status.charAt(0).toUpperCase() + status.slice(1).replace('-', ' ')}
-              </button>
-            ))}
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div className="flex gap-2 flex-wrap">
+              {['all', 'pending', 'in-progress', 'completed', 'cancelled'].map((status) => (
+                <button
+                  key={status}
+                  onClick={() => setFilterStatus(status)}
+                  className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                    filterStatus === status
+                      ? 'bg-indigo-600 dark:bg-indigo-500 text-white'
+                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                  }`}
+                >
+                  {status.charAt(0).toUpperCase() + status.slice(1).replace('-', ' ')}
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={() => setShowModal(true)}
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 dark:bg-indigo-500 hover:bg-indigo-700 dark:hover:bg-indigo-600"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              New Request
+            </button>
           </div>
-          <button
-            onClick={() => setShowModal(true)}
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 dark:bg-indigo-500 hover:bg-indigo-700 dark:hover:bg-indigo-600"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            New Request
-          </button>
+          <div className="flex items-center gap-2">
+            <User className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Filter by Creator:</label>
+            <select
+              value={filterCreatorId}
+              onChange={(e) => setFilterCreatorId(e.target.value)}
+              className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            >
+              <option value="all">All Creators</option>
+              {creators.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+            {filterCreatorId !== 'all' && (
+              <button
+                onClick={() => setFilterCreatorId('all')}
+                className="inline-flex items-center px-2 py-1 text-xs bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-300 dark:hover:bg-gray-600"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
