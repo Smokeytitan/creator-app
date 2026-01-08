@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/api/bot-analytics/:path*",
+      "destination": "https://telegram-bot-seven-swart.vercel.app/api/bot-analytics/:path*"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
