@@ -104,17 +104,25 @@ export default function App() {
   }, [activeTab]);
 
   return (
-    <div className="min-h-screen w-full bg-polygon-bg-primary transition-colors overflow-x-hidden">
+    <div className="min-h-screen w-full bg-[var(--color-bg-primary)] transition-colors overflow-x-hidden">
       {/* Header */}
-      <div className="bg-polygon-bg-primary border-b border-white/[0.08] px-6 py-4 sticky top-0 z-50 backdrop-blur-xl">
+      <div className="bg-[var(--color-bg-secondary)] border-b border-[var(--color-border)] px-6 py-5 sticky top-0 z-50 backdrop-blur-xl">
         <div className="flex items-center justify-between max-w-[1920px] mx-auto">
-          <h1 className="text-xl font-semibold text-polygon-text-primary tracking-tight">Creator Platform</h1>
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[var(--color-accent-primary)] to-[var(--color-accent-secondary)] flex items-center justify-center">
+              <span className="text-display text-white text-xl font-bold">P</span>
+            </div>
+            <div>
+              <h1 className="text-display text-2xl text-[var(--color-text-primary)] tracking-tight">Polygon Analytics</h1>
+              <p className="text-xs text-[var(--color-text-tertiary)] text-mono uppercase tracking-wider">Creator Intelligence Platform</p>
+            </div>
+          </div>
           <ThemeToggle />
         </div>
       </div>
 
       {/* Mobile Navigation - visible on small/medium screens */}
-      <div className="lg:hidden bg-polygon-bg-secondary border-b border-white/[0.08] px-2">
+      <div className="lg:hidden bg-[var(--color-bg-secondary)] border-b border-[var(--color-border)] px-2">
         <nav className="flex gap-2 overflow-x-auto">
           {/* Hidden tabs - kept in code for later use
           <button
@@ -150,30 +158,30 @@ export default function App() {
           */}
           <button
             onClick={() => setActiveTab('kaito')}
-            className={`flex-1 px-4 py-3 text-sm font-medium whitespace-nowrap transition-all duration-200 ${
+            className={`flex-1 px-4 py-3 text-sm font-semibold whitespace-nowrap transition-all duration-200 ${
               activeTab === 'kaito'
-                ? 'bg-gradient-to-br from-polygon-primary-light to-polygon-primary text-polygon-text-primary rounded-t-lg shadow-polygon-glow'
-                : 'text-polygon-text-secondary hover:text-polygon-text-primary hover:bg-white/[0.03] rounded-t-lg'
+                ? 'bg-gradient-to-r from-[var(--color-accent-primary)] to-[var(--color-accent-secondary)] text-white rounded-t-lg'
+                : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)] rounded-t-lg'
             }`}
           >
             Kaito
           </button>
           <button
             onClick={() => setActiveTab('botanalytics')}
-            className={`flex-1 px-4 py-3 text-sm font-medium whitespace-nowrap transition-all duration-200 ${
+            className={`flex-1 px-4 py-3 text-sm font-semibold whitespace-nowrap transition-all duration-200 ${
               activeTab === 'botanalytics'
-                ? 'bg-gradient-to-br from-polygon-primary-light to-polygon-primary text-polygon-text-primary rounded-t-lg shadow-polygon-glow'
-                : 'text-polygon-text-secondary hover:text-polygon-text-primary hover:bg-white/[0.03] rounded-t-lg'
+                ? 'bg-gradient-to-r from-[var(--color-accent-primary)] to-[var(--color-accent-secondary)] text-white rounded-t-lg'
+                : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)] rounded-t-lg'
             }`}
           >
             Bot Analytics
           </button>
           <button
             onClick={() => setActiveTab('channels')}
-            className={`flex-1 px-4 py-3 text-sm font-medium whitespace-nowrap transition-all duration-200 ${
+            className={`flex-1 px-4 py-3 text-sm font-semibold whitespace-nowrap transition-all duration-200 ${
               activeTab === 'channels'
-                ? 'bg-gradient-to-br from-polygon-primary-light to-polygon-primary text-polygon-text-primary rounded-t-lg shadow-polygon-glow'
-                : 'text-polygon-text-secondary hover:text-polygon-text-primary hover:bg-white/[0.03] rounded-t-lg'
+                ? 'bg-gradient-to-r from-[var(--color-accent-primary)] to-[var(--color-accent-secondary)] text-white rounded-t-lg'
+                : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)] rounded-t-lg'
             }`}
           >
             Channels
@@ -183,8 +191,8 @@ export default function App() {
 
       <div className="flex">
         {/* Sidebar - hidden on small/medium screens, visible on large+ */}
-        <div className="hidden lg:block w-60 h-screen sticky top-[73px] bg-polygon-bg-secondary border-r border-white/[0.08] py-4 overflow-y-auto">
-          <nav className="flex flex-col gap-1 px-3">
+        <div className="hidden lg:block w-60 h-screen sticky top-[73px] bg-[var(--color-bg-secondary)] border-r border-[var(--color-border)] py-6 overflow-y-auto">
+          <nav className="flex flex-col gap-2 px-4">
             {/* Hidden tabs - kept in code for later use
             <button
               onClick={() => setActiveTab('roster')}
@@ -222,21 +230,21 @@ export default function App() {
 
             <button
               onClick={() => setActiveTab('kaito')}
-              className={`px-4 py-3 text-sm font-medium transition-all duration-200 text-left rounded-lg relative ${
+              className={`px-4 py-3 text-sm font-semibold transition-all duration-200 text-left rounded-lg ${
                 activeTab === 'kaito'
-                  ? 'bg-white/[0.05] text-polygon-text-primary border-l-2 border-polygon-primary'
-                  : 'text-polygon-text-secondary hover:text-polygon-text-primary hover:bg-white/[0.03]'
+                  ? 'bg-gradient-to-r from-[var(--color-accent-primary)] to-[var(--color-accent-secondary)] text-white'
+                  : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)]'
               }`}
             >
-              Kaito
+              Kaito Leaderboard
             </button>
 
             <button
               onClick={() => setActiveTab('botanalytics')}
-              className={`px-4 py-3 text-sm font-medium transition-all duration-200 text-left rounded-lg relative ${
+              className={`px-4 py-3 text-sm font-semibold transition-all duration-200 text-left rounded-lg ${
                 activeTab === 'botanalytics'
-                  ? 'bg-white/[0.05] text-polygon-text-primary border-l-2 border-polygon-primary'
-                  : 'text-polygon-text-secondary hover:text-polygon-text-primary hover:bg-white/[0.03]'
+                  ? 'bg-gradient-to-r from-[var(--color-accent-primary)] to-[var(--color-accent-secondary)] text-white'
+                  : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)]'
               }`}
             >
               Bot Analytics
@@ -244,10 +252,10 @@ export default function App() {
 
             <button
               onClick={() => setActiveTab('channels')}
-              className={`px-4 py-3 text-sm font-medium transition-all duration-200 text-left rounded-lg relative ${
+              className={`px-4 py-3 text-sm font-semibold transition-all duration-200 text-left rounded-lg ${
                 activeTab === 'channels'
-                  ? 'bg-white/[0.05] text-polygon-text-primary border-l-2 border-polygon-primary'
-                  : 'text-polygon-text-secondary hover:text-polygon-text-primary hover:bg-white/[0.03]'
+                  ? 'bg-gradient-to-r from-[var(--color-accent-primary)] to-[var(--color-accent-secondary)] text-white'
+                  : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)]'
               }`}
             >
               Channel Manager
