@@ -124,38 +124,26 @@ export default function App() {
       {/* Mobile Navigation - visible on small/medium screens */}
       <div className="lg:hidden bg-[var(--color-bg-secondary)] border-b border-[var(--color-border)] px-2">
         <nav className="flex gap-2 overflow-x-auto">
-          {/* Hidden tabs - kept in code for later use
           <button
             onClick={() => setActiveTab('roster')}
-            className={`flex-1 px-4 py-3 text-sm font-medium whitespace-nowrap transition-all duration-200 ${
+            className={`flex-1 px-4 py-3 text-sm font-semibold whitespace-nowrap transition-all duration-200 ${
               activeTab === 'roster'
-                ? 'bg-gradient-to-br from-polygon-primary-light to-polygon-primary text-polygon-text-primary rounded-t-lg shadow-polygon-glow'
-                : 'text-polygon-text-secondary hover:text-polygon-text-primary hover:bg-white/[0.03] rounded-t-lg'
+                ? 'bg-gradient-to-r from-[var(--color-accent-primary)] to-[var(--color-accent-secondary)] text-white rounded-t-lg'
+                : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)] rounded-t-lg'
             }`}
           >
             Roster
           </button>
           <button
             onClick={() => setActiveTab('requests')}
-            className={`flex-1 px-4 py-3 text-sm font-medium whitespace-nowrap transition-all duration-200 ${
+            className={`flex-1 px-4 py-3 text-sm font-semibold whitespace-nowrap transition-all duration-200 ${
               activeTab === 'requests'
-                ? 'bg-gradient-to-br from-polygon-primary-light to-polygon-primary text-polygon-text-primary rounded-t-lg shadow-polygon-glow'
-                : 'text-polygon-text-secondary hover:text-polygon-text-primary hover:bg-white/[0.03] rounded-t-lg'
+                ? 'bg-gradient-to-r from-[var(--color-accent-primary)] to-[var(--color-accent-secondary)] text-white rounded-t-lg'
+                : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)] rounded-t-lg'
             }`}
           >
             Requests
           </button>
-          <button
-            onClick={() => setActiveTab('analytics')}
-            className={`flex-1 px-4 py-3 text-sm font-medium whitespace-nowrap transition-all duration-200 ${
-              activeTab === 'analytics'
-                ? 'bg-gradient-to-br from-polygon-primary-light to-polygon-primary text-polygon-text-primary rounded-t-lg shadow-polygon-glow'
-                : 'text-polygon-text-secondary hover:text-polygon-text-primary hover:bg-white/[0.03] rounded-t-lg'
-            }`}
-          >
-            Analytics
-          </button>
-          */}
           <button
             onClick={() => setActiveTab('kaito')}
             className={`flex-1 px-4 py-3 text-sm font-semibold whitespace-nowrap transition-all duration-200 ${
@@ -193,13 +181,12 @@ export default function App() {
         {/* Sidebar - hidden on small/medium screens, visible on large+ */}
         <div className="hidden lg:block w-60 h-screen sticky top-[73px] bg-[var(--color-bg-secondary)] border-r border-[var(--color-border)] py-6 overflow-y-auto">
           <nav className="flex flex-col gap-2 px-4">
-            {/* Hidden tabs - kept in code for later use
             <button
               onClick={() => setActiveTab('roster')}
-              className={`px-4 py-3 text-sm font-medium transition-all duration-200 text-left rounded-lg relative ${
+              className={`px-4 py-3 text-sm font-semibold transition-all duration-200 text-left rounded-lg ${
                 activeTab === 'roster'
-                  ? 'bg-white/[0.05] text-polygon-text-primary border-l-2 border-polygon-primary'
-                  : 'text-polygon-text-secondary hover:text-polygon-text-primary hover:bg-white/[0.03]'
+                  ? 'bg-gradient-to-r from-[var(--color-accent-primary)] to-[var(--color-accent-secondary)] text-white'
+                  : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)]'
               }`}
             >
               Creator Roster
@@ -207,26 +194,14 @@ export default function App() {
 
             <button
               onClick={() => setActiveTab('requests')}
-              className={`px-4 py-3 text-sm font-medium transition-all duration-200 text-left rounded-lg relative ${
+              className={`px-4 py-3 text-sm font-semibold transition-all duration-200 text-left rounded-lg ${
                 activeTab === 'requests'
-                  ? 'bg-white/[0.05] text-polygon-text-primary border-l-2 border-polygon-primary'
-                  : 'text-polygon-text-secondary hover:text-polygon-text-primary hover:bg-white/[0.03]'
+                  ? 'bg-gradient-to-r from-[var(--color-accent-primary)] to-[var(--color-accent-secondary)] text-white'
+                  : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)]'
               }`}
             >
               Content Requests
             </button>
-
-            <button
-              onClick={() => setActiveTab('analytics')}
-              className={`px-4 py-3 text-sm font-medium transition-all duration-200 text-left rounded-lg relative ${
-                activeTab === 'analytics'
-                  ? 'bg-white/[0.05] text-polygon-text-primary border-l-2 border-polygon-primary'
-                  : 'text-polygon-text-secondary hover:text-polygon-text-primary hover:bg-white/[0.03]'
-              }`}
-            >
-              Analytics
-            </button>
-            */}
 
             <button
               onClick={() => setActiveTab('kaito')}
