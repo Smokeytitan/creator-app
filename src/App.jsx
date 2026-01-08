@@ -3,6 +3,8 @@ import CreatorRoster from './components/CreatorRoster';
 import ContentRequests from './components/ContentRequests';
 import Analytics from './components/Analytics';
 import Kaito from './components/Kaito';
+import BotAnalytics from './components/BotAnalytics';
+import ChannelManager from './components/ChannelManager';
 import { GoogleSheetsService } from './services/googleSheetsService';
 import ThemeToggle from './components/ThemeToggle';
 import { IMPORTED_CREATORS } from './data/importedCreators';
@@ -15,7 +17,8 @@ const DEFAULT_CREATORS = IMPORTED_CREATORS;
 export default function App() {
   const [activeTab, setActiveTab] = useState(() => {
     const stored = localStorage.getItem('activeTab');
-    return stored || 'roster';
+    // Default to channels tab now that roster/requests/analytics are hidden
+    return stored || 'channels';
   });
   const [loading, setLoading] = useState(true);
   const [creators, setCreators] = useState(() => {
@@ -101,61 +104,94 @@ export default function App() {
   }, [activeTab]);
 
   return (
-    <div className="min-h-screen w-full bg-gray-50 dark:bg-gray-900 transition-colors overflow-x-hidden">
+    <div className="min-h-screen w-full bg-polygon-bg-primary transition-colors overflow-x-hidden">
       {/* Header */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-3">
-        <div className="flex items-center justify-between">
-          <h1 className="text-xl font-medium text-gray-900 dark:text-gray-50">Creator Platform</h1>
+      <div className="bg-polygon-bg-primary border-b border-white/[0.08] px-6 py-4 sticky top-0 z-50 backdrop-blur-xl">
+        <div className="flex items-center justify-between max-w-[1920px] mx-auto">
+          <h1 className="text-xl font-semibold text-polygon-text-primary tracking-tight">Creator Platform</h1>
           <ThemeToggle />
         </div>
       </div>
 
       {/* Mobile Navigation - visible on small/medium screens */}
-      <div className="lg:hidden bg-white dark:bg-gray-800 border-b-2 border-gray-200 dark:border-gray-700 px-2">
+      <div className="lg:hidden bg-polygon-bg-secondary border-b border-white/[0.08] px-2">
         <nav className="flex gap-2 overflow-x-auto">
+          {/* Hidden tabs - kept in code for later use
           <button
             onClick={() => setActiveTab('roster')}
-            className={`flex-1 px-4 py-3 text-sm font-medium whitespace-nowrap transition-colors ${
-              activeTab === 'roster' ? 'bg-red-600 text-white rounded-t-lg' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-t-lg'
+            className={`flex-1 px-4 py-3 text-sm font-medium whitespace-nowrap transition-all duration-200 ${
+              activeTab === 'roster'
+                ? 'bg-gradient-to-br from-polygon-primary-light to-polygon-primary text-polygon-text-primary rounded-t-lg shadow-polygon-glow'
+                : 'text-polygon-text-secondary hover:text-polygon-text-primary hover:bg-white/[0.03] rounded-t-lg'
             }`}
           >
             Roster
           </button>
           <button
             onClick={() => setActiveTab('requests')}
-            className={`flex-1 px-4 py-3 text-sm font-medium whitespace-nowrap transition-colors ${
-              activeTab === 'requests' ? 'bg-red-600 text-white rounded-t-lg' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-t-lg'
+            className={`flex-1 px-4 py-3 text-sm font-medium whitespace-nowrap transition-all duration-200 ${
+              activeTab === 'requests'
+                ? 'bg-gradient-to-br from-polygon-primary-light to-polygon-primary text-polygon-text-primary rounded-t-lg shadow-polygon-glow'
+                : 'text-polygon-text-secondary hover:text-polygon-text-primary hover:bg-white/[0.03] rounded-t-lg'
             }`}
           >
             Requests
           </button>
           <button
             onClick={() => setActiveTab('analytics')}
-            className={`flex-1 px-4 py-3 text-sm font-medium whitespace-nowrap transition-colors ${
-              activeTab === 'analytics' ? 'bg-red-600 text-white rounded-t-lg' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-t-lg'
+            className={`flex-1 px-4 py-3 text-sm font-medium whitespace-nowrap transition-all duration-200 ${
+              activeTab === 'analytics'
+                ? 'bg-gradient-to-br from-polygon-primary-light to-polygon-primary text-polygon-text-primary rounded-t-lg shadow-polygon-glow'
+                : 'text-polygon-text-secondary hover:text-polygon-text-primary hover:bg-white/[0.03] rounded-t-lg'
             }`}
           >
             Analytics
           </button>
+          */}
           <button
             onClick={() => setActiveTab('kaito')}
-            className={`flex-1 px-4 py-3 text-sm font-medium whitespace-nowrap transition-colors ${
-              activeTab === 'kaito' ? 'bg-red-600 text-white rounded-t-lg' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-t-lg'
+            className={`flex-1 px-4 py-3 text-sm font-medium whitespace-nowrap transition-all duration-200 ${
+              activeTab === 'kaito'
+                ? 'bg-gradient-to-br from-polygon-primary-light to-polygon-primary text-polygon-text-primary rounded-t-lg shadow-polygon-glow'
+                : 'text-polygon-text-secondary hover:text-polygon-text-primary hover:bg-white/[0.03] rounded-t-lg'
             }`}
           >
             Kaito
+          </button>
+          <button
+            onClick={() => setActiveTab('botanalytics')}
+            className={`flex-1 px-4 py-3 text-sm font-medium whitespace-nowrap transition-all duration-200 ${
+              activeTab === 'botanalytics'
+                ? 'bg-gradient-to-br from-polygon-primary-light to-polygon-primary text-polygon-text-primary rounded-t-lg shadow-polygon-glow'
+                : 'text-polygon-text-secondary hover:text-polygon-text-primary hover:bg-white/[0.03] rounded-t-lg'
+            }`}
+          >
+            Bot Analytics
+          </button>
+          <button
+            onClick={() => setActiveTab('channels')}
+            className={`flex-1 px-4 py-3 text-sm font-medium whitespace-nowrap transition-all duration-200 ${
+              activeTab === 'channels'
+                ? 'bg-gradient-to-br from-polygon-primary-light to-polygon-primary text-polygon-text-primary rounded-t-lg shadow-polygon-glow'
+                : 'text-polygon-text-secondary hover:text-polygon-text-primary hover:bg-white/[0.03] rounded-t-lg'
+            }`}
+          >
+            Channels
           </button>
         </nav>
       </div>
 
       <div className="flex">
         {/* Sidebar - hidden on small/medium screens, visible on large+ */}
-        <div className="hidden lg:block w-60 h-screen sticky top-0 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 py-3 overflow-y-auto">
-          <nav className="flex flex-col gap-1">
+        <div className="hidden lg:block w-60 h-screen sticky top-[73px] bg-polygon-bg-secondary border-r border-white/[0.08] py-4 overflow-y-auto">
+          <nav className="flex flex-col gap-1 px-3">
+            {/* Hidden tabs - kept in code for later use
             <button
               onClick={() => setActiveTab('roster')}
-              className={`px-6 py-2.5 text-sm font-medium transition-colors text-left ${
-                activeTab === 'roster' ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-50 border-l-4 border-red-600' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50'
+              className={`px-4 py-3 text-sm font-medium transition-all duration-200 text-left rounded-lg relative ${
+                activeTab === 'roster'
+                  ? 'bg-white/[0.05] text-polygon-text-primary border-l-2 border-polygon-primary'
+                  : 'text-polygon-text-secondary hover:text-polygon-text-primary hover:bg-white/[0.03]'
               }`}
             >
               Creator Roster
@@ -163,8 +199,10 @@ export default function App() {
 
             <button
               onClick={() => setActiveTab('requests')}
-              className={`px-6 py-2.5 text-sm font-medium transition-colors text-left ${
-                activeTab === 'requests' ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-50 border-l-4 border-red-600' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50'
+              className={`px-4 py-3 text-sm font-medium transition-all duration-200 text-left rounded-lg relative ${
+                activeTab === 'requests'
+                  ? 'bg-white/[0.05] text-polygon-text-primary border-l-2 border-polygon-primary'
+                  : 'text-polygon-text-secondary hover:text-polygon-text-primary hover:bg-white/[0.03]'
               }`}
             >
               Content Requests
@@ -172,31 +210,58 @@ export default function App() {
 
             <button
               onClick={() => setActiveTab('analytics')}
-              className={`px-6 py-2.5 text-sm font-medium transition-colors text-left ${
-                activeTab === 'analytics' ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-50 border-l-4 border-red-600' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50'
+              className={`px-4 py-3 text-sm font-medium transition-all duration-200 text-left rounded-lg relative ${
+                activeTab === 'analytics'
+                  ? 'bg-white/[0.05] text-polygon-text-primary border-l-2 border-polygon-primary'
+                  : 'text-polygon-text-secondary hover:text-polygon-text-primary hover:bg-white/[0.03]'
               }`}
             >
               Analytics
             </button>
+            */}
 
             <button
               onClick={() => setActiveTab('kaito')}
-              className={`px-6 py-2.5 text-sm font-medium transition-colors text-left ${
-                activeTab === 'kaito' ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-50 border-l-4 border-red-600' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50'
+              className={`px-4 py-3 text-sm font-medium transition-all duration-200 text-left rounded-lg relative ${
+                activeTab === 'kaito'
+                  ? 'bg-white/[0.05] text-polygon-text-primary border-l-2 border-polygon-primary'
+                  : 'text-polygon-text-secondary hover:text-polygon-text-primary hover:bg-white/[0.03]'
               }`}
             >
               Kaito
+            </button>
+
+            <button
+              onClick={() => setActiveTab('botanalytics')}
+              className={`px-4 py-3 text-sm font-medium transition-all duration-200 text-left rounded-lg relative ${
+                activeTab === 'botanalytics'
+                  ? 'bg-white/[0.05] text-polygon-text-primary border-l-2 border-polygon-primary'
+                  : 'text-polygon-text-secondary hover:text-polygon-text-primary hover:bg-white/[0.03]'
+              }`}
+            >
+              Bot Analytics
+            </button>
+
+            <button
+              onClick={() => setActiveTab('channels')}
+              className={`px-4 py-3 text-sm font-medium transition-all duration-200 text-left rounded-lg relative ${
+                activeTab === 'channels'
+                  ? 'bg-white/[0.05] text-polygon-text-primary border-l-2 border-polygon-primary'
+                  : 'text-polygon-text-secondary hover:text-polygon-text-primary hover:bg-white/[0.03]'
+              }`}
+            >
+              Channel Manager
             </button>
           </nav>
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 p-3 sm:p-6 max-w-full">
+        <div className="flex-1 p-3 sm:p-6 max-w-full bg-polygon-bg-primary">
           {loading ? (
             <div className="flex items-center justify-center py-12">
               <div className="text-center">
-                <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-indigo-600 dark:border-indigo-500 border-r-transparent"></div>
-                <p className="mt-4 text-gray-600 dark:text-gray-400">Loading creators...</p>
+                <div className="inline-block h-10 w-10 animate-spin rounded-full border-4 border-solid border-polygon-primary border-r-transparent"></div>
+                <p className="mt-4 text-polygon-text-secondary font-medium">Loading creators...</p>
               </div>
             </div>
           ) : (
@@ -205,6 +270,8 @@ export default function App() {
               {activeTab === 'requests' && <ContentRequests creators={creators} />}
               {activeTab === 'analytics' && <Analytics creators={creators} requests={requests} />}
               {activeTab === 'kaito' && <Kaito />}
+              {activeTab === 'botanalytics' && <BotAnalytics />}
+              {activeTab === 'channels' && <ChannelManager />}
             </>
           )}
         </div>
