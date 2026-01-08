@@ -1,9 +1,9 @@
 import { useState, useEffect, useMemo } from 'react';
-import { TrendingUp, MessageSquare, Heart, Repeat, Eye, Calendar, ExternalLink, ChevronDown, ChevronUp, Activity } from 'lucide-react';
+import { TrendingUp, MessageSquare, Heart, Repeat, Eye, Calendar, ExternalLink, ChevronDown, ChevronUp } from 'lucide-react';
 import { BotAnalyticsService } from '../services/botAnalyticsService';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
 export default function BotAnalytics() {
   const [loading, setLoading] = useState(true);
@@ -13,7 +13,6 @@ export default function BotAnalytics() {
   const [posts, setPosts] = useState([]);
   const [timeline, setTimeline] = useState([]);
   const [showAllCreators, setShowAllCreators] = useState(false);
-  const [dateRange, setDateRange] = useState('30d');
 
   // Date range (default: last 30 days)
   const [startDate, setStartDate] = useState(() => {
@@ -69,57 +68,18 @@ export default function BotAnalytics() {
     }
   };
 
-  const handleDateRangeChange = (range) => {
-    setDateRange(range);
-    const end = new Date();
-    const start = new Date();
-
-    if (range === '7d') {
-      start.setDate(start.getDate() - 7);
-    } else if (range === '30d') {
-      start.setDate(start.getDate() - 30);
-    } else if (range === '90d') {
-      start.setDate(start.getDate() - 90);
-    }
-
-    setStartDate(start);
-    setEndDate(end);
-  };
-
   const formatNumber = (num) => {
     if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
     if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
     return num?.toString() || '0';
   };
 
-  const calculateChange = (current, previous) => {
-    if (!previous || previous === 0) return null;
-    const change = ((current - previous) / previous) * 100;
-    return change.toFixed(1);
-  };
-
-  // Skeleton loader
-  if (loading && !summary) {
+  if (loading) {
     return (
-      <div>
-        {/* Slim top bar skeleton */}
-        <div className="sticky top-0 z-10 border-b border-white/[0.06] bg-polygon-bg-primary/80 backdrop-blur-xl">
-          <div className="px-6 py-4 flex items-center justify-between">
-            <div className="h-6 w-32 bg-white/5 rounded animate-pulse"></div>
-            <div className="h-9 w-64 bg-white/5 rounded-lg animate-pulse"></div>
-          </div>
-        </div>
-
-        {/* KPI cards skeleton */}
-        <div className="px-6 py-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="h-32 bg-white/[0.03] border border-white/[0.06] rounded-xl animate-pulse"></div>
-            ))}
-          </div>
-
-          {/* Chart skeleton */}
-          <div className="h-96 bg-white/[0.03] border border-white/[0.06] rounded-xl animate-pulse"></div>
+      <div className="flex items-center justify-center py-12">
+        <div className="text-center">
+          <div className="inline-block h-10 w-10 animate-spin rounded-full border-4 border-solid border-indigo-600 dark:border-indigo-500 border-r-transparent"></div>
+          <p className="mt-4 text-gray-600 dark:text-gray-400 font-medium">Loading bot analytics...</p>
         </div>
       </div>
     );
@@ -127,15 +87,12 @@ export default function BotAnalytics() {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center py-24">
+      <div className="flex items-center justify-center py-12">
         <div className="text-center">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-red-500/10 mb-4">
-            <Activity className="w-6 h-6 text-red-400" />
-          </div>
-          <p className="text-red-400 mb-4 text-sm">{error}</p>
+          <p className="text-red-600 dark:text-red-400">{error}</p>
           <button
             onClick={fetchData}
-            className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white/90 rounded-lg text-sm transition-colors border border-white/[0.06]"
+            className="mt-4 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
           >
             Retry
           </button>
@@ -145,350 +102,303 @@ export default function BotAnalytics() {
   }
 
   return (
-    <div>
-      {/* Slim sticky header */}
-      <div className="sticky top-0 z-10 border-b border-white/[0.06] bg-polygon-bg-primary/80 backdrop-blur-xl">
-        <div className="px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2">
-              <Activity className="w-5 h-5 text-indigo-400" />
-              <h1 className="text-lg font-semibold text-white/90 tracking-tight">Bot Analytics</h1>
+    <div className="space-y-6">
+      {/* All-Time Stats Banner */}
+      {allTimeSummary && (
+        <div className="bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg shadow-lg p-6">
+          <h3 className="text-white text-lg font-semibold mb-4">All Time Stats</h3>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-6 text-white">
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-white/20 rounded-lg">
+                <MessageSquare className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-sm opacity-90">Total Posts</p>
+                <p className="text-2xl font-bold">{allTimeSummary.totalPosts || 0}</p>
+              </div>
             </div>
-            <div className="hidden sm:block text-xs text-white/40 font-mono">
-              {allTimeSummary?.totalPosts || 0} posts tracked
+
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-white/20 rounded-lg">
+                <Eye className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-sm opacity-90">Impressions</p>
+                <p className="text-2xl font-bold">{formatNumber(allTimeSummary.totalViews)}</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-white/20 rounded-lg">
+                <Heart className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-sm opacity-90">Likes</p>
+                <p className="text-2xl font-bold">{formatNumber(allTimeSummary.totalLikes)}</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-white/20 rounded-lg">
+                <Repeat className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-sm opacity-90">Retweets</p>
+                <p className="text-2xl font-bold">{formatNumber(allTimeSummary.totalRetweets)}</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-white/20 rounded-lg">
+                <TrendingUp className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-sm opacity-90">Engagement</p>
+                <p className="text-2xl font-bold">{allTimeSummary.avgEngagementRate?.toFixed(1)}%</p>
+              </div>
             </div>
           </div>
+        </div>
+      )}
 
-          {/* Date range selector */}
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1 bg-white/[0.03] border border-white/[0.06] rounded-lg p-1">
-              {['7d', '30d', '90d', 'custom'].map((range) => (
-                <button
-                  key={range}
-                  onClick={() => range !== 'custom' && handleDateRangeChange(range)}
-                  className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
-                    dateRange === range
-                      ? 'bg-indigo-500/20 text-indigo-300'
-                      : 'text-white/50 hover:text-white/70 hover:bg-white/5'
-                  }`}
-                >
-                  {range === 'custom' ? (
-                    <div className="flex items-center gap-1">
-                      <Calendar className="w-3 h-3" />
-                      Custom
-                    </div>
-                  ) : (
-                    range.toUpperCase()
-                  )}
-                </button>
-              ))}
-            </div>
+      {/* Header with Date Range Picker */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-50">Filtered Analytics</h2>
+          <p className="text-gray-600 dark:text-gray-400 text-sm">
+            Select date range to filter data
+          </p>
+        </div>
 
-            {dateRange === 'custom' && (
-              <div className="flex items-center gap-2 ml-2">
-                <DatePicker
-                  selected={startDate}
-                  onChange={setStartDate}
-                  selectsStart
-                  startDate={startDate}
-                  endDate={endDate}
-                  className="px-3 py-1.5 bg-white/[0.03] border border-white/[0.06] rounded-lg text-white/90 text-xs w-32 focus:outline-none focus:ring-1 focus:ring-indigo-500/50"
-                  dateFormat="MMM d, yyyy"
-                />
-                <span className="text-white/30 text-xs">→</span>
-                <DatePicker
-                  selected={endDate}
-                  onChange={setEndDate}
-                  selectsEnd
-                  startDate={startDate}
-                  endDate={endDate}
-                  minDate={startDate}
-                  className="px-3 py-1.5 bg-white/[0.03] border border-white/[0.06] rounded-lg text-white/90 text-xs w-32 focus:outline-none focus:ring-1 focus:ring-indigo-500/50"
-                  dateFormat="MMM d, yyyy"
-                />
-              </div>
-            )}
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 text-sm">
+            <Calendar className="w-4 h-4 text-gray-500" />
+            <DatePicker
+              selected={startDate}
+              onChange={setStartDate}
+              selectsStart
+              startDate={startDate}
+              endDate={endDate}
+              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-50"
+              dateFormat="MMM d, yyyy"
+            />
+            <span className="text-gray-500">to</span>
+            <DatePicker
+              selected={endDate}
+              onChange={setEndDate}
+              selectsEnd
+              startDate={startDate}
+              endDate={endDate}
+              minDate={startDate}
+              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-50"
+              dateFormat="MMM d, yyyy"
+            />
           </div>
         </div>
       </div>
 
-      {/* Main content */}
-      <div className="px-6 py-8 max-w-[1600px] mx-auto">
-        {/* KPI row - hero metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          {/* Total Posts */}
-          <div className="group relative bg-white/[0.03] hover:bg-white/[0.05] border border-white/[0.06] rounded-xl p-5 transition-all duration-200 hover:shadow-lg hover:shadow-indigo-500/5 hover:-translate-y-0.5">
-            <div className="flex items-center justify-between mb-3">
-              <div className="p-2 bg-blue-500/10 rounded-lg">
-                <MessageSquare className="w-4 h-4 text-blue-400" />
+      {/* Filtered Summary Banner */}
+      {summary && (
+        <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-lg shadow-lg p-6">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-6 text-white">
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-white/20 rounded-lg">
+                <MessageSquare className="w-5 h-5" />
               </div>
-              {summary?.totalPosts && (
-                <div className="flex items-center gap-1 text-xs">
-                  <TrendingUp className="w-3 h-3 text-green-400" />
-                  <span className="text-green-400 font-medium">Active</span>
-                </div>
-              )}
+              <div>
+                <p className="text-sm opacity-90">Total Posts</p>
+                <p className="text-2xl font-bold">{summary.totalPosts || 0}</p>
+              </div>
             </div>
-            <div className="space-y-1">
-              <p className="text-2xl font-bold text-white/95 tracking-tight tabular-nums">
-                {formatNumber(summary?.totalPosts || 0)}
-              </p>
-              <p className="text-xs uppercase tracking-wider text-white/40 font-medium">Total Posts</p>
-            </div>
-          </div>
 
-          {/* Total Impressions */}
-          <div className="group relative bg-white/[0.03] hover:bg-white/[0.05] border border-white/[0.06] rounded-xl p-5 transition-all duration-200 hover:shadow-lg hover:shadow-indigo-500/5 hover:-translate-y-0.5">
-            <div className="flex items-center justify-between mb-3">
-              <div className="p-2 bg-yellow-500/10 rounded-lg">
-                <Eye className="w-4 h-4 text-yellow-400" />
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-white/20 rounded-lg">
+                <Eye className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-sm opacity-90">Impressions</p>
+                <p className="text-2xl font-bold">{formatNumber(summary.totalViews)}</p>
               </div>
             </div>
-            <div className="space-y-1">
-              <p className="text-2xl font-bold text-white/95 tracking-tight tabular-nums">
-                {formatNumber(summary?.totalViews || 0)}
-              </p>
-              <p className="text-xs uppercase tracking-wider text-white/40 font-medium">Impressions</p>
-            </div>
-          </div>
 
-          {/* Total Engagement */}
-          <div className="group relative bg-white/[0.03] hover:bg-white/[0.05] border border-white/[0.06] rounded-xl p-5 transition-all duration-200 hover:shadow-lg hover:shadow-indigo-500/5 hover:-translate-y-0.5">
-            <div className="flex items-center justify-between mb-3">
-              <div className="p-2 bg-purple-500/10 rounded-lg">
-                <Heart className="w-4 h-4 text-purple-400" />
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-white/20 rounded-lg">
+                <Heart className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-sm opacity-90">Likes</p>
+                <p className="text-2xl font-bold">{formatNumber(summary.totalLikes)}</p>
               </div>
             </div>
-            <div className="space-y-1">
-              <p className="text-2xl font-bold text-white/95 tracking-tight tabular-nums">
-                {formatNumber((summary?.totalLikes || 0) + (summary?.totalRetweets || 0))}
-              </p>
-              <p className="text-xs uppercase tracking-wider text-white/40 font-medium">Engagement</p>
-            </div>
-          </div>
 
-          {/* Engagement Rate */}
-          <div className="group relative bg-white/[0.03] hover:bg-white/[0.05] border border-white/[0.06] rounded-xl p-5 transition-all duration-200 hover:shadow-lg hover:shadow-indigo-500/5 hover:-translate-y-0.5">
-            <div className="flex items-center justify-between mb-3">
-              <div className="p-2 bg-green-500/10 rounded-lg">
-                <TrendingUp className="w-4 h-4 text-green-400" />
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-white/20 rounded-lg">
+                <Repeat className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-sm opacity-90">Retweets</p>
+                <p className="text-2xl font-bold">{formatNumber(summary.totalRetweets)}</p>
               </div>
             </div>
-            <div className="space-y-1">
-              <p className="text-2xl font-bold text-white/95 tracking-tight tabular-nums">
-                {summary?.avgEngagementRate?.toFixed(1) || '0.0'}%
-              </p>
-              <p className="text-xs uppercase tracking-wider text-white/40 font-medium">Avg Engagement</p>
+
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-white/20 rounded-lg">
+                <TrendingUp className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-sm opacity-90">Engagement</p>
+                <p className="text-2xl font-bold">{summary.avgEngagementRate?.toFixed(1)}%</p>
+              </div>
             </div>
           </div>
         </div>
+      )}
 
-        {/* Primary chart - centerpiece */}
-        <div className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-6 mb-8">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-sm font-semibold text-white/70 uppercase tracking-wider">Activity Timeline</h3>
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2 text-xs text-white/50">
-                <div className="w-2 h-2 rounded-full bg-indigo-500"></div>
-                Posts
-              </div>
-            </div>
-          </div>
-
+      {/* Charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Timeline Chart */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-50 mb-4">Posts Over Time</h3>
           <ResponsiveContainer width="100%" height={300}>
-            <AreaChart data={timeline}>
-              <defs>
-                <linearGradient id="postsGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#6366F1" stopOpacity={0.3} />
-                  <stop offset="100%" stopColor="#6366F1" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
-              <XAxis
-                dataKey="date"
-                stroke="rgba(255,255,255,0.2)"
-                tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 11 }}
-                axisLine={{ stroke: 'rgba(255,255,255,0.06)' }}
-              />
-              <YAxis
-                stroke="rgba(255,255,255,0.2)"
-                tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 11 }}
-                axisLine={false}
-                tickLine={false}
-              />
+            <LineChart data={timeline}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.2} />
+              <XAxis dataKey="date" stroke="#9CA3AF" tick={{ fill: '#9CA3AF' }} />
+              <YAxis stroke="#9CA3AF" tick={{ fill: '#9CA3AF' }} />
               <Tooltip
-                contentStyle={{
-                  backgroundColor: 'rgba(15, 15, 20, 0.95)',
-                  border: '1px solid rgba(255,255,255,0.1)',
-                  borderRadius: '8px',
-                  padding: '8px 12px',
-                  backdropFilter: 'blur(12px)',
-                }}
-                labelStyle={{ color: 'rgba(255,255,255,0.6)', fontSize: '11px', marginBottom: '4px' }}
-                itemStyle={{ color: '#fff', fontSize: '12px', fontWeight: 500 }}
+                contentStyle={{ backgroundColor: '#1F2937', border: 'none', borderRadius: '8px', color: '#F9FAFB' }}
               />
-              <Area
-                type="monotone"
-                dataKey="posts"
-                stroke="#6366F1"
-                strokeWidth={2}
-                fill="url(#postsGradient)"
-                animationDuration={800}
-              />
-            </AreaChart>
+              <Line type="monotone" dataKey="posts" stroke="#3B82F6" strokeWidth={2} dot={{ fill: '#3B82F6' }} />
+            </LineChart>
           </ResponsiveContainer>
         </div>
 
-        {/* Two column layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-          {/* Engagement breakdown */}
-          <div className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-6">
-            <h3 className="text-sm font-semibold text-white/70 uppercase tracking-wider mb-6">Engagement Breakdown</h3>
-            <ResponsiveContainer width="100%" height={250}>
-              <BarChart data={[
-                { name: 'Likes', value: summary?.totalLikes || 0 },
-                { name: 'Retweets', value: summary?.totalRetweets || 0 },
-                { name: 'Replies', value: summary?.totalReplies || 0 },
-                { name: 'Bookmarks', value: summary?.totalBookmarks || 0 },
-              ]}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
-                <XAxis
-                  dataKey="name"
-                  stroke="rgba(255,255,255,0.2)"
-                  tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 11 }}
-                  axisLine={{ stroke: 'rgba(255,255,255,0.06)' }}
-                />
-                <YAxis
-                  stroke="rgba(255,255,255,0.2)"
-                  tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 11 }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: 'rgba(15, 15, 20, 0.95)',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    borderRadius: '8px',
-                    padding: '8px 12px',
-                  }}
-                  itemStyle={{ color: '#fff', fontSize: '12px' }}
-                />
-                <Bar dataKey="value" fill="#6366F1" radius={[6, 6, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-
-          {/* Top Creators - compact */}
-          {allTimeSummary?.topCreators && allTimeSummary.topCreators.length > 0 && (
-            <div className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-sm font-semibold text-white/70 uppercase tracking-wider">Top Creators</h3>
-                {allTimeSummary.topCreators.length > 10 && (
-                  <button
-                    onClick={() => setShowAllCreators(!showAllCreators)}
-                    className="flex items-center gap-1.5 px-2.5 py-1 text-xs text-indigo-400 hover:bg-white/5 rounded-md transition-colors"
-                  >
-                    {showAllCreators ? (
-                      <>
-                        <ChevronUp className="w-3 h-3" />
-                        Less
-                      </>
-                    ) : (
-                      <>
-                        <ChevronDown className="w-3 h-3" />
-                        All {allTimeSummary.topCreators.length}
-                      </>
-                    )}
-                  </button>
-                )}
-              </div>
-              <div className="space-y-2">
-                {(showAllCreators ? allTimeSummary.topCreators : allTimeSummary.topCreators.slice(0, 10)).map((creator, index) => (
-                  <div key={creator.xHandle} className="flex items-center justify-between p-2.5 hover:bg-white/[0.03] rounded-lg transition-colors group">
-                    <div className="flex items-center gap-3">
-                      <div className="flex items-center justify-center w-6 h-6 bg-indigo-500/10 text-indigo-400 rounded-md text-xs font-bold font-mono">
-                        {index + 1}
-                      </div>
-                      <div className="min-w-0">
-                        <p className="font-medium text-white/90 text-sm truncate">{creator.name}</p>
-                        <p className="text-xs text-white/40 truncate">@{creator.xHandle}</p>
-                      </div>
-                    </div>
-                    <div className="text-right flex-shrink-0">
-                      <p className="text-sm font-semibold text-white/90 tabular-nums">{formatNumber(creator.totalImpressions)}</p>
-                      <p className="text-xs text-white/40">{creator.postCount} posts</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+        {/* Engagement Chart */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-50 mb-4">Engagement Over Time</h3>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={timeline}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.2} />
+              <XAxis dataKey="date" stroke="#9CA3AF" tick={{ fill: '#9CA3AF' }} />
+              <YAxis stroke="#9CA3AF" tick={{ fill: '#9CA3AF' }} />
+              <Tooltip
+                contentStyle={{ backgroundColor: '#1F2937', border: 'none', borderRadius: '8px', color: '#F9FAFB' }}
+              />
+              <Bar dataKey="engagement" fill="#8B5CF6" radius={[8, 8, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
         </div>
+      </div>
 
-        {/* Posts table */}
-        <div className="bg-white/[0.03] border border-white/[0.06] rounded-xl overflow-hidden">
-          <div className="px-6 py-4 border-b border-white/[0.06]">
-            <h3 className="text-sm font-semibold text-white/70 uppercase tracking-wider">Recent Posts</h3>
+      {/* Top Creators - Always shows all-time data */}
+      {allTimeSummary?.topCreators && allTimeSummary.topCreators.length > 0 && (
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-50">Top Creators (All Time)</h3>
+            {allTimeSummary.topCreators.length > 10 && (
+              <button
+                onClick={() => setShowAllCreators(!showAllCreators)}
+                className="flex items-center gap-2 px-3 py-1 text-sm text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition-colors"
+              >
+                {showAllCreators ? (
+                  <>
+                    <ChevronUp className="w-4 h-4" />
+                    Show Less
+                  </>
+                ) : (
+                  <>
+                    <ChevronDown className="w-4 h-4" />
+                    Show All ({allTimeSummary.topCreators.length})
+                  </>
+                )}
+              </button>
+            )}
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-white/[0.06]">
-                  <th className="px-6 py-3 text-left text-xs font-medium text-white/40 uppercase tracking-wider">Creator</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-white/40 uppercase tracking-wider">Date</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-white/40 uppercase tracking-wider">Likes</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-white/40 uppercase tracking-wider">Retweets</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-white/40 uppercase tracking-wider">Views</th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-white/40 uppercase tracking-wider">Link</th>
+          <div className="space-y-3">
+            {(showAllCreators ? allTimeSummary.topCreators : allTimeSummary.topCreators.slice(0, 10)).map((creator, index) => (
+              <div key={creator.xHandle} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900/50 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center justify-center w-8 h-8 bg-indigo-100 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 rounded-full font-bold">
+                    {index + 1}
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-900 dark:text-gray-50">{creator.name}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">@{creator.xHandle}</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="font-bold text-gray-900 dark:text-gray-50">{formatNumber(creator.totalImpressions)}</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">{creator.postCount} posts</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Posts Table */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-50">Recent Posts</h3>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-50 dark:bg-gray-900">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Creator
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Date
+                </th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Likes
+                </th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Retweets
+                </th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Replies
+                </th>
+                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Link
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+              {posts.slice(0, 10).map((post) => (
+                <tr key={post.id} className="hover:bg-gray-50 dark:hover:bg-gray-900/50">
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div>
+                      <p className="font-medium text-gray-900 dark:text-gray-50">{post.creator.name}</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">@{post.creator.xHandle}</p>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
+                    {new Date(post.sharedAt).toLocaleDateString()}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium text-gray-900 dark:text-gray-50">
+                    {formatNumber(post.metrics?.likes || 0)}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium text-gray-900 dark:text-gray-50">
+                    {formatNumber(post.metrics?.retweets || 0)}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium text-gray-900 dark:text-gray-50">
+                    {formatNumber(post.metrics?.replies || 0)}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-center">
+                    <a
+                      href={post.xUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                    </a>
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {posts.slice(0, 20).map((post, index) => (
-                  <tr
-                    key={post.id}
-                    className={`border-b border-white/[0.03] hover:bg-white/[0.02] transition-colors ${
-                      index % 2 === 0 ? 'bg-white/[0.01]' : ''
-                    }`}
-                  >
-                    <td className="px-6 py-3">
-                      <div>
-                        <p className="font-medium text-white/90 text-sm">{post.creator.name}</p>
-                        <p className="text-xs text-white/40">@{post.creator.xHandle}</p>
-                      </div>
-                    </td>
-                    <td className="px-6 py-3 text-sm text-white/60 font-mono">
-                      {new Date(post.sharedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                    </td>
-                    <td className="px-6 py-3 text-right text-sm font-semibold text-white/80 tabular-nums">
-                      {formatNumber(post.metrics?.likes || 0)}
-                    </td>
-                    <td className="px-6 py-3 text-right text-sm font-semibold text-white/80 tabular-nums">
-                      {formatNumber(post.metrics?.retweets || 0)}
-                    </td>
-                    <td className="px-6 py-3 text-right text-sm font-semibold text-white/80 tabular-nums">
-                      {formatNumber(post.metrics?.views || 0)}
-                    </td>
-                    <td className="px-6 py-3 text-center">
-                      <a
-                        href={post.xUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center justify-center w-8 h-8 rounded-md hover:bg-white/5 text-white/40 hover:text-white/70 transition-colors"
-                      >
-                        <ExternalLink className="w-4 h-4" />
-                      </a>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {posts.length > 20 && (
-            <div className="px-6 py-4 border-t border-white/[0.06] text-center">
-              <p className="text-xs text-white/40">Showing 20 of {posts.length} posts</p>
-            </div>
-          )}
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
