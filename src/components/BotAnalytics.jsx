@@ -283,7 +283,7 @@ export default function BotAnalytics() {
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="font-bold text-gray-900 dark:text-gray-50">{formatNumber(creator.totalEngagement)}</p>
+                  <p className="font-bold text-gray-900 dark:text-gray-50">{formatNumber(creator.totalImpressions)}</p>
                   <p className="text-sm text-gray-600 dark:text-gray-400">{creator.postCount} posts</p>
                 </div>
               </div>
