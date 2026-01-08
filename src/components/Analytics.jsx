@@ -349,12 +349,12 @@ export default function Analytics({ creators, requests = [] }) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-50">Analytics Dashboard</h2>
+          <h2 className="text-2xl font-bold text-polygon-text-primary">Analytics Dashboard</h2>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Track influencer performance and campaign metrics</p>
         </div>
         <button
           onClick={exportToCSV}
-          className="inline-flex items-center px-4 py-2 bg-indigo-600 dark:bg-indigo-500 text-white rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-colors text-sm font-medium shadow-sm"
+          className="inline-flex items-center px-4 py-2 bg-indigo-600 dark:bg-indigo-500 text-white rounded-polygon hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-colors text-sm font-medium shadow-sm"
         >
           <Download className="w-4 h-4 mr-2" />
           Export
@@ -363,7 +363,7 @@ export default function Analytics({ creators, requests = [] }) {
 
       {/* Top Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-        <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg p-4 sm:p-6 text-white shadow-lg">
+        <div className="bg-gradient-to-br from-polygon-primary to-polygon-primary-hover rounded-polygon p-4 sm:p-6 text-white shadow-lg">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-purple-100 text-xs sm:text-sm font-medium mb-1">Total Influencers</p>
@@ -373,7 +373,7 @@ export default function Analytics({ creators, requests = [] }) {
           </div>
         </div>
 
-        <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg p-4 sm:p-6 text-white shadow-lg">
+        <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-polygon p-4 sm:p-6 text-white shadow-lg">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-blue-100 text-xs sm:text-sm font-medium mb-1">Total Spend</p>
@@ -383,7 +383,7 @@ export default function Analytics({ creators, requests = [] }) {
           </div>
         </div>
 
-        <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-lg p-4 sm:p-6 text-white shadow-lg">
+        <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-polygon p-4 sm:p-6 text-white shadow-lg">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-green-100 text-xs sm:text-sm font-medium mb-1">Total Impressions</p>
@@ -393,7 +393,7 @@ export default function Analytics({ creators, requests = [] }) {
           </div>
         </div>
 
-        <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg p-4 sm:p-6 text-white shadow-lg">
+        <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-polygon p-4 sm:p-6 text-white shadow-lg">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-orange-100 text-xs sm:text-sm font-medium mb-1">Total Posts</p>
@@ -407,9 +407,9 @@ export default function Analytics({ creators, requests = [] }) {
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* CPM by Influencer */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6">
-          <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-50 mb-3 sm:mb-4 flex items-center gap-2">
-            <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5 text-indigo-600" />
+        <div className="card-polygon rounded-polygon shadow-sm border border-white/[0.08] p-4 sm:p-6">
+          <h3 className="text-base sm:text-lg font-semibold text-polygon-text-primary mb-3 sm:mb-4 flex items-center gap-2">
+            <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5 text-polygon-primary" />
             CPM by Influencer
           </h3>
           <ResponsiveContainer width="100%" height={300}>
@@ -442,8 +442,8 @@ export default function Analytics({ creators, requests = [] }) {
         </div>
 
         {/* Budget by Platform */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-50 mb-4">Budget by Platform</h3>
+        <div className="card-polygon rounded-polygon shadow-sm border border-white/[0.08] p-6">
+          <h3 className="text-lg font-semibold text-polygon-text-primary mb-4">Budget by Platform</h3>
           {platformData.length > 0 ? (
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
@@ -483,10 +483,10 @@ export default function Analytics({ creators, requests = [] }) {
       {/* Progress Metrics */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Q4 Budget Used */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        <div className="card-polygon rounded-polygon shadow-sm border border-white/[0.08] p-6">
           <div className="flex items-center justify-between mb-2">
-            <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">Total Budget Used</h4>
-            <span className="text-sm font-semibold text-gray-900 dark:text-gray-50">
+            <h4 className="text-sm font-medium text-polygon-text-secondary">Total Budget Used</h4>
+            <span className="text-sm font-semibold text-polygon-text-primary">
               {analytics.totalSpend > 0 ? '100%' : '0%'}
             </span>
           </div>
@@ -502,10 +502,10 @@ export default function Analytics({ creators, requests = [] }) {
         </div>
 
         {/* Avg Impressions per Post */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        <div className="card-polygon rounded-polygon shadow-sm border border-white/[0.08] p-6">
           <div className="flex items-center justify-between mb-2">
-            <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">Avg Impressions per Post</h4>
-            <span className="text-sm font-semibold text-gray-900 dark:text-gray-50">
+            <h4 className="text-sm font-medium text-polygon-text-secondary">Avg Impressions per Post</h4>
+            <span className="text-sm font-semibold text-polygon-text-primary">
               {formatNumber(avgImpressionsPerPost)}
             </span>
           </div>
@@ -521,16 +521,16 @@ export default function Analytics({ creators, requests = [] }) {
         </div>
 
         {/* Influencers with Activity */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        <div className="card-polygon rounded-polygon shadow-sm border border-white/[0.08] p-6">
           <div className="flex items-center justify-between mb-2">
-            <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">Influencers with Activity</h4>
-            <span className="text-sm font-semibold text-gray-900 dark:text-gray-50">
+            <h4 className="text-sm font-medium text-polygon-text-secondary">Influencers with Activity</h4>
+            <span className="text-sm font-semibold text-polygon-text-primary">
               {activityPercentage.toFixed(0)}%
             </span>
           </div>
           <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
             <div
-              className="bg-gradient-to-r from-purple-500 to-purple-600 h-3 rounded-full transition-all duration-500"
+              className="bg-gradient-to-r from-polygon-primary to-polygon-primary-hover h-3 rounded-full transition-all duration-500"
               style={{ width: `${activityPercentage}%` }}
             ></div>
           </div>
@@ -541,9 +541,9 @@ export default function Analytics({ creators, requests = [] }) {
       </div>
 
       {/* Top Performers Table */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-        <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200 dark:border-gray-700">
-          <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-50 flex items-center gap-2">
+      <div className="card-polygon rounded-polygon shadow-sm border border-white/[0.08] overflow-hidden">
+        <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-white/[0.08]">
+          <h3 className="text-base sm:text-lg font-semibold text-polygon-text-primary flex items-center gap-2">
             <Award className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-500" />
             Top Performers by ROI
           </h3>
@@ -582,23 +582,23 @@ export default function Analytics({ creators, requests = [] }) {
                           index === 0 ? 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200' :
                           index === 1 ? 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200' :
                           index === 2 ? 'bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200' :
-                          'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
+                          'bg-gray-100 dark:bg-gray-700 text-polygon-text-secondary'
                         } font-bold text-xs sm:text-sm`}>
                           #{index + 1}
                         </span>
                       </div>
                     </td>
                     <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
-                      <div className="text-xs sm:text-sm font-medium text-gray-900 dark:text-gray-50">{creator.name}</div>
+                      <div className="text-xs sm:text-sm font-medium text-polygon-text-primary">{creator.name}</div>
                     </td>
                     <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
-                      <div className="text-xs sm:text-sm text-gray-700 dark:text-gray-300">{creator.posts}</div>
+                      <div className="text-xs sm:text-sm text-polygon-text-secondary">{creator.posts}</div>
                     </td>
                     <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
-                      <div className="text-xs sm:text-sm font-medium text-gray-900 dark:text-gray-50">{formatCurrency(creator.spend)}</div>
+                      <div className="text-xs sm:text-sm font-medium text-polygon-text-primary">{formatCurrency(creator.spend)}</div>
                     </td>
                     <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
-                      <div className="text-xs sm:text-sm text-gray-700 dark:text-gray-300">{formatNumber(creator.impressions)}</div>
+                      <div className="text-xs sm:text-sm text-polygon-text-secondary">{formatNumber(creator.impressions)}</div>
                     </td>
                     <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
                       <div className="text-xs sm:text-sm font-semibold text-green-600 dark:text-green-400">
@@ -622,8 +622,8 @@ export default function Analytics({ creators, requests = [] }) {
       {/* Additional Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Performance by Category (Top Spend) */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-50 mb-4">Performance by Spend</h3>
+        <div className="card-polygon rounded-polygon shadow-sm border border-white/[0.08] p-6">
+          <h3 className="text-lg font-semibold text-polygon-text-primary mb-4">Performance by Spend</h3>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart
               data={analytics.topBySpend.slice(0, 5)}
@@ -654,8 +654,8 @@ export default function Analytics({ creators, requests = [] }) {
         </div>
 
         {/* Impressions by Influencer */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-50 mb-4">Impressions by Influencer</h3>
+        <div className="card-polygon rounded-polygon shadow-sm border border-white/[0.08] p-6">
+          <h3 className="text-lg font-semibold text-polygon-text-primary mb-4">Impressions by Influencer</h3>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart
               data={analytics.topByImpressions.slice(0, 5)}

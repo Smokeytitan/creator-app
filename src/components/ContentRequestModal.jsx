@@ -76,10 +76,10 @@ export default function ContentRequestModal({ creators, onClose, onSubmit }) {
 
   return (
     <div className="fixed inset-0 bg-black/40 dark:bg-black/60 flex items-center justify-center p-4 z-50" onClick={onClose}>
-      <div className="bg-white dark:bg-gray-800 w-full max-w-lg rounded-lg shadow flex flex-col max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
+      <div className="card-polygon w-full max-w-lg rounded-polygon shadow flex flex-col max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between p-6 pb-4 border-b border-gray-200 dark:border-gray-700">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-50">New Content Request</h3>
-          <button className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300" onClick={onClose}>
+          <h3 className="text-lg font-semibold text-polygon-text-primary">New Content Request</h3>
+          <button className="text-polygon-text-secondary hover:text-gray-700 dark:hover:text-gray-300" onClick={onClose}>
             ✕
           </button>
         </div>
@@ -88,7 +88,7 @@ export default function ContentRequestModal({ creators, onClose, onSubmit }) {
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Title</label>
             <input
-              className="mt-1 w-full rounded-md border border-gray-300 dark:border-gray-600 p-2 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-50"
+              className="mt-1 w-full rounded-md border border-white/[0.12] p-2 bg-white dark:bg-gray-900 text-polygon-text-primary"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
             />
@@ -97,7 +97,7 @@ export default function ContentRequestModal({ creators, onClose, onSubmit }) {
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Description</label>
             <textarea
-              className="mt-1 w-full rounded-md border border-gray-300 dark:border-gray-600 p-2 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-50"
+              className="mt-1 w-full rounded-md border border-white/[0.12] p-2 bg-white dark:bg-gray-900 text-polygon-text-primary"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={3}
@@ -108,7 +108,7 @@ export default function ContentRequestModal({ creators, onClose, onSubmit }) {
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Creators ({selectedCreatorIds.length} selected)
             </label>
-            <div className="max-h-48 overflow-y-auto border border-gray-300 dark:border-gray-600 rounded-md p-3 bg-white dark:bg-gray-900 space-y-2">
+            <div className="max-h-48 overflow-y-auto border border-white/[0.12] rounded-md p-3 bg-white dark:bg-gray-900 space-y-2">
               {creators.map((c) => {
                 const stats = creatorStats.find(s => s.id === c.id);
                 const avgImpressions = stats?.avgImpressions || 0;
@@ -120,9 +120,9 @@ export default function ContentRequestModal({ creators, onClose, onSubmit }) {
                         type="checkbox"
                         checked={selectedCreatorIds.includes(c.id)}
                         onChange={() => toggleCreator(c.id)}
-                        className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                        className="h-4 w-4 text-indigo-600 focus:ring-polygon-primary border-gray-300 rounded"
                       />
-                      <span className="text-sm text-gray-900 dark:text-gray-50">{c.name}</span>
+                      <span className="text-sm text-polygon-text-primary">{c.name}</span>
                     </div>
                     <div className="flex items-center gap-3">
                       {costPerPost > 0 && (
@@ -132,7 +132,7 @@ export default function ContentRequestModal({ creators, onClose, onSubmit }) {
                         </span>
                       )}
                       {avgImpressions > 0 && (
-                        <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                        <span className="text-xs text-polygon-text-secondary flex items-center gap-1">
                           <Eye className="h-3 w-3" />
                           {avgImpressions.toLocaleString()} avg
                         </span>
@@ -148,7 +148,7 @@ export default function ContentRequestModal({ creators, onClose, onSubmit }) {
           <div className="grid grid-cols-1 gap-3">
             {/* Estimated Cost */}
             {estimatedCost > 0 && (
-              <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+              <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-polygon p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <DollarSign className="h-5 w-5 text-green-600 dark:text-green-400" />
@@ -158,7 +158,7 @@ export default function ContentRequestModal({ creators, onClose, onSubmit }) {
                     ${estimatedCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </span>
                 </div>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                <p className="text-xs text-polygon-text-secondary mt-2">
                   Total cost for {selectedCreatorIds.length} creator{selectedCreatorIds.length !== 1 ? 's' : ''} (1 post each)
                 </p>
               </div>
@@ -166,7 +166,7 @@ export default function ContentRequestModal({ creators, onClose, onSubmit }) {
 
             {/* Estimated Impressions */}
             {selectedCreatorIds.length > 0 && (
-              <div className="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-lg p-4">
+              <div className="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-polygon p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Eye className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
@@ -176,7 +176,7 @@ export default function ContentRequestModal({ creators, onClose, onSubmit }) {
                     {estimatedImpressions > 0 ? estimatedImpressions.toLocaleString() : 'N/A'}
                   </span>
                 </div>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                <p className="text-xs text-polygon-text-secondary mt-2">
                   {estimatedImpressions > 0
                     ? 'Based on average impressions per creator'
                     : 'No post history available for selected creators'}
@@ -186,9 +186,9 @@ export default function ContentRequestModal({ creators, onClose, onSubmit }) {
 
             {/* Estimated CPM */}
             {estimatedCPM > 0 && (
-              <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-3">
+              <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-polygon p-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-medium text-gray-600 dark:text-gray-400">Estimated CPM</span>
+                  <span className="text-xs font-medium text-polygon-text-secondary">Estimated CPM</span>
                   <span className="text-lg font-bold text-purple-600 dark:text-purple-400">
                     ${estimatedCPM.toFixed(2)}
                   </span>
@@ -204,7 +204,7 @@ export default function ContentRequestModal({ creators, onClose, onSubmit }) {
                 selected={dueDate}
                 onChange={(date) => setDueDate(date)}
                 dateFormat="MMMM d, yyyy"
-                className="w-full rounded-md border border-gray-300 dark:border-gray-600 p-2 pr-10 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-50 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 cursor-pointer"
+                className="w-full rounded-md border border-white/[0.12] p-2 pr-10 bg-white dark:bg-gray-900 text-polygon-text-primary focus:ring-2 focus:ring-polygon-primary focus:border-indigo-500 cursor-pointer"
                 minDate={new Date()}
                 showPopperArrow={false}
                 wrapperClassName="w-full"
@@ -219,7 +219,7 @@ export default function ContentRequestModal({ creators, onClose, onSubmit }) {
             Cancel
           </button>
           <button
-            className="px-4 py-2 rounded-md bg-indigo-600 dark:bg-indigo-500 text-white hover:bg-indigo-700 dark:hover:bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 rounded-md btn-polygon-primary  disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={() => {
               const selectedCreators = creators.filter(c => selectedCreatorIds.includes(c.id));
               onSubmit({

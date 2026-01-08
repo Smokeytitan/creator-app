@@ -266,12 +266,12 @@ export default function BotAnalytics() {
         </div>
       </div>
 
-      {/* Top Creators */}
-      {summary?.topCreators && summary.topCreators.length > 0 && (
+      {/* Top Creators - Always shows all-time data */}
+      {allTimeSummary?.topCreators && allTimeSummary.topCreators.length > 0 && (
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-50 mb-4">Top Creators</h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-50 mb-4">Top Creators (All Time)</h3>
           <div className="space-y-3">
-            {summary.topCreators.map((creator, index) => (
+            {allTimeSummary.topCreators.map((creator, index) => (
               <div key={creator.xHandle} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900/50 rounded-lg">
                 <div className="flex items-center gap-3">
                   <div className="flex items-center justify-center w-8 h-8 bg-indigo-100 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 rounded-full font-bold">

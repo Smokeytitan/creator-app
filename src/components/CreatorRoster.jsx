@@ -398,11 +398,11 @@ export default function CreatorRoster({ creators, setCreators }) {
   return (
     <div>
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-50">Creator Roster</h2>
+        <h2 className="text-xl font-semibold text-polygon-text-primary">Creator Roster</h2>
         <div className="flex flex-wrap gap-2 w-full sm:w-auto">
           <button
             onClick={startAdd}
-            className="inline-flex items-center px-3 sm:px-4 py-2 bg-green-600 dark:bg-green-500 text-white rounded-lg hover:bg-green-700 dark:hover:bg-green-600 transition-colors text-sm"
+            className="inline-flex items-center px-3 sm:px-4 py-2 btn-polygon-primary rounded-polygon-button text-sm shadow-polygon"
           >
             <Plus className="w-4 h-4 mr-1 sm:mr-2" />
             <span className="hidden sm:inline">New Creator</span>
@@ -417,7 +417,7 @@ export default function CreatorRoster({ creators, setCreators }) {
           />
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="inline-flex items-center px-3 sm:px-4 py-2 bg-indigo-600 dark:bg-indigo-500 text-white rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-colors text-sm"
+            className="inline-flex items-center px-3 sm:px-4 py-2 btn-polygon-primary rounded-polygon-button text-sm shadow-polygon"
           >
             <Upload className="w-4 h-4 mr-1 sm:mr-2" />
             <span className="hidden sm:inline">Import CSV</span>
@@ -425,7 +425,7 @@ export default function CreatorRoster({ creators, setCreators }) {
           </button>
           <button
             onClick={exportToCSV}
-            className="inline-flex items-center px-3 sm:px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors text-sm"
+            className="inline-flex items-center px-3 sm:px-4 py-2 btn-polygon-secondary rounded-polygon-button text-sm"
           >
             <Download className="w-4 h-4 mr-1 sm:mr-2" />
             <span className="hidden sm:inline">Export CSV</span>
@@ -433,7 +433,7 @@ export default function CreatorRoster({ creators, setCreators }) {
           </button>
           <button
             onClick={resetToImportedData}
-            className="inline-flex items-center px-3 sm:px-4 py-2 bg-orange-600 dark:bg-orange-500 text-white rounded-lg hover:bg-orange-700 dark:hover:bg-orange-600 transition-colors text-sm"
+            className="inline-flex items-center px-3 sm:px-4 py-2 btn-polygon-secondary rounded-polygon-button text-sm border-orange-500/30 hover:border-orange-500/50"
             title="Reset to Google Sheets data"
           >
             <RefreshCw className="w-4 h-4 mr-1 sm:mr-2" />
@@ -444,7 +444,7 @@ export default function CreatorRoster({ creators, setCreators }) {
       </div>
 
       {/* Search and Filter Section */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-3 sm:p-4 mb-4 space-y-3 sm:space-y-4">
+      <div className="card-polygon rounded-xl shadow p-3 sm:p-4 mb-4 space-y-3 sm:space-y-4">
         {/* Search Bar */}
         <div className="flex items-center gap-2">
           <div className="relative flex-1">
@@ -454,7 +454,7 @@ export default function CreatorRoster({ creators, setCreators }) {
               placeholder="Search by name or handle..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full pl-10 pr-3 py-2 border border-white/[0.12] rounded-polygon bg-white dark:bg-gray-900 text-polygon-text-primary focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
           </div>
         </div>
@@ -462,7 +462,7 @@ export default function CreatorRoster({ creators, setCreators }) {
         {/* Filters */}
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-2">
-            <Filter className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+            <Filter className="h-4 w-4 text-polygon-text-secondary" />
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Filters:</span>
           </div>
 
@@ -470,7 +470,7 @@ export default function CreatorRoster({ creators, setCreators }) {
           <select
             value={filterActivity}
             onChange={(e) => setFilterActivity(e.target.value)}
-            className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-50"
+            className="px-3 py-1.5 text-sm border border-white/[0.12] rounded-polygon bg-white dark:bg-gray-900 text-polygon-text-primary"
           >
             <option value="all">All Activity</option>
             <option value="active">Has Posts</option>
@@ -479,11 +479,11 @@ export default function CreatorRoster({ creators, setCreators }) {
 
           {/* Sort By */}
           <div className="flex items-center gap-2">
-            <SortAsc className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+            <SortAsc className="h-4 w-4 text-polygon-text-secondary" />
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-50"
+              className="px-3 py-1.5 text-sm border border-white/[0.12] rounded-polygon bg-white dark:bg-gray-900 text-polygon-text-primary"
             >
               <option value="name">Sort by Name</option>
               <option value="posts">Sort by Posts</option>
@@ -494,7 +494,7 @@ export default function CreatorRoster({ creators, setCreators }) {
           {hasActiveFilters && (
             <button
               onClick={clearFilters}
-              className="inline-flex items-center px-3 py-1.5 text-sm bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+              className="inline-flex items-center px-3 py-1.5 text-sm bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-polygon hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
             >
               <X className="h-4 w-4 mr-1" />
               Clear All
@@ -502,7 +502,7 @@ export default function CreatorRoster({ creators, setCreators }) {
           )}
 
           {/* Results Count */}
-          <span className="text-sm text-gray-500 dark:text-gray-400 ml-auto">
+          <span className="text-sm text-polygon-text-secondary ml-auto">
             Showing {filteredCreators.length} of {creators.length} creators
           </span>
         </div>
@@ -510,13 +510,13 @@ export default function CreatorRoster({ creators, setCreators }) {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {isAdding && (
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6 border-2 border-green-500 dark:border-green-400 min-h-[400px]">
+          <div className="card-polygon rounded-xl shadow p-6 border-2 border-green-500 dark:border-green-400 min-h-[400px]">
             <div className="space-y-4">
               <div>
-                <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Name *</label>
+                <label className="block text-xs font-medium text-polygon-text-secondary mb-1">Name *</label>
                 <input
                   type="text"
-                  className="border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-sm w-full bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-50"
+                  className="border border-white/[0.12] rounded px-3 py-2 text-sm w-full bg-white dark:bg-gray-900 text-polygon-text-primary"
                   value={editForm.name}
                   onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
                   placeholder="Creator name"
@@ -524,10 +524,10 @@ export default function CreatorRoster({ creators, setCreators }) {
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Handle</label>
+                <label className="block text-xs font-medium text-polygon-text-secondary mb-1">Handle</label>
                 <input
                   type="text"
-                  className="border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-sm w-full bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-50"
+                  className="border border-white/[0.12] rounded px-3 py-2 text-sm w-full bg-white dark:bg-gray-900 text-polygon-text-primary"
                   value={editForm.handle}
                   onChange={(e) => setEditForm({ ...editForm, handle: e.target.value })}
                   placeholder="@username"
@@ -535,10 +535,10 @@ export default function CreatorRoster({ creators, setCreators }) {
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Notes</label>
+                <label className="block text-xs font-medium text-polygon-text-secondary mb-1">Notes</label>
                 <input
                   type="text"
-                  className="border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-sm w-full bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-50"
+                  className="border border-white/[0.12] rounded px-3 py-2 text-sm w-full bg-white dark:bg-gray-900 text-polygon-text-primary"
                   value={editForm.notes}
                   onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
                   placeholder="Optional notes"
@@ -546,10 +546,10 @@ export default function CreatorRoster({ creators, setCreators }) {
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Cost Per Post</label>
+                <label className="block text-xs font-medium text-polygon-text-secondary mb-1">Cost Per Post</label>
                 <input
                   type="text"
-                  className="border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-sm w-full bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-50"
+                  className="border border-white/[0.12] rounded px-3 py-2 text-sm w-full bg-white dark:bg-gray-900 text-polygon-text-primary"
                   value={editForm.costPerPost}
                   onChange={(e) => setEditForm({ ...editForm, costPerPost: e.target.value })}
                   placeholder="e.g., $1,250.00"
@@ -557,7 +557,7 @@ export default function CreatorRoster({ creators, setCreators }) {
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Platforms</label>
+                <label className="block text-xs font-medium text-polygon-text-secondary mb-2">Platforms</label>
                 <div className="flex flex-wrap gap-2">
                   {AVAILABLE_PLATFORMS.map(platform => (
                     <button
@@ -569,7 +569,7 @@ export default function CreatorRoster({ creators, setCreators }) {
                       }}
                       className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
                         (editForm.platforms || []).includes(platform)
-                          ? 'bg-indigo-600 dark:bg-indigo-500 text-white'
+                          ? 'btn-polygon-primary'
                           : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
                       }`}
                     >
@@ -581,7 +581,7 @@ export default function CreatorRoster({ creators, setCreators }) {
 
               <div className="flex gap-2 pt-2">
                 <button
-                  className="flex-1 px-4 py-2 text-sm bg-green-600 dark:bg-green-500 text-white rounded hover:bg-green-700 dark:hover:bg-green-600"
+                  className="flex-1 px-4 py-2 text-sm btn-polygon-primary rounded "
                   onClick={saveNew}
                 >
                   Create
@@ -599,16 +599,16 @@ export default function CreatorRoster({ creators, setCreators }) {
         {filteredCreators.map((c) => (
           <div
             key={c.id}
-            className="bg-white dark:bg-gray-800 rounded-xl shadow p-4 sm:p-6 hover:shadow-lg transition-shadow cursor-pointer min-h-[300px] sm:min-h-[400px] flex flex-col"
+            className="card-polygon rounded-xl shadow p-4 sm:p-6 hover:shadow-lg transition-shadow cursor-pointer min-h-[300px] sm:min-h-[400px] flex flex-col"
             onClick={() => !isAdding && editingId !== c.id && startEdit(c)}
           >
             {editingId === c.id ? (
               <div className="space-y-4">
                 <div>
-                  <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Name</label>
+                  <label className="block text-xs font-medium text-polygon-text-secondary mb-1">Name</label>
                   <input
                     type="text"
-                    className="border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-sm w-full bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-50"
+                    className="border border-white/[0.12] rounded px-3 py-2 text-sm w-full bg-white dark:bg-gray-900 text-polygon-text-primary"
                     value={editForm.name}
                     onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
                     onClick={(e) => e.stopPropagation()}
@@ -616,10 +616,10 @@ export default function CreatorRoster({ creators, setCreators }) {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Handle</label>
+                  <label className="block text-xs font-medium text-polygon-text-secondary mb-1">Handle</label>
                   <input
                     type="text"
-                    className="border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-sm w-full bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-50"
+                    className="border border-white/[0.12] rounded px-3 py-2 text-sm w-full bg-white dark:bg-gray-900 text-polygon-text-primary"
                     value={editForm.handle}
                     onChange={(e) => setEditForm({ ...editForm, handle: e.target.value })}
                     onClick={(e) => e.stopPropagation()}
@@ -627,10 +627,10 @@ export default function CreatorRoster({ creators, setCreators }) {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Notes</label>
+                  <label className="block text-xs font-medium text-polygon-text-secondary mb-1">Notes</label>
                   <input
                     type="text"
-                    className="border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-sm w-full bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-50"
+                    className="border border-white/[0.12] rounded px-3 py-2 text-sm w-full bg-white dark:bg-gray-900 text-polygon-text-primary"
                     value={editForm.notes}
                     onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
                     onClick={(e) => e.stopPropagation()}
@@ -638,10 +638,10 @@ export default function CreatorRoster({ creators, setCreators }) {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Cost Per Post</label>
+                  <label className="block text-xs font-medium text-polygon-text-secondary mb-1">Cost Per Post</label>
                   <input
                     type="text"
-                    className="border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-sm w-full bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-50"
+                    className="border border-white/[0.12] rounded px-3 py-2 text-sm w-full bg-white dark:bg-gray-900 text-polygon-text-primary"
                     value={editForm.costPerPost}
                     onChange={(e) => setEditForm({ ...editForm, costPerPost: e.target.value })}
                     onClick={(e) => e.stopPropagation()}
@@ -650,7 +650,7 @@ export default function CreatorRoster({ creators, setCreators }) {
                 </div>
 
                 <div onClick={(e) => e.stopPropagation()}>
-                  <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Platforms</label>
+                  <label className="block text-xs font-medium text-polygon-text-secondary mb-2">Platforms</label>
                   <div className="flex flex-wrap gap-2">
                     {AVAILABLE_PLATFORMS.map(platform => (
                       <button
@@ -662,7 +662,7 @@ export default function CreatorRoster({ creators, setCreators }) {
                         }}
                         className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
                           (editForm.platforms || []).includes(platform)
-                            ? 'bg-indigo-600 dark:bg-indigo-500 text-white'
+                            ? 'btn-polygon-primary'
                             : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
                         }`}
                       >
@@ -674,7 +674,7 @@ export default function CreatorRoster({ creators, setCreators }) {
 
                 <div className="flex gap-2 pt-2" onClick={(e) => e.stopPropagation()}>
                   <button
-                    className="flex-1 px-4 py-2 text-sm bg-indigo-600 dark:bg-indigo-500 text-white rounded hover:bg-indigo-700 dark:hover:bg-indigo-600"
+                    className="flex-1 px-4 py-2 text-sm btn-polygon-primary rounded "
                     onClick={() => saveEdit(c.id)}
                   >
                     Save
@@ -692,13 +692,13 @@ export default function CreatorRoster({ creators, setCreators }) {
                 <div className="flex items-start justify-between mb-3">
                   <div>
                     <div className="flex items-center gap-2 mb-1">
-                      <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-50">{c.name}</h3>
+                      <h3 className="text-xl font-semibold text-polygon-text-primary">{c.name}</h3>
                       {(c.platforms || []).length > 0 && (
                         <div className="flex gap-1">
                           {c.platforms.map(platform => (
                             <span
                               key={platform}
-                              className="px-2 py-0.5 text-xs font-medium bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200 rounded-full"
+                              className="px-2 py-0.5 text-xs font-medium bg-polygon-primary/20 text-polygon-primary-light rounded-full"
                             >
                               {platform}
                             </span>
@@ -706,7 +706,7 @@ export default function CreatorRoster({ creators, setCreators }) {
                         </div>
                       )}
                     </div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">{c.handle}</p>
+                    <p className="text-sm text-polygon-text-secondary">{c.handle}</p>
                   </div>
                   <button
                     onClick={(e) => deleteCreator(c.id, e)}
@@ -716,7 +716,7 @@ export default function CreatorRoster({ creators, setCreators }) {
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">{c.notes}</p>
+                <p className="text-sm text-polygon-text-secondary mb-4">{c.notes}</p>
 
                 {/* Stats */}
                 {(c.posts || []).length > 0 && (() => {
@@ -747,32 +747,32 @@ export default function CreatorRoster({ creators, setCreators }) {
                     <div className="space-y-3 mb-4">
                       {/* Metrics Grid */}
                       <div className="grid grid-cols-2 gap-3">
-                        <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
-                          <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Total Impressions</div>
-                          <div className="text-lg font-bold text-gray-900 dark:text-gray-50">
+                        <div className="bg-polygon-bg-secondary rounded-polygon p-3">
+                          <div className="text-xs text-polygon-text-secondary mb-1">Total Impressions</div>
+                          <div className="text-lg font-bold text-polygon-text-primary">
                             {totalImpressions.toLocaleString()}
                           </div>
                         </div>
 
-                        <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
-                          <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Avg Impressions</div>
-                          <div className="text-lg font-bold text-gray-900 dark:text-gray-50">
+                        <div className="bg-polygon-bg-secondary rounded-polygon p-3">
+                          <div className="text-xs text-polygon-text-secondary mb-1">Avg Impressions</div>
+                          <div className="text-lg font-bold text-polygon-text-primary">
                             {avgImpressions.toLocaleString()}
                           </div>
                         </div>
 
                         {totalCost > 0 && (
                           <>
-                            <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
-                              <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Total Cost</div>
+                            <div className="bg-polygon-bg-secondary rounded-polygon p-3">
+                              <div className="text-xs text-polygon-text-secondary mb-1">Total Cost</div>
                               <div className="text-lg font-bold text-green-600 dark:text-green-400">
                                 ${totalCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                               </div>
                             </div>
 
                             {avgCostPerPost > 0 && (
-                              <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
-                                <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Avg Cost/Post</div>
+                              <div className="bg-polygon-bg-secondary rounded-polygon p-3">
+                                <div className="text-xs text-polygon-text-secondary mb-1">Avg Cost/Post</div>
                                 <div className="text-lg font-bold text-green-600 dark:text-green-400">
                                   ${avgCostPerPost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                 </div>
@@ -782,7 +782,7 @@ export default function CreatorRoster({ creators, setCreators }) {
                         )}
 
                         {cpm > 0 && (
-                          <div className="bg-indigo-50 dark:bg-indigo-900/20 rounded-lg p-3 border-2 border-indigo-200 dark:border-indigo-700">
+                          <div className="bg-indigo-50 dark:bg-indigo-900/20 rounded-polygon p-3 border-2 border-indigo-200 dark:border-indigo-700">
                             <div className="text-xs text-indigo-600 dark:text-indigo-400 font-medium mb-1">CPM (Cost/1K)</div>
                             <div className="text-lg font-bold text-indigo-700 dark:text-indigo-300">
                               ${cpm.toFixed(2)}
@@ -799,7 +799,7 @@ export default function CreatorRoster({ creators, setCreators }) {
                 <div className="mt-auto pt-4 border-t border-gray-100 dark:border-gray-700">
                   <button
                     onClick={(e) => toggleViewPosts(c.id, e)}
-                    className="inline-flex items-center px-3 py-2 text-sm bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 rounded-lg font-medium transition-colors w-full justify-center"
+                    className="inline-flex items-center px-3 py-2 text-sm bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 rounded-polygon font-medium transition-colors w-full justify-center"
                   >
                     <FileText className="h-4 w-4 mr-2" />
                     {viewingPostsId === c.id ? 'Hide' : 'View'} {(c.posts || []).length} Post{(c.posts || []).length !== 1 ? 's' : ''}
@@ -820,7 +820,7 @@ export default function CreatorRoster({ creators, setCreators }) {
                     </div>
 
                     {addingPostId === c.id && (
-                      <div className="bg-gray-50 rounded-lg p-3 space-y-2 border border-indigo-200">
+                      <div className="bg-gray-50 rounded-polygon p-3 space-y-2 border border-indigo-200">
                         <input
                           type="text"
                           placeholder="Description *"
@@ -878,7 +878,7 @@ export default function CreatorRoster({ creators, setCreators }) {
                         <p className="text-xs text-gray-400 text-center py-2">No posts yet</p>
                       ) : (
                         (c.posts || []).map((post) => (
-                          <div key={post.id} className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3 text-sm border border-gray-200 dark:border-gray-600">
+                          <div key={post.id} className="bg-gray-50 dark:bg-gray-700 rounded-polygon p-3 text-sm border border-gray-200 dark:border-gray-600">
                             {editingPostId === post.id ? (
                               <div className="space-y-2 border border-indigo-200 rounded p-2 bg-white">
                                 <input
@@ -934,8 +934,8 @@ export default function CreatorRoster({ creators, setCreators }) {
                             ) : (
                               <div className="flex items-start justify-between">
                                 <div className="flex-1">
-                                  <p className="font-semibold text-gray-900 dark:text-gray-50 mb-2">{post.description}</p>
-                                  <div className="flex flex-wrap items-center gap-3 text-gray-600 dark:text-gray-400 text-sm">
+                                  <p className="font-semibold text-polygon-text-primary mb-2">{post.description}</p>
+                                  <div className="flex flex-wrap items-center gap-3 text-polygon-text-secondary text-sm">
                                     {post.date && (
                                       <span className="inline-flex items-center">
                                         <Calendar className="h-3 w-3 mr-1" />

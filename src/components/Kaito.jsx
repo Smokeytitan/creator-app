@@ -130,21 +130,21 @@ export default function Kaito() {
     if (rank === 1) return 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200';
     if (rank === 2) return 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200';
     if (rank === 3) return 'bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200';
-    return 'bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400';
+    return 'bg-gray-50 dark:bg-gray-800 text-polygon-text-secondary';
   };
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h2 className="text-xl font-medium text-gray-900 dark:text-gray-50">Kaito Creator Leaderboard</h2>
+        <h2 className="text-xl font-medium text-polygon-text-primary">Kaito Creator Leaderboard</h2>
         <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
           Discover the top 115 Polygon creators ranked by influence and engagement
         </p>
       </div>
 
       {/* Date Range Filters */}
-      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded p-3 sm:p-4">
+      <div className="card-polygon border border-gray-200 dark:border-gray-700 rounded p-3 sm:p-4">
         <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-end gap-3 sm:gap-4">
           <div className="flex-1 min-w-[200px]">
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -155,7 +155,7 @@ export default function Kaito() {
                 selected={startDate}
                 onChange={(date) => setStartDate(date)}
                 dateFormat="MMMM d, yyyy"
-                className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 pr-10 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-50 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 cursor-pointer text-sm"
+                className="w-full rounded-polygon border border-gray-300 dark:border-gray-600 px-3 py-2 pr-10 bg-white dark:bg-gray-900 text-polygon-text-primary focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 cursor-pointer text-sm"
                 maxDate={endDate}
                 showPopperArrow={false}
                 wrapperClassName="w-full"
@@ -175,7 +175,7 @@ export default function Kaito() {
                 selected={endDate}
                 onChange={(date) => setEndDate(date)}
                 dateFormat="MMMM d, yyyy"
-                className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 pr-10 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-50 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 cursor-pointer text-sm"
+                className="w-full rounded-polygon border border-gray-300 dark:border-gray-600 px-3 py-2 pr-10 bg-white dark:bg-gray-900 text-polygon-text-primary focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 cursor-pointer text-sm"
                 minDate={startDate}
                 showPopperArrow={false}
                 wrapperClassName="w-full"
@@ -189,29 +189,29 @@ export default function Kaito() {
           <button
             onClick={fetchLeaderboard}
             disabled={loading}
-            className="inline-flex items-center justify-center px-4 py-2 bg-purple-600 dark:bg-purple-500 text-white rounded-lg hover:bg-purple-700 dark:hover:bg-purple-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium w-full sm:w-auto"
+            className="inline-flex items-center justify-center px-4 py-2 bg-purple-600 dark:bg-purple-500 text-white rounded-polygon hover:bg-purple-700 dark:hover:bg-purple-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium w-full sm:w-auto"
             title="Fetch Kaito data for selected date range"
           >
             <TrendingUp className={`w-4 h-4 mr-2 ${loading ? 'animate-pulse' : ''}`} />
             {loading ? 'Fetching...' : 'Fetch Kaito Data'}
           </button>
         </div>
-        <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-3">
+        <div className="text-xs sm:text-sm text-polygon-text-secondary mt-3">
           Showing data from {startDate.toLocaleDateString()} to {endDate.toLocaleDateString()}
         </div>
       </div>
 
       {/* Total Impressions Card */}
       {!loading && totalImpressions > 0 && (
-        <div className="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 border border-indigo-200 dark:border-indigo-800 rounded-lg p-4 sm:p-6">
+        <div className="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 border border-indigo-200 dark:border-indigo-800 rounded-polygon p-4 sm:p-6">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 sm:p-3 bg-indigo-600 dark:bg-indigo-500 rounded-lg">
+              <div className="p-2 sm:p-3 bg-indigo-600 dark:bg-indigo-500 rounded-polygon">
                 <Eye className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
               </div>
               <div>
-                <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400">Total Impressions</p>
-                <p className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-50">
+                <p className="text-xs sm:text-sm font-medium text-polygon-text-secondary">Total Impressions</p>
+                <p className="text-2xl sm:text-3xl font-bold text-polygon-text-primary">
                   {totalImpressions.toLocaleString()}
                 </p>
               </div>
@@ -228,7 +228,7 @@ export default function Kaito() {
 
       {/* Error Status */}
       {error && (
-        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-polygon p-4">
           <div className="flex items-start">
             <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-500 mt-0.5 mr-3 flex-shrink-0" />
             <div>
@@ -242,7 +242,7 @@ export default function Kaito() {
       )}
 
       {/* Search and Filters */}
-      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded p-4">
+      <div className="card-polygon border border-gray-200 dark:border-gray-700 rounded p-4">
         <div className="flex flex-col sm:flex-row gap-4">
           {/* Search */}
           <div className="flex-1">
@@ -253,7 +253,7 @@ export default function Kaito() {
                 placeholder="Search creators..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-polygon bg-white dark:bg-gray-900 text-polygon-text-primary focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
           </div>
@@ -264,7 +264,7 @@ export default function Kaito() {
             <select
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
-              className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-polygon bg-white dark:bg-gray-900 text-polygon-text-primary focus:outline-none focus:ring-2 focus:ring-indigo-500"
             >
               {categories.map(cat => (
                 <option key={cat} value={cat}>
@@ -277,12 +277,12 @@ export default function Kaito() {
       </div>
 
       {/* Leaderboard */}
-      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded overflow-hidden">
+      <div className="card-polygon border border-gray-200 dark:border-gray-700 rounded overflow-hidden">
         {loading && !error ? (
           <div className="flex items-center justify-center py-12">
             <div className="text-center">
               <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-indigo-600 dark:border-indigo-500 border-r-transparent"></div>
-              <p className="mt-4 text-gray-600 dark:text-gray-400">Loading leaderboard...</p>
+              <p className="mt-4 text-polygon-text-secondary">Loading leaderboard...</p>
             </div>
           </div>
         ) : (
@@ -313,7 +313,7 @@ export default function Kaito() {
                       </td>
                       <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
                         <div>
-                          <div className="text-xs sm:text-sm font-medium text-gray-900 dark:text-gray-50">{creator.name}</div>
+                          <div className="text-xs sm:text-sm font-medium text-polygon-text-primary">{creator.name}</div>
                           <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">{creator.handle}</div>
                         </div>
                       </td>
@@ -323,7 +323,7 @@ export default function Kaito() {
                         </span>
                       </td>
                       <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
-                        <div className="flex items-center text-xs sm:text-sm text-gray-900 dark:text-gray-50">
+                        <div className="flex items-center text-xs sm:text-sm text-polygon-text-primary">
                           <Eye className="h-3 w-3 sm:h-4 sm:w-4 mr-1 text-gray-400" />
                           {creator.impressions.toLocaleString()}
                         </div>
@@ -351,7 +351,7 @@ export default function Kaito() {
                       <tr key={`${creator.rank}-tweets`} className="bg-gray-50 dark:bg-gray-900">
                         <td colSpan="5" className="px-3 sm:px-6 py-3 sm:py-4">
                           <div className="space-y-2">
-                            <h4 className="text-sm font-medium text-gray-900 dark:text-gray-50 mb-3">
+                            <h4 className="text-sm font-medium text-polygon-text-primary mb-3">
                               Tweets from {creator.name} ({creator.tweetUrls.length} tweets)
                             </h4>
                             {creator.tweetUrls.length > 0 ? (
@@ -362,9 +362,9 @@ export default function Kaito() {
                                     href={url}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="flex items-center justify-between px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-indigo-500 dark:hover:border-indigo-500 transition-colors group"
+                                    className="flex items-center justify-between px-4 py-2 card-polygon border border-gray-200 dark:border-gray-700 rounded-polygon hover:border-indigo-500 dark:hover:border-indigo-500 transition-colors group"
                                   >
-                                    <span className="text-sm text-gray-600 dark:text-gray-400 truncate flex-1">
+                                    <span className="text-sm text-polygon-text-secondary truncate flex-1">
                                       Tweet #{index + 1}
                                     </span>
                                     <ExternalLink className="h-4 w-4 text-gray-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 ml-2 flex-shrink-0" />
