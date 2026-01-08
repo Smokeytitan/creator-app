@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import CreatorRoster from './components/CreatorRoster';
-import ContentRequests from './components/ContentRequests';
+import CreatorRosterEditorial from './components/CreatorRosterEditorial';
+import ContentRequestsEditorial from './components/ContentRequestsEditorial';
 import Analytics from './components/Analytics';
 import KaitoEditorial from './components/KaitoEditorial';
 import BotAnalyticsEditorial from './components/BotAnalyticsEditorial';
@@ -249,8 +249,8 @@ export default function App() {
             </div>
           ) : (
             <>
-              {activeTab === 'roster' && <CreatorRoster creators={creators} setCreators={setCreators} />}
-              {activeTab === 'requests' && <ContentRequests creators={creators} />}
+              {activeTab === 'roster' && <CreatorRosterEditorial creators={creators} setCreators={setCreators} />}
+              {activeTab === 'requests' && <ContentRequestsEditorial creators={creators} />}
               {activeTab === 'analytics' && <Analytics creators={creators} requests={requests} />}
               {activeTab === 'kaito' && <KaitoEditorial />}
               {activeTab === 'botanalytics' && <BotAnalyticsEditorial />}
