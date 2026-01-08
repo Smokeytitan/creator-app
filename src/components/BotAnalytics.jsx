@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { TrendingUp, MessageSquare, Heart, Repeat, Eye, Calendar, ExternalLink } from 'lucide-react';
+import { TrendingUp, MessageSquare, Heart, Repeat, Eye, Calendar, ExternalLink, ChevronDown, ChevronUp } from 'lucide-react';
 import { BotAnalyticsService } from '../services/botAnalyticsService';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
@@ -12,6 +12,7 @@ export default function BotAnalytics() {
   const [allTimeSummary, setAllTimeSummary] = useState(null);
   const [posts, setPosts] = useState([]);
   const [timeline, setTimeline] = useState([]);
+  const [showAllCreators, setShowAllCreators] = useState(false);
 
   // Date range (default: last 30 days)
   const [startDate, setStartDate] = useState(() => {
@@ -291,9 +292,29 @@ export default function BotAnalytics() {
       {/* Top Creators - Always shows all-time data */}
       {allTimeSummary?.topCreators && allTimeSummary.topCreators.length > 0 && (
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-50 mb-4">Top Creators (All Time)</h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-50">Top Creators (All Time)</h3>
+            {allTimeSummary.topCreators.length > 10 && (
+              <button
+                onClick={() => setShowAllCreators(!showAllCreators)}
+                className="flex items-center gap-2 px-3 py-1 text-sm text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition-colors"
+              >
+                {showAllCreators ? (
+                  <>
+                    <ChevronUp className="w-4 h-4" />
+                    Show Less
+                  </>
+                ) : (
+                  <>
+                    <ChevronDown className="w-4 h-4" />
+                    Show All ({allTimeSummary.topCreators.length})
+                  </>
+                )}
+              </button>
+            )}
+          </div>
           <div className="space-y-3">
-            {allTimeSummary.topCreators.map((creator, index) => (
+            {(showAllCreators ? allTimeSummary.topCreators : allTimeSummary.topCreators.slice(0, 10)).map((creator, index) => (
               <div key={creator.xHandle} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900/50 rounded-lg">
                 <div className="flex items-center gap-3">
                   <div className="flex items-center justify-center w-8 h-8 bg-indigo-100 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 rounded-full font-bold">
