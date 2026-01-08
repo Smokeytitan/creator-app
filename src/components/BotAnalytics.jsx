@@ -1,3 +1,4 @@
+// Bot Analytics Dashboard - Telegram X Post Metrics
 import { useState, useEffect, useMemo } from 'react';
 import { TrendingUp, MessageSquare, Heart, Repeat, Eye, Calendar, ExternalLink, ChevronDown, ChevronUp } from 'lucide-react';
 import { BotAnalyticsService } from '../services/botAnalyticsService';
