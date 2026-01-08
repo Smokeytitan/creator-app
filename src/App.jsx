@@ -3,7 +3,7 @@ import CreatorRoster from './components/CreatorRoster';
 import ContentRequests from './components/ContentRequests';
 import Analytics from './components/Analytics';
 import Kaito from './components/Kaito';
-import BotAnalytics from './components/BotAnalytics';
+import BotAnalyticsEditorial from './components/BotAnalyticsEditorial';
 import ChannelManager from './components/ChannelManager';
 import { GoogleSheetsService } from './services/googleSheetsService';
 import ThemeToggle from './components/ThemeToggle';
@@ -270,7 +270,7 @@ export default function App() {
               {activeTab === 'requests' && <ContentRequests creators={creators} />}
               {activeTab === 'analytics' && <Analytics creators={creators} requests={requests} />}
               {activeTab === 'kaito' && <Kaito />}
-              {activeTab === 'botanalytics' && <BotAnalytics />}
+              {activeTab === 'botanalytics' && <BotAnalyticsEditorial />}
               {activeTab === 'channels' && <ChannelManager />}
             </>
           )}
