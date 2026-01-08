@@ -101,9 +101,9 @@ export default function BotAnalytics() {
   // Skeleton loader
   if (loading && !summary) {
     return (
-      <div className="min-h-screen bg-[#0A0A0F]">
+      <div>
         {/* Slim top bar skeleton */}
-        <div className="sticky top-0 z-10 border-b border-white/[0.06] bg-[#0A0A0F]/80 backdrop-blur-xl">
+        <div className="sticky top-0 z-10 border-b border-white/[0.06] bg-polygon-bg-primary/80 backdrop-blur-xl">
           <div className="px-6 py-4 flex items-center justify-between">
             <div className="h-6 w-32 bg-white/5 rounded animate-pulse"></div>
             <div className="h-9 w-64 bg-white/5 rounded-lg animate-pulse"></div>
@@ -127,7 +127,7 @@ export default function BotAnalytics() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-[#0A0A0F] flex items-center justify-center">
+      <div className="flex items-center justify-center py-24">
         <div className="text-center">
           <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-red-500/10 mb-4">
             <Activity className="w-6 h-6 text-red-400" />
@@ -145,9 +145,9 @@ export default function BotAnalytics() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0A0A0F]">
+    <div>
       {/* Slim sticky header */}
-      <div className="sticky top-0 z-10 border-b border-white/[0.06] bg-[#0A0A0F]/80 backdrop-blur-xl">
+      <div className="sticky top-0 z-10 border-b border-white/[0.06] bg-polygon-bg-primary/80 backdrop-blur-xl">
         <div className="px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
