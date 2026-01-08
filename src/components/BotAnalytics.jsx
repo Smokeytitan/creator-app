@@ -102,26 +102,6 @@ export default function BotAnalytics() {
 
   return (
     <div className="space-y-6">
-      {/* All-Time Stats Banner */}
-      {allTimeSummary && (
-        <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-lg shadow-lg p-6 text-white">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-lg font-semibold opacity-90">All Time Stats</h3>
-              <p className="text-2xl font-bold mt-1">
-                {allTimeSummary.totalPosts} Posts • {formatNumber(allTimeSummary.totalViews)} Impressions
-              </p>
-            </div>
-            <div className="hidden sm:flex gap-6">
-              <div className="text-right">
-                <p className="text-sm opacity-90">Total Engagement</p>
-                <p className="text-xl font-bold">{formatNumber(allTimeSummary.totalLikes + allTimeSummary.totalRetweets)}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Header with Date Range Picker */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
@@ -158,78 +138,62 @@ export default function BotAnalytics() {
         </div>
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Total Posts</p>
-              <p className="text-3xl font-bold text-gray-900 dark:text-gray-50 mt-1">
-                {summary?.totalPosts || 0}
-              </p>
+      {/* Summary Banner */}
+      {summary && (
+        <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-lg shadow-lg p-6">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-6 text-white">
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-white/20 rounded-lg">
+                <MessageSquare className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-sm opacity-90">Total Posts</p>
+                <p className="text-2xl font-bold">{summary.totalPosts || 0}</p>
+              </div>
             </div>
-            <div className="p-3 bg-blue-100 dark:bg-blue-900/20 rounded-lg">
-              <MessageSquare className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-            </div>
-          </div>
-        </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Total Impressions</p>
-              <p className="text-3xl font-bold text-gray-900 dark:text-gray-50 mt-1">
-                {formatNumber(summary?.totalViews)}
-              </p>
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-white/20 rounded-lg">
+                <Eye className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-sm opacity-90">Impressions</p>
+                <p className="text-2xl font-bold">{formatNumber(summary.totalViews)}</p>
+              </div>
             </div>
-            <div className="p-3 bg-yellow-100 dark:bg-yellow-900/20 rounded-lg">
-              <Eye className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
-            </div>
-          </div>
-        </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Total Likes</p>
-              <p className="text-3xl font-bold text-gray-900 dark:text-gray-50 mt-1">
-                {formatNumber(summary?.totalLikes)}
-              </p>
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-white/20 rounded-lg">
+                <Heart className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-sm opacity-90">Likes</p>
+                <p className="text-2xl font-bold">{formatNumber(summary.totalLikes)}</p>
+              </div>
             </div>
-            <div className="p-3 bg-red-100 dark:bg-red-900/20 rounded-lg">
-              <Heart className="w-6 h-6 text-red-600 dark:text-red-400" />
-            </div>
-          </div>
-        </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Total Retweets</p>
-              <p className="text-3xl font-bold text-gray-900 dark:text-gray-50 mt-1">
-                {formatNumber(summary?.totalRetweets)}
-              </p>
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-white/20 rounded-lg">
+                <Repeat className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-sm opacity-90">Retweets</p>
+                <p className="text-2xl font-bold">{formatNumber(summary.totalRetweets)}</p>
+              </div>
             </div>
-            <div className="p-3 bg-green-100 dark:bg-green-900/20 rounded-lg">
-              <Repeat className="w-6 h-6 text-green-600 dark:text-green-400" />
-            </div>
-          </div>
-        </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Engagement Rate</p>
-              <p className="text-3xl font-bold text-gray-900 dark:text-gray-50 mt-1">
-                {summary?.avgEngagementRate?.toFixed(1)}%
-              </p>
-            </div>
-            <div className="p-3 bg-purple-100 dark:bg-purple-900/20 rounded-lg">
-              <TrendingUp className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-white/20 rounded-lg">
+                <TrendingUp className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-sm opacity-90">Engagement</p>
+                <p className="text-2xl font-bold">{summary.avgEngagementRate?.toFixed(1)}%</p>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
