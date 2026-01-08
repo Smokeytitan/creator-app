@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import CreatorRoster from './components/CreatorRoster';
 import ContentRequests from './components/ContentRequests';
 import Analytics from './components/Analytics';
-import Kaito from './components/Kaito';
+import KaitoEditorial from './components/KaitoEditorial';
 import BotAnalyticsEditorial from './components/BotAnalyticsEditorial';
 import ChannelManager from './components/ChannelManager';
 import { GoogleSheetsService } from './services/googleSheetsService';
@@ -269,7 +269,7 @@ export default function App() {
               {activeTab === 'roster' && <CreatorRoster creators={creators} setCreators={setCreators} />}
               {activeTab === 'requests' && <ContentRequests creators={creators} />}
               {activeTab === 'analytics' && <Analytics creators={creators} requests={requests} />}
-              {activeTab === 'kaito' && <Kaito />}
+              {activeTab === 'kaito' && <KaitoEditorial />}
               {activeTab === 'botanalytics' && <BotAnalyticsEditorial />}
               {activeTab === 'channels' && <ChannelManager />}
             </>
