@@ -24,14 +24,16 @@ export default function ChannelManager() {
         headers: { 'X-API-Key': apiKey },
       });
 
-      setChannels(response.data.channels);
+      setChannels(response.data.channels || []);
       setAllowAll(response.data.allowAll);
 
       // Set initially selected channels
       const allowed = new Set();
-      response.data.channels.forEach(ch => {
-        if (ch.isAllowed) allowed.add(ch.channelId);
-      });
+      if (response.data.channels) {
+        response.data.channels.forEach(ch => {
+          if (ch.isAllowed) allowed.add(ch.channelId);
+        });
+      }
       setSelectedChannels(allowed);
     } catch (error) {
       console.error('Failed to fetch channels:', error);
