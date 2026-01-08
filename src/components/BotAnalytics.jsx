@@ -102,12 +102,70 @@ export default function BotAnalytics() {
 
   return (
     <div className="space-y-6">
+      {/* All-Time Stats Banner */}
+      {allTimeSummary && (
+        <div className="bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg shadow-lg p-6">
+          <h3 className="text-white text-lg font-semibold mb-4">All Time Stats</h3>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-6 text-white">
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-white/20 rounded-lg">
+                <MessageSquare className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-sm opacity-90">Total Posts</p>
+                <p className="text-2xl font-bold">{allTimeSummary.totalPosts || 0}</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-white/20 rounded-lg">
+                <Eye className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-sm opacity-90">Impressions</p>
+                <p className="text-2xl font-bold">{formatNumber(allTimeSummary.totalViews)}</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-white/20 rounded-lg">
+                <Heart className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-sm opacity-90">Likes</p>
+                <p className="text-2xl font-bold">{formatNumber(allTimeSummary.totalLikes)}</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-white/20 rounded-lg">
+                <Repeat className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-sm opacity-90">Retweets</p>
+                <p className="text-2xl font-bold">{formatNumber(allTimeSummary.totalRetweets)}</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-white/20 rounded-lg">
+                <TrendingUp className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-sm opacity-90">Engagement</p>
+                <p className="text-2xl font-bold">{allTimeSummary.avgEngagementRate?.toFixed(1)}%</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header with Date Range Picker */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-50">Bot Analytics</h2>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-50">Filtered Analytics</h2>
           <p className="text-gray-600 dark:text-gray-400 text-sm">
-            X post tracking from Telegram channels
+            Select date range to filter data
           </p>
         </div>
 
@@ -138,7 +196,7 @@ export default function BotAnalytics() {
         </div>
       </div>
 
-      {/* Summary Banner */}
+      {/* Filtered Summary Banner */}
       {summary && (
         <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-lg shadow-lg p-6">
           <div className="grid grid-cols-2 md:grid-cols-5 gap-6 text-white">
