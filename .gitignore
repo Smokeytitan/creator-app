@@ -25,3 +25,8 @@ dist-ssr
 *.sw?
 .vercel
 .env*.local
+
+# Development toolkit logs
+dev-server.log
+dev-server-monitor.log
+error-monitor.log
