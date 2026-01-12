@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Migrate localStorage to Supabase</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #0A090D;
+      color: #F3F5FF;
+    }
+    .card {
+      background: #141217;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 30px;
+    }
+    button {
+      background: linear-gradient(135deg, #9A60FF 0%, #6A23E7 100%);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 100px;
+      font-weight: 600;
+      cursor: pointer;
+      margin: 10px 5px;
+    }
+    button:hover {
+      opacity: 0.9;
+    }
+    #log {
+      background: #000;
+      padding: 15px;
+      border-radius: 8px;
+      margin-top: 20px;
+      font-family: monospace;
+      font-size: 12px;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    .success { color: #4ade80; }
+    .error { color: #ef4444; }
+    .info { color: #60a5fa; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Migrate localStorage to Supabase</h1>
+    <p>This tool will migrate your flash campaigns and excluded accounts from localStorage to Supabase.</p>
+
+    <div>
+      <button onclick="checkData()">1. Check localStorage Data</button>
+      <button onclick="migrateData()">2. Migrate to Supabase</button>
+      <button onclick="clearLocalStorage()">3. Clear localStorage</button>
+    </div>
+
+    <div id="log"></div>
+  </div>
+
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+    const supabase = createClient(
+      'https://ibqqffnwawkualsynlrt.supabase.co',
+      'sb_publishable_nyXVq3lwJvKzX5h0QV6n4g_TeyGf1gt'
+    );
+
+    window.supabase = supabase;
+
+    function log(message, type = 'info') {
+      const logDiv = document.getElementById('log');
+      const line = document.createElement('div');
+      line.className = type;
+      line.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+      logDiv.appendChild(line);
+      logDiv.scrollTop = logDiv.scrollHeight;
+      console.log(message);
+    }
+
+    window.checkData = function() {
+      document.getElementById('log').innerHTML = '';
+      log('Checking localStorage...', 'info');
+
+      const campaigns = JSON.parse(localStorage.getItem('flashCampaigns') || '[]');
+      const exclusions = JSON.parse(localStorage.getItem('excludedAccounts') || '[]');
+
+      log(`Found ${campaigns.length} campaigns in localStorage`, 'success');
+      log(`Found ${exclusions.length} excluded accounts in localStorage`, 'success');
+
+      if (exclusions.length > 0) {
+        log('\nExcluded accounts:', 'info');
+        exclusions.forEach(e => {
+          log(`  - @${e.handle}: ${e.reason}`, 'info');
+        });
+      }
+
+      if (campaigns.length > 0) {
+        log('\nCampaigns:', 'info');
+        campaigns.forEach(c => {
+          log(`  - ${c.name} (${c.status})`, 'info');
+        });
+      }
+    };
+
+    window.migrateData = async function() {
+      document.getElementById('log').innerHTML = '';
+      log('Starting migration...', 'info');
+
+      try {
+        // Migrate exclusions
+        const exclusions = JSON.parse(localStorage.getItem('excludedAccounts') || '[]');
+        log(`\nMigrating ${exclusions.length} excluded accounts...`, 'info');
+
+        for (const exclusion of exclusions) {
+          const { data, error } = await supabase
+            .from('excluded_accounts')
+            .upsert({
+              id: exclusion.id,
+              handle: exclusion.handle.toLowerCase().replace(/^@/, ''),
+              reason: exclusion.reason || '',
+              added_at: exclusion.addedAt || new Date().toISOString()
+            }, {
+              onConflict: 'id'
+            })
+            .select();
+
+          if (error) {
+            log(`  ✗ Failed: @${exclusion.handle} - ${error.message}`, 'error');
+          } else {
+            log(`  ✓ Migrated: @${exclusion.handle}`, 'success');
+          }
+        }
+
+        // Migrate campaigns
+        const campaigns = JSON.parse(localStorage.getItem('flashCampaigns') || '[]');
+        log(`\nMigrating ${campaigns.length} campaigns...`, 'info');
+
+        for (const campaign of campaigns) {
+          const { data, error } = await supabase
+            .from('flash_campaigns')
+            .upsert({
+              id: campaign.id,
+              name: campaign.name,
+              description: campaign.description || '',
+              start_date_time: campaign.startDateTime,
+              end_date_time: campaign.endDateTime,
+              key_phrases: campaign.keyPhrases,
+              reward_pool: campaign.rewardPool || '',
+              status: campaign.status,
+              created_at: campaign.createdAt,
+              results: campaign.results ? JSON.stringify(campaign.results) : null
+            }, {
+              onConflict: 'id'
+            })
+            .select();
+
+          if (error) {
+            log(`  ✗ Failed: ${campaign.name} - ${error.message}`, 'error');
+          } else {
+            log(`  ✓ Migrated: ${campaign.name}`, 'success');
+          }
+        }
+
+        log('\n✅ Migration completed!', 'success');
+        log('You can now clear localStorage and use Supabase data', 'info');
+
+      } catch (error) {
+        log(`\n❌ Migration failed: ${error.message}`, 'error');
+      }
+    };
+
+    window.clearLocalStorage = function() {
+      if (confirm('Are you sure? This will delete localStorage data. Make sure migration completed successfully first!')) {
+        localStorage.removeItem('flashCampaigns');
+        localStorage.removeItem('excludedAccounts');
+        log('✅ localStorage cleared', 'success');
+        log('Refresh the app to use Supabase data', 'info');
+      }
+    };
+  </script>
+</body>
+</html>
