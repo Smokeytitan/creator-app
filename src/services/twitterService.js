@@ -83,6 +83,37 @@ export const batchFetchTweets = async (tweetIds, chunkSize = 100) => {
 };
 
 /**
+ * Fetch user timeline (all tweets from a user in a date range)
+ * @param {string} userId - Twitter user ID
+ * @param {string} startTime - ISO 8601 datetime (e.g., "2024-01-01T00:00:00Z")
+ * @param {string} endTime - ISO 8601 datetime
+ * @param {number} maxResults - Max tweets per request (default 100, max 100)
+ * @returns {Promise<Array>} Array of tweet objects
+ */
+export const fetchUserTimeline = async (userId, startTime, endTime, maxResults = 100) => {
+  try {
+    const response = await fetch('/api/twitter-user-timeline', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ userId, startTime, endTime, maxResults })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to fetch user timeline');
+    }
+
+    const data = await response.json();
+    return data.data || [];
+  } catch (error) {
+    console.error(`Error fetching timeline for user ${userId}:`, error);
+    throw error;
+  }
+};
+
+/**
  * Check if tweet text contains any of the key phrases (case-insensitive)
  * @param {string} tweetText - Tweet text content
  * @param {string[]} keyPhrases - Array of key phrases to match
