@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Plus, Zap, Clock, CheckCircle, XCircle, Eye, Calendar, Tag, Trophy } from 'lucide-react';
+import { Plus, Zap, Clock, CheckCircle, XCircle, Eye, Calendar, Tag, Trophy, Trash2 } from 'lucide-react';
 import CampaignCreationModal from './CampaignCreationModal';
 import CampaignResultsView from './CampaignResultsView';
 import ExclusionListManager from './ExclusionListManager';
@@ -8,6 +8,7 @@ import {
   getCampaignsByStatus,
   checkAndProcessEndedCampaigns,
   cancelCampaign,
+  deleteCampaign,
   getStatusDisplay
 } from '../services/flashCampaignService';
 
@@ -95,6 +96,23 @@ const FlashCampaignDashboard = () => {
     if (confirm('Are you sure you want to cancel this campaign?')) {
       cancelCampaign(campaignId);
       loadCampaigns();
+    }
+  };
+
+  const handleDeleteCampaign = (campaignId, campaignName) => {
+    if (confirm(`Are you sure you want to permanently delete the campaign "${campaignName}"? This will delete all campaign data including results and cannot be undone.`)) {
+      deleteCampaign(campaignId);
+      loadCampaigns();
+      // Show success notification
+      setProcessingNotifications(prev => [
+        ...prev,
+        `Campaign "${campaignName}" deleted successfully`
+      ]);
+      setTimeout(() => {
+        setProcessingNotifications(prev =>
+          prev.filter(n => !n.includes(campaignName))
+        );
+      }, 3000);
     }
   };
 
@@ -248,6 +266,15 @@ const FlashCampaignDashboard = () => {
               Cancel
             </button>
           )}
+
+          {/* Delete button - show for all statuses */}
+          <button
+            onClick={() => handleDeleteCampaign(campaign.id, campaign.name)}
+            className="btn-editorial-secondary flex items-center justify-center gap-2 text-red-500 border-red-500/30 hover:bg-red-500/10"
+            title="Delete campaign permanently"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
         </div>
       </div>
     );
