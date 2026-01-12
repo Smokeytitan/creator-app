@@ -264,6 +264,7 @@ export const getExcludedAccounts = async () => {
  * @returns {string} Normalized handle
  */
 export const normalizeHandle = (handle) => {
+  if (!handle) return '';
   return handle.toLowerCase().replace(/^@/, '');
 };
 
@@ -445,6 +446,7 @@ export const fetchCampaignResults = async (campaignId) => {
   // Filter for top 115 creators only and exclude blocked accounts
   const eligibleCreators = leaderboardData
     .filter(creator => creator.rank <= 115)
+    .filter(creator => creator.handle) // Ensure creator has a handle
     .filter(creator => !excludedHandles.includes(normalizeHandle(creator.handle)));
 
   console.log(`Found ${eligibleCreators.length} eligible creators (top 115, excluding blocked accounts)`);
