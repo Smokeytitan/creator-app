@@ -108,6 +108,43 @@ body {
   display: none;
 }
 
+.react-datepicker-popper {
+  z-index: 9999 !important;
+}
+
+.react-datepicker__time-container {
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.react-datepicker__time {
+  background-color: #141217;
+}
+
+.react-datepicker__time-box {
+  width: 100%;
+}
+
+.react-datepicker__time-list {
+  padding: 0;
+}
+
+.react-datepicker__time-list-item {
+  color: #9AA3B2;
+  padding: 8px 10px;
+  transition: all 0.2s ease;
+}
+
+.react-datepicker__time-list-item:hover {
+  background-color: rgba(255, 107, 53, 0.15);
+  color: #F3F5FF;
+}
+
+.react-datepicker__time-list-item--selected {
+  background-color: rgba(255, 107, 53, 0.2) !important;
+  color: #FF6B35 !important;
+  font-weight: 600;
+}
+
 /* Polygon Brand Button Styles */
 .btn-polygon-primary {
   background: radial-gradient(70.64% 70.64% at 50% 25.87%, #9A60FF 0%, #6A23E7 100%);

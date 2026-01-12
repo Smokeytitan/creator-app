@@ -10,7 +10,7 @@ import {
   cancelCampaign,
   deleteCampaign,
   getStatusDisplay
-} from '../services/flashCampaignService';
+} from '../services/flashCampaignServiceSupabase';
 
 const FlashCampaignDashboard = () => {
   const [campaigns, setCampaigns] = useState([]);
@@ -26,10 +26,16 @@ const FlashCampaignDashboard = () => {
   const [processingNotifications, setProcessingNotifications] = useState([]);
 
   // Load campaigns
-  const loadCampaigns = useCallback(() => {
-    const loaded = getCampaigns();
+  const loadCampaigns = useCallback(async () => {
+    const loaded = await getCampaigns();
     setCampaigns(loaded);
-    setGroupedCampaigns(getCampaignsByStatus());
+    const grouped = {
+      active: loaded.filter(c => c.status === 'active'),
+      scheduled: loaded.filter(c => c.status === 'scheduled'),
+      completed: loaded.filter(c => c.status === 'completed'),
+      cancelled: loaded.filter(c => c.status === 'cancelled')
+    };
+    setGroupedCampaigns(grouped);
   }, []);
 
   // Check for ended campaigns
@@ -92,17 +98,17 @@ const FlashCampaignDashboard = () => {
     setViewMode('results');
   };
 
-  const handleCancelCampaign = (campaignId) => {
+  const handleCancelCampaign = async (campaignId) => {
     if (confirm('Are you sure you want to cancel this campaign?')) {
-      cancelCampaign(campaignId);
-      loadCampaigns();
+      await cancelCampaign(campaignId);
+      await loadCampaigns();
     }
   };
 
-  const handleDeleteCampaign = (campaignId, campaignName) => {
+  const handleDeleteCampaign = async (campaignId, campaignName) => {
     if (confirm(`Are you sure you want to permanently delete the campaign "${campaignName}"? This will delete all campaign data including results and cannot be undone.`)) {
-      deleteCampaign(campaignId);
-      loadCampaigns();
+      await deleteCampaign(campaignId);
+      await loadCampaigns();
       // Show success notification
       setProcessingNotifications(prev => [
         ...prev,

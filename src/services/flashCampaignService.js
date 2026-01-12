@@ -1,4 +1,5 @@
 import { KaitoService } from './kaitoService';
+import { extractTweetId, batchFetchTweets, findMatchingPhrase } from './twitterService';
 
 // localStorage keys
 const CAMPAIGNS_KEY = 'flashCampaigns';
@@ -251,7 +252,7 @@ const formatDateForAPI = (dateTime) => {
 };
 
 /**
- * Fetch campaign results from Kaito API
+ * Fetch campaign results from Kaito API with Twitter API integration for phrase matching
  * @param {number} campaignId - Campaign ID
  * @returns {Promise<object>} Updated campaign with results
  */
@@ -274,40 +275,89 @@ export const fetchCampaignResults = async (campaignId) => {
     // Get excluded handles
     const excludedHandles = getExcludedAccounts().map(a => normalizeHandle(a.handle));
 
-    // Filter for top 100 creators only and exclude blocked accounts
+    // Filter for top 115 creators only and exclude blocked accounts
     const eligibleCreators = leaderboardData
-      .filter(creator => creator.rank <= 100)
+      .filter(creator => creator.rank <= 115)
       .filter(creator => !excludedHandles.includes(normalizeHandle(creator.handle)));
 
-    // Collect all tweet URLs with creator info and metrics
-    const eligibleTweets = [];
+    // Collect all tweet URLs with creator info
+    const allTweetData = [];
 
     eligibleCreators.forEach(creator => {
       const tweetUrls = creator.tweetUrls || [];
 
       tweetUrls.forEach(tweetUrl => {
-        eligibleTweets.push({
-          tweetUrl,
-          creatorName: creator.name,
-          creatorHandle: creator.handle,
-          creatorRank: creator.rank,
-          creatorUserId: creator.userId,
-          // Aggregate metrics (per creator, not per tweet)
-          totalImpressions: creator.impressions || 0,
-          totalLikes: creator.totalLikes || 0,
-          totalRetweets: creator.totalRetweets || 0,
-          totalQuotes: creator.totalQuotes || 0,
-          totalBookmarks: creator.totalBookmarks || 0,
-          engagementRate: creator.engagement || '0%',
-          matchedPhrase: 'N/A' // Manual verification required (no tweet content available)
-        });
+        const tweetId = extractTweetId(tweetUrl);
+        if (tweetId) {
+          allTweetData.push({
+            tweetId,
+            tweetUrl,
+            creatorName: creator.name,
+            creatorHandle: creator.handle,
+            creatorRank: creator.rank,
+            creatorUserId: creator.userId,
+            // Aggregate metrics (per creator, not per tweet)
+            totalImpressions: creator.impressions || 0,
+            totalLikes: creator.totalLikes || 0,
+            totalRetweets: creator.totalRetweets || 0,
+            totalQuotes: creator.totalQuotes || 0,
+            totalBookmarks: creator.totalBookmarks || 0,
+            engagementRate: creator.engagement || '0%'
+          });
+        }
       });
     });
+
+    console.log(`Found ${allTweetData.length} tweets from ${eligibleCreators.length} eligible creators`);
+
+    // Fetch tweet content from Twitter API
+    const tweetIds = allTweetData.map(t => t.tweetId);
+    let tweetsWithContent = [];
+
+    try {
+      const twitterTweets = await batchFetchTweets(tweetIds);
+      console.log(`Fetched ${twitterTweets.length} tweets from Twitter API`);
+
+      // Create a map of tweet ID to tweet text
+      const tweetTextMap = {};
+      twitterTweets.forEach(tweet => {
+        tweetTextMap[tweet.id] = tweet.text;
+      });
+
+      // Match tweets against key phrases
+      allTweetData.forEach(tweetData => {
+        const tweetText = tweetTextMap[tweetData.tweetId];
+        if (tweetText) {
+          const matchedPhrase = findMatchingPhrase(tweetText, campaign.keyPhrases);
+          if (matchedPhrase) {
+            // Only include tweets that match key phrases
+            tweetsWithContent.push({
+              ...tweetData,
+              matchedPhrase,
+              tweetText: tweetText.substring(0, 200) // Store first 200 chars for reference
+            });
+          }
+        }
+      });
+
+      console.log(`${tweetsWithContent.length} tweets matched key phrases`);
+
+    } catch (twitterError) {
+      console.error('Error fetching from Twitter API:', twitterError);
+      // Fallback: return all tweets without phrase matching
+      console.log('Falling back to manual verification mode');
+      tweetsWithContent = allTweetData.map(t => ({
+        ...t,
+        matchedPhrase: 'N/A - Twitter API Error',
+        tweetText: null
+      }));
+    }
 
     // Save results to campaign
     const results = {
       fetchedAt: new Date().toISOString(),
-      eligibleTweets
+      eligibleTweets: tweetsWithContent,
+      twitterApiUsed: tweetsWithContent.length > 0 && tweetsWithContent[0].matchedPhrase !== 'N/A - Twitter API Error'
     };
 
     updateCampaignResults(campaignId, results);

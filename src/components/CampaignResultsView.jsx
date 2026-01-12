@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
-import { Download, ExternalLink, RefreshCw, Eye, TrendingUp, Users, Calendar, Award } from 'lucide-react';
-import { fetchCampaignResults, getExcludedAccounts } from '../services/flashCampaignService';
+import { Download, ExternalLink, RefreshCw, Eye, TrendingUp, Users, Calendar, Award, CheckCircle, AlertCircle } from 'lucide-react';
+import { fetchCampaignResults, getExcludedAccounts } from '../services/flashCampaignServiceSupabase';
 
 const CampaignResultsView = ({ campaign, onResultsUpdated }) => {
   const [isRefetching, setIsRefetching] = useState(false);
@@ -97,11 +97,12 @@ const CampaignResultsView = ({ campaign, onResultsUpdated }) => {
     csv += `Excluded Accounts: ${excludedHandles || 'None'}\n\n`;
 
     // Column headers
-    csv += 'Creator Name,Handle,Rank,Tweet URL,Impressions,Likes,Retweets,Quotes,Bookmarks,Engagement Rate,Matched Phrase\n';
+    csv += 'Creator Name,Handle,Rank,Tweet URL,Impressions,Likes,Retweets,Quotes,Bookmarks,Engagement Rate,Matched Phrase,Tweet Preview\n';
 
     // Data rows
     campaign.results.eligibleTweets.forEach(tweet => {
-      csv += `"${tweet.creatorName}","${tweet.creatorHandle}",${tweet.creatorRank},"${tweet.tweetUrl}",${tweet.totalImpressions},${tweet.totalLikes},${tweet.totalRetweets},${tweet.totalQuotes},${tweet.totalBookmarks},"${tweet.engagementRate}","${tweet.matchedPhrase}"\n`;
+      const tweetPreview = tweet.tweetText ? tweet.tweetText.replace(/"/g, '""') : 'N/A';
+      csv += `"${tweet.creatorName}","${tweet.creatorHandle}",${tweet.creatorRank},"${tweet.tweetUrl}",${tweet.totalImpressions},${tweet.totalLikes},${tweet.totalRetweets},${tweet.totalQuotes},${tweet.totalBookmarks},"${tweet.engagementRate}","${tweet.matchedPhrase}","${tweetPreview}"\n`;
     });
 
     // Download file
@@ -291,9 +292,43 @@ const CampaignResultsView = ({ campaign, onResultsUpdated }) => {
         </button>
       </div>
 
+      {/* Twitter API Status Banner */}
+      {campaign.results.twitterApiUsed ? (
+        <div className="card-editorial bg-green-500/5 border-green-500/30">
+          <div className="flex gap-3">
+            <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+            <div className="text-sm">
+              <p className="font-medium text-green-500 mb-1">Automatic Phrase Matching Enabled</p>
+              <p className="text-green-500/80 text-xs">
+                Tweet content was fetched from Twitter API and automatically matched against your key phrases. Only tweets containing the required phrases are shown below.
+              </p>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="card-editorial bg-yellow-500/5 border-yellow-500/30">
+          <div className="flex gap-3">
+            <AlertCircle className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
+            <div className="text-sm">
+              <p className="font-medium text-yellow-500 mb-1">Manual Verification Required</p>
+              <p className="text-yellow-500/80 text-xs">
+                Twitter API was unavailable during results fetching. Click "View Tweet" links to manually verify that each tweet contains the required key phrases.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Results Table */}
       <div className="card-editorial overflow-hidden">
-        <h4 className="text-lg font-bold mb-4">Eligible Tweets (Top 100 Creators Only)</h4>
+        <h4 className="text-lg font-bold mb-4">
+          Eligible Tweets (Top 115 Creators Only)
+          {campaign.results.twitterApiUsed && (
+            <span className="ml-2 text-xs text-green-500 font-normal">
+              • Phrase-matched
+            </span>
+          )}
+        </h4>
 
         {sortedTweets.length === 0 ? (
           <div className="text-center py-12">
@@ -325,6 +360,14 @@ const CampaignResultsView = ({ campaign, onResultsUpdated }) => {
                   <th className="text-left py-3 px-4 text-xs font-medium text-[var(--color-text-tertiary)]">
                     Tweet
                   </th>
+                  {campaign.results.twitterApiUsed && (
+                    <th
+                      className="text-left py-3 px-4 text-xs font-medium text-[var(--color-text-tertiary)] cursor-pointer hover:text-[var(--color-text-primary)]"
+                      onClick={() => handleSort('matchedPhrase')}
+                    >
+                      Matched Phrase {sortConfig.key === 'matchedPhrase' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                    </th>
+                  )}
                   <th
                     className="text-left py-3 px-4 text-xs font-medium text-[var(--color-text-tertiary)] cursor-pointer hover:text-[var(--color-text-primary)]"
                     onClick={() => handleSort('totalImpressions')}
@@ -360,16 +403,30 @@ const CampaignResultsView = ({ campaign, onResultsUpdated }) => {
                       </div>
                     </td>
                     <td className="py-3 px-4">
-                      <a
-                        href={tweet.tweetUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-2 text-sm text-[var(--color-accent-primary)] hover:text-[var(--color-accent-secondary)] transition-colors"
-                      >
-                        <span>View Tweet</span>
-                        <ExternalLink className="w-3 h-3" />
-                      </a>
+                      <div className="flex flex-col gap-1">
+                        <a
+                          href={tweet.tweetUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 text-sm text-[var(--color-accent-primary)] hover:text-[var(--color-accent-secondary)] transition-colors"
+                        >
+                          <span>View Tweet</span>
+                          <ExternalLink className="w-3 h-3" />
+                        </a>
+                        {tweet.tweetText && (
+                          <p className="text-xs text-[var(--color-text-tertiary)] italic max-w-xs truncate" title={tweet.tweetText}>
+                            "{tweet.tweetText}"
+                          </p>
+                        )}
+                      </div>
                     </td>
+                    {campaign.results.twitterApiUsed && (
+                      <td className="py-3 px-4">
+                        <span className="px-2 py-1 text-xs bg-green-500/10 text-green-500 rounded-full border border-green-500/30">
+                          {tweet.matchedPhrase}
+                        </span>
+                      </td>
+                    )}
                     <td className="py-3 px-4">
                       <span className="text-mono text-sm">
                         {tweet.totalImpressions.toLocaleString()}
@@ -386,20 +443,6 @@ const CampaignResultsView = ({ campaign, onResultsUpdated }) => {
             </table>
           </div>
         )}
-      </div>
-
-      {/* Note about manual verification */}
-      <div className="card-editorial bg-yellow-500/5 border-yellow-500/30">
-        <div className="flex gap-3">
-          <Award className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
-          <div className="text-sm">
-            <p className="font-medium text-yellow-500 mb-1">Manual Verification Required</p>
-            <p className="text-yellow-500/80 text-xs">
-              Click "View Tweet" links to manually verify that each tweet contains the required key phrases.
-              The Kaito API provides tweet URLs but not tweet content, so automatic phrase matching is not available in this version.
-            </p>
-          </div>
-        </div>
       </div>
     </div>
   );

@@ -4,7 +4,7 @@ import {
   getExcludedAccounts,
   addExcludedAccount,
   removeExcludedAccount
-} from '../services/flashCampaignService';
+} from '../services/flashCampaignServiceSupabase';
 
 const ExclusionListManager = () => {
   const [exclusions, setExclusions] = useState([]);
@@ -18,12 +18,12 @@ const ExclusionListManager = () => {
     loadExclusions();
   }, []);
 
-  const loadExclusions = () => {
-    const loaded = getExcludedAccounts();
+  const loadExclusions = async () => {
+    const loaded = await getExcludedAccounts();
     setExclusions(loaded);
   };
 
-  const handleAdd = (e) => {
+  const handleAdd = async (e) => {
     e.preventDefault();
     setError('');
 
@@ -40,10 +40,10 @@ const ExclusionListManager = () => {
         ? newHandle.trim()
         : `@${newHandle.trim()}`;
 
-      addExcludedAccount(handle, newReason.trim());
+      await addExcludedAccount(handle, newReason.trim());
 
       // Reload exclusions
-      loadExclusions();
+      await loadExclusions();
 
       // Reset form
       setNewHandle('');
@@ -56,10 +56,10 @@ const ExclusionListManager = () => {
     }
   };
 
-  const handleRemove = (exclusionId) => {
+  const handleRemove = async (exclusionId) => {
     try {
-      removeExcludedAccount(exclusionId);
-      loadExclusions();
+      await removeExcludedAccount(exclusionId);
+      await loadExclusions();
     } catch (err) {
       console.error('Error removing exclusion:', err);
     }
