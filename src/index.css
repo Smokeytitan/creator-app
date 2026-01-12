@@ -264,6 +264,60 @@ body {
   border-left: 3px solid var(--color-accent-primary);
 }
 
+/* Editorial Button Styles */
+.btn-editorial-primary {
+  padding: 0.625rem 1.25rem;
+  background: linear-gradient(135deg, var(--color-accent-primary) 0%, var(--color-accent-secondary) 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(255, 107, 53, 0.2);
+}
+
+.btn-editorial-primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+}
+
+.btn-editorial-primary:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.btn-editorial-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-editorial-secondary {
+  padding: 0.625rem 1.25rem;
+  background: transparent;
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-editorial-secondary:hover:not(:disabled) {
+  background: var(--color-bg-tertiary);
+  border-color: var(--color-border-hover);
+}
+
+.btn-editorial-secondary:active:not(:disabled) {
+  background: var(--color-bg-secondary);
+}
+
+.btn-editorial-secondary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
