@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Plus, Zap, Clock, CheckCircle, XCircle, Eye, Calendar, Tag, Trophy, Trash2 } from 'lucide-react';
+import { Plus, Zap, Clock, CheckCircle, XCircle, Eye, Calendar, Tag, Trophy, Trash2, RefreshCw } from 'lucide-react';
 import CampaignCreationModal from './CampaignCreationModal';
 import CampaignResultsView from './CampaignResultsView';
 import ExclusionListManager from './ExclusionListManager';
@@ -24,6 +24,7 @@ const FlashCampaignDashboard = () => {
   const [selectedCampaign, setSelectedCampaign] = useState(null);
   const [viewMode, setViewMode] = useState('list'); // 'list' | 'results' | 'exclusions'
   const [processingNotifications, setProcessingNotifications] = useState([]);
+  const [isManualProcessing, setIsManualProcessing] = useState(false);
 
   // Load campaigns
   const loadCampaigns = useCallback(async () => {
@@ -126,6 +127,43 @@ const FlashCampaignDashboard = () => {
     setViewMode('list');
     setSelectedCampaign(null);
     loadCampaigns(); // Reload in case results were refetched
+  };
+
+  const handleManualProcess = async () => {
+    setIsManualProcessing(true);
+    try {
+      const processed = await checkAndProcessEndedCampaigns();
+
+      if (processed.length > 0) {
+        setProcessingNotifications(prev => [
+          ...prev,
+          `Processed ${processed.length} campaign(s): ${processed.map(c => c.name).join(', ')}`
+        ]);
+        setTimeout(() => {
+          setProcessingNotifications(prev => prev.slice(1));
+        }, 5000);
+        await loadCampaigns();
+      } else {
+        setProcessingNotifications(prev => [
+          ...prev,
+          'No campaigns need processing at this time'
+        ]);
+        setTimeout(() => {
+          setProcessingNotifications(prev => prev.slice(1));
+        }, 3000);
+      }
+    } catch (error) {
+      console.error('Manual processing error:', error);
+      setProcessingNotifications(prev => [
+        ...prev,
+        `Error: ${error.message}`
+      ]);
+      setTimeout(() => {
+        setProcessingNotifications(prev => prev.slice(1));
+      }, 5000);
+    } finally {
+      setIsManualProcessing(false);
+    }
   };
 
   const getTimeRemaining = (endDateTime) => {
@@ -366,6 +404,15 @@ const FlashCampaignDashboard = () => {
           className="btn-editorial-secondary flex items-center gap-2"
         >
           Manage Exclusions
+        </button>
+        <button
+          onClick={handleManualProcess}
+          disabled={isManualProcessing}
+          className="btn-editorial-secondary flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          title="Manually check for ended campaigns and process them"
+        >
+          <RefreshCw className={`w-4 h-4 ${isManualProcessing ? 'animate-spin' : ''}`} />
+          {isManualProcessing ? 'Processing...' : 'Process Now'}
         </button>
       </div>
 
