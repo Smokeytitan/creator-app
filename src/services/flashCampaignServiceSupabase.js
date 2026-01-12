@@ -441,7 +441,16 @@ export const fetchCampaignResults = async (campaignId) => {
 
   // Fetch Kaito leaderboard data
   const kaitoService = new KaitoService();
-  const leaderboardData = await kaitoService.getLeaderboardByDateRange(startDate, endDate);
+  const rawLeaderboardData = await kaitoService.getLeaderboardByDateRange(startDate, endDate);
+
+  // Transform raw Kaito data to add handle field (Kaito uses 'username' field)
+  const leaderboardData = rawLeaderboardData.map(creator => ({
+    ...creator,
+    handle: creator.username ? `@${creator.username}` : null,
+    name: creator.displayname || creator.username || 'Unknown'
+  }));
+
+  console.log(`Transformed ${leaderboardData.length} creators from Kaito API`);
 
   // Filter for top 115 creators only and exclude blocked accounts
   const eligibleCreators = leaderboardData
