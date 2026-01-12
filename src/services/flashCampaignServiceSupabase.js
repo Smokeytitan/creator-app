@@ -377,17 +377,29 @@ export const checkAndProcessEndedCampaigns = async () => {
   const now = new Date();
   const processedCampaigns = [];
 
+  console.log('[checkAndProcessEndedCampaigns] Total campaigns:', campaigns.length);
+  console.log('[checkAndProcessEndedCampaigns] Current time:', now.toISOString());
+
   // Find campaigns that have ended but not yet processed
   const endedCampaigns = campaigns.filter(c =>
     c.status === 'active' && new Date(c.endDateTime) <= now
   );
 
+  console.log('[checkAndProcessEndedCampaigns] Found ended campaigns:', endedCampaigns.length);
+  endedCampaigns.forEach(c => {
+    console.log('  -', c.name, 'ended at', c.endDateTime);
+  });
+
   for (const campaign of endedCampaigns) {
     try {
+      console.log(`[checkAndProcessEndedCampaigns] Processing campaign: ${campaign.name}`);
       await fetchCampaignResults(campaign.id);
-      processedCampaigns.push(campaign.name);
+      processedCampaigns.push(campaign);
+      console.log(`[checkAndProcessEndedCampaigns] Successfully processed: ${campaign.name}`);
     } catch (error) {
-      console.error(`Failed to process campaign ${campaign.id}:`, error);
+      console.error(`[checkAndProcessEndedCampaigns] Failed to process campaign ${campaign.id}:`, error);
+      // Still add to processed list but mark as failed
+      processedCampaigns.push({ ...campaign, error: error.message });
     }
   }
 
@@ -395,6 +407,8 @@ export const checkAndProcessEndedCampaigns = async () => {
   const scheduledCampaigns = campaigns.filter(c =>
     c.status === 'scheduled' && new Date(c.startDateTime) <= now
   );
+
+  console.log('[checkAndProcessEndedCampaigns] Found scheduled campaigns to activate:', scheduledCampaigns.length);
 
   for (const campaign of scheduledCampaigns) {
     await updateCampaignStatus(campaign.id, 'active');
