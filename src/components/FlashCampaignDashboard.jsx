@@ -222,7 +222,7 @@ const FlashCampaignDashboard = () => {
           <div className="mb-4 p-2 bg-white/5 rounded-lg">
             <p className="text-xs text-[var(--color-text-secondary)] flex items-center gap-2">
               <Clock className="w-3 h-3" />
-              {isActive ? getTimeRemaining(campaign.endDateTime) : getTimeUntilStart(campaign.startDateTime)}
+              {isActive ? getTimeRemaining(campaign.endDateTime) : getTimeUntilStart(campaign.startDateTime)} (EST)
             </p>
           </div>
         )}

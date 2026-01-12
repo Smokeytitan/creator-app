@@ -59,12 +59,29 @@ const CampaignCreationModal = ({ isOpen, onClose, onCampaignCreated }) => {
         .map(p => p.trim())
         .filter(p => p.length > 0);
 
+      // Convert selected time to EST
+      // User sees/picks time in EST, but DatePicker stores it in browser's local time
+      // We need to interpret the date/time AS IF it were in EST timezone
+      const convertToEST = (localDate) => {
+        // Format: "2025-01-11 15:30:00" - treat this as EST time
+        const year = localDate.getFullYear();
+        const month = String(localDate.getMonth() + 1).padStart(2, '0');
+        const day = String(localDate.getDate()).padStart(2, '0');
+        const hours = String(localDate.getHours()).padStart(2, '0');
+        const minutes = String(localDate.getMinutes()).padStart(2, '0');
+
+        // Create an ISO string for EST timezone explicitly
+        // This creates the date in EST and returns UTC timestamp
+        const estString = `${year}-${month}-${day}T${hours}:${minutes}:00-05:00`; // -05:00 is EST offset
+        return new Date(estString);
+      };
+
       // Create campaign
       const campaignData = {
         name: formData.name.trim(),
         description: formData.description.trim(),
-        startDateTime: formData.startDateTime.toISOString(),
-        endDateTime: formData.endDateTime.toISOString(),
+        startDateTime: convertToEST(formData.startDateTime).toISOString(),
+        endDateTime: convertToEST(formData.endDateTime).toISOString(),
         keyPhrases,
         rewardPool: formData.rewardPool.trim()
       };
