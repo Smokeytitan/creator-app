@@ -1,0 +1,48 @@
+================================================================================
+VERCEL ENVIRONMENT VARIABLES - ADD THESE TO YOUR PROJECT
+================================================================================
+
+Go to: Vercel Dashboard → Your Project → Settings → Environment Variables
+
+Add these 5 variables (set for Production, Preview, and Development):
+
+================================================================================
+
+1. VITE_SUPABASE_URL
+   Value: https://ibqqffnwawkualsynlrt.supabase.co
+   Environments: ✓ Production ✓ Preview ✓ Development
+
+2. VITE_SUPABASE_ANON_KEY
+   Value: sb_publishable_nyXVq3lwJvKzX5h0QV6n4g_TeyGf1gt
+   Environments: ✓ Production ✓ Preview ✓ Development
+
+3. CRON_SECRET
+   Value: 0KK0UttTzPtBX+IvzMX0RWO9JLBbiorSBjIib49Zi9c=
+   Environments: ✓ Production (only needed in production)
+
+4. VITE_KAITO_API_KEY (if not already added)
+   Value: l5WWSDoert2mCtOH7dfDz5Ni5l7eGJMk4OCJZKXi
+   Environments: ✓ Production ✓ Preview ✓ Development
+
+5. VITE_TWITTER_BEARER_TOKEN (if not already added)
+   Value: AAAAAAAAAAAAAAAAAAAAAH286wEAAAAANJSPGKkfHrScm%2BZsZaT7t8YPdKg%3D6YNbIGSmhhRMfB8R3yJpEVpaFxrLP0mz6eO510u9bbkokuGTmE
+   Environments: ✓ Production ✓ Preview ✓ Development
+
+================================================================================
+
+After adding all variables:
+1. Go to Deployments tab
+2. Click "..." menu on the latest deployment
+3. Click "Redeploy" to apply the new environment variables
+
+================================================================================
+
+Once deployed, the cron job will run every minute at:
+/api/cron-check-campaigns
+
+You can monitor cron job execution in:
+Vercel Dashboard → Your Project → Logs
+
+Look for entries with [CRON] prefix to see campaign processing in real-time.
+
+================================================================================

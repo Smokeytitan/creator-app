@@ -19,7 +19,9 @@ const ExclusionListManager = () => {
   }, []);
 
   const loadExclusions = async () => {
+    console.log('Loading exclusions from Supabase...');
     const loaded = await getExcludedAccounts();
+    console.log('Loaded exclusions:', loaded);
     setExclusions(loaded);
   };
 
