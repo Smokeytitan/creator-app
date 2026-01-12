@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test Supabase Connection</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #0A090D;
+      color: #F3F5FF;
+    }
+    .card {
+      background: #141217;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 30px;
+    }
+    button {
+      background: linear-gradient(135deg, #9A60FF 0%, #6A23E7 100%);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 100px;
+      font-weight: 600;
+      cursor: pointer;
+      margin: 10px 5px;
+    }
+    button:hover {
+      opacity: 0.9;
+    }
+    pre {
+      background: #000;
+      padding: 15px;
+      border-radius: 8px;
+      margin-top: 20px;
+      font-size: 12px;
+      max-height: 400px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+    }
+    .success { color: #4ade80; }
+    .error { color: #ef4444; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Supabase Connection Test</h1>
+    <button onclick="testConnection()">Test Connection</button>
+    <button onclick="fetchExclusions()">Fetch Exclusions</button>
+    <pre id="output">Click "Test Connection" to start...</pre>
+  </div>
+
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+    const output = document.getElementById('output');
+
+    function log(message) {
+      output.textContent += message + '\n';
+      console.log(message);
+    }
+
+    window.testConnection = async function() {
+      output.textContent = 'Testing Supabase connection...\n\n';
+
+      const url = 'https://ibqqffnwawkualsynlrt.supabase.co';
+      const key = 'sb_publishable_nyXVq3lwJvKzX5h0QV6n4g_TeyGf1gt';
+
+      log(`URL: ${url}`);
+      log(`Key: ${key.substring(0, 20)}...`);
+      log('');
+
+      try {
+        const supabase = createClient(url, key);
+        log('✓ Supabase client created');
+
+        // Test query
+        const { data, error, count } = await supabase
+          .from('excluded_accounts')
+          .select('*', { count: 'exact' });
+
+        if (error) {
+          log('✗ Error: ' + error.message);
+          log('Error details: ' + JSON.stringify(error, null, 2));
+        } else {
+          log(`✓ Successfully connected!`);
+          log(`✓ Found ${data.length} excluded accounts`);
+          log('');
+          log('Data:');
+          log(JSON.stringify(data, null, 2));
+        }
+      } catch (err) {
+        log('✗ Exception: ' + err.message);
+        log(err.stack);
+      }
+    };
+
+    window.fetchExclusions = async function() {
+      output.textContent = 'Fetching exclusions...\n\n';
+
+      try {
+        const supabase = createClient(
+          'https://ibqqffnwawkualsynlrt.supabase.co',
+          'sb_publishable_nyXVq3lwJvKzX5h0QV6n4g_TeyGf1gt'
+        );
+
+        const { data, error } = await supabase
+          .from('excluded_accounts')
+          .select('*')
+          .order('added_at', { ascending: false });
+
+        if (error) {
+          log('Error: ' + JSON.stringify(error, null, 2));
+        } else {
+          log(`Found ${data.length} accounts:\n`);
+          data.forEach(acc => {
+            log(`  @${acc.handle} - ${acc.reason}`);
+          });
+        }
+      } catch (err) {
+        log('Exception: ' + err.message);
+      }
+    };
+  </script>
+</body>
+</html>
