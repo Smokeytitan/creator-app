@@ -440,7 +440,7 @@ export const fetchCampaignResults = async (campaignId) => {
 
   // Fetch Kaito leaderboard data
   const kaitoService = new KaitoService();
-  const leaderboardData = await kaitoService.getLeaderboard(startDate, endDate);
+  const leaderboardData = await kaitoService.getLeaderboardByDateRange(startDate, endDate);
 
   // Filter for top 115 creators only and exclude blocked accounts
   const eligibleCreators = leaderboardData
