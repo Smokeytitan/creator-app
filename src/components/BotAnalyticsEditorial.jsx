@@ -1,6 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
-import { TrendingUp, MessageSquare, Heart, Repeat, Eye, Calendar, ExternalLink, ChevronDown, ChevronUp, Activity, Zap } from 'lucide-react';
+import { TrendingUp, MessageSquare, Heart, Repeat, Eye, Calendar, ExternalLink, ChevronDown, ChevronUp, Activity, Zap, UserX } from 'lucide-react';
 import { BotAnalyticsService } from '../services/botAnalyticsService';
+import BotExclusionManager from './BotExclusionManager';
+import { filterExcludedPosts } from '../services/botExclusionService';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
@@ -13,6 +15,7 @@ export default function BotAnalyticsEditorial() {
   const [posts, setPosts] = useState([]);
   const [timeline, setTimeline] = useState([]);
   const [showAllCreators, setShowAllCreators] = useState(false);
+  const [viewMode, setViewMode] = useState('analytics'); // 'analytics' | 'exclusions'
 
   const [startDate, setStartDate] = useState(() => {
     const date = new Date();
@@ -54,8 +57,11 @@ export default function BotAnalyticsEditorial() {
         service.fetchTimeline({ startDate: start, endDate: end, groupBy: 'day' }),
       ]);
 
+      // Filter out excluded accounts
+      const filteredPosts = await filterExcludedPosts(postsData);
+
       setSummary(summaryData);
-      setPosts(postsData);
+      setPosts(filteredPosts);
       setTimeline(timelineData);
     } catch (err) {
       setError('Failed to load bot analytics');
@@ -106,16 +112,42 @@ export default function BotAnalyticsEditorial() {
     );
   }
 
+  // Show exclusions view
+  if (viewMode === 'exclusions') {
+    return (
+      <div>
+        <button
+          onClick={() => setViewMode('analytics')}
+          className="btn-editorial-secondary mb-6"
+        >
+          ← Back to Analytics
+        </button>
+        <BotExclusionManager />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8 pb-12">
       {/* Hero Header */}
       <div className="border-b border-[var(--color-border)] pb-8" style={{ animation: 'fadeInUp 0.4s ease-out' }}>
-        <h1 className="text-display text-5xl mb-3 text-[var(--color-text-primary)]">
-          Creator Analytics
-        </h1>
-        <p className="text-[var(--color-text-secondary)] text-lg">
-          Real-time performance metrics from Telegram channels
-        </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-display text-5xl mb-3 text-[var(--color-text-primary)]">
+              Creator Analytics
+            </h1>
+            <p className="text-[var(--color-text-secondary)] text-lg">
+              Real-time performance metrics from Telegram channels
+            </p>
+          </div>
+          <button
+            onClick={() => setViewMode('exclusions')}
+            className="btn-editorial-secondary flex items-center gap-2"
+          >
+            <UserX className="w-4 h-4" />
+            Manage Exclusions
+          </button>
+        </div>
       </div>
 
       {/* All-Time Metrics Grid */}
