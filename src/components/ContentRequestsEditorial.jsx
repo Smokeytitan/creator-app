@@ -5,8 +5,32 @@ import { INITIAL_REQUESTS } from '../data/initialRequests';
 import { extractTweetId, fetchTweets } from '../services/twitterService';
 import { createCampaign, updateCampaign, deleteCampaign as deleteCampaignSupabase, getCampaigns } from '../services/campaignsServiceSupabase';
 import { supabase } from '../lib/supabaseClient';
+import { migrateLocalStorageToSupabase } from '../utils/migrateToSupabase';
 
 const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setRequests }) => {
+  const [migrating, setMigrating] = useState(false);
+
+  const migrateData = async () => {
+    if (!confirm('This will migrate your localStorage campaigns to Supabase. Continue?')) {
+      return;
+    }
+
+    setMigrating(true);
+    try {
+      const results = await migrateLocalStorageToSupabase();
+      alert(`Migration complete!\nCampaigns: ${results.requests.migrated}/${results.requests.total}\nCreators: ${results.creators.migrated}/${results.creators.total}\nPosts: ${results.posts.migrated}/${results.posts.total}`);
+
+      // Reload campaigns from Supabase
+      const updated = await getCampaigns();
+      setRequests(updated);
+    } catch (error) {
+      console.error('Migration error:', error);
+      alert('Migration failed: ' + error.message);
+    } finally {
+      setMigrating(false);
+    }
+  };
+
   const resetToCampaigns = () => {
     if (confirm('This will load all campaigns from Google Sheets. Your current requests will be replaced. Are you sure?')) {
       setRequests(INITIAL_REQUESTS);
@@ -675,7 +699,22 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
                 Completed
               </button>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
+              {supabase && (
+                <button
+                  onClick={migrateData}
+                  disabled={migrating}
+                  className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-all duration-200 shadow-lg shadow-blue-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
+                  title="Migrate localStorage data to Supabase"
+                >
+                  {migrating ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                  )}
+                  {migrating ? 'Migrating...' : 'Migrate Data'}
+                </button>
+              )}
               <button
                 onClick={exportCampaignsToCSV}
                 className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg bg-green-500 text-white hover:bg-green-600 transition-all duration-200 shadow-lg shadow-green-500/25"
