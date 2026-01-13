@@ -58,10 +58,15 @@ export default function ContentRequestModal({ creators, onClose, onSubmit }) {
 
   // Calculate estimated total impressions for selected creators
   const estimatedImpressions = useMemo(() => {
-    return selectedCreatorIds.reduce((total, creatorId) => {
+    console.log('Calculating estimated impressions for selectedCreatorIds:', selectedCreatorIds);
+    console.log('Available creatorStats:', creatorStats.map(s => ({ id: s.id, avgImpressions: s.avgImpressions })));
+    const total = selectedCreatorIds.reduce((total, creatorId) => {
       const stats = creatorStats.find(s => s.id === creatorId);
+      console.log(`Creator ${creatorId}: found stats =`, stats);
       return total + (stats?.avgImpressions || 0);
     }, 0);
+    console.log('Total estimated impressions:', total);
+    return total;
   }, [selectedCreatorIds, creatorStats]);
 
   // Calculate estimated total cost for selected creators
