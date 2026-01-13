@@ -42,8 +42,9 @@ if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
   process.exit(1);
 }
 
-// Google Sheets CSV export URL
-const GOOGLE_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1J75nBdYNyQivMdi7XihhpYr6aXOnCNcJIAjTQLwjkXk/export?format=csv&gid=1537582832';
+// Google Sheets CSV export URLs
+const ROSTER_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1J75nBdYNyQivMdi7XihhpYr6aXOnCNcJIAjTQLwjkXk/export?format=csv&gid=1537582832';
+const DELIVERABLES_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1J75nBdYNyQivMdi7XihhpYr6aXOnCNcJIAjTQLwjkXk/export?format=csv&gid=0';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -129,8 +130,94 @@ function mapToCreators(rawData) {
   return creators;
 }
 
-// Initial campaigns data
-const INITIAL_CAMPAIGNS = [
+/**
+ * Parse Deliverables sheet and map to campaigns with posts
+ * Expected format: Each row is a campaign with creator columns (name, name impressions, ...)
+ * Header row: Content Request, Req Date, Picolas Cage, Picolas Cage Impressions, Jampzey, Jampzey Impressions, ...
+ */
+function mapToCampaigns(rawData, creatorMapping) {
+  if (rawData.length < 2) {
+    console.error('Invalid deliverables format: not enough rows');
+    return [];
+  }
+
+  const headerRow = rawData[0];
+  const campaigns = [];
+
+  // Parse header to get creator column indices
+  const creatorColumns = [];
+  for (let i = 2; i < headerRow.length; i += 2) {
+    const creatorName = headerRow[i];
+    if (creatorName && creatorName.trim()) {
+      creatorColumns.push({
+        name: creatorName.trim(),
+        urlIndex: i,
+        impressionsIndex: i + 1
+      });
+    }
+  }
+
+  // Process each campaign row
+  for (let rowIndex = 1; rowIndex < rawData.length; rowIndex++) {
+    const row = rawData[rowIndex];
+    const campaignTitle = row[0]?.trim();
+    const reqDate = row[1]?.trim();
+
+    if (!campaignTitle) continue;
+
+    const campaign = {
+      id: rowIndex,
+      title: campaignTitle,
+      description: `Content campaign: ${campaignTitle}`,
+      status: 'completed',
+      created_at: reqDate ? parseDateString(reqDate) : new Date().toISOString(),
+      posts: []
+    };
+
+    let totalImpressions = 0;
+
+    // Extract posts for each creator
+    for (const creatorCol of creatorColumns) {
+      const tweetUrl = row[creatorCol.urlIndex]?.trim();
+      const impressions = row[creatorCol.impressionsIndex]?.trim();
+
+      if (tweetUrl && impressions) {
+        const creatorId = creatorMapping[creatorCol.name];
+        if (creatorId) {
+          campaign.posts.push({
+            creator_id: creatorId,
+            creator_name: creatorCol.name,
+            tweet_url: tweetUrl,
+            impressions: parseInt(impressions.replace(/,/g, '')) || 0
+          });
+          totalImpressions += parseInt(impressions.replace(/,/g, '')) || 0;
+        }
+      }
+    }
+
+    campaign.estimated_impressions = totalImpressions;
+    campaigns.push(campaign);
+  }
+
+  return campaigns;
+}
+
+/**
+ * Parse date string from Google Sheets (e.g., "11/18/25" or "12/2/25")
+ */
+function parseDateString(dateStr) {
+  try {
+    const [month, day, year] = dateStr.split('/');
+    const fullYear = year.length === 2 ? `20${year}` : year;
+    return new Date(`${fullYear}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`).toISOString();
+  } catch (error) {
+    console.warn(`Failed to parse date: ${dateStr}`);
+    return new Date().toISOString();
+  }
+}
+
+// Fallback campaigns data (if Deliverables sheet fails)
+const FALLBACK_CAMPAIGNS = [
   {
     id: 1,
     title: "Revolut x Mastercard",
@@ -223,24 +310,42 @@ async function importGoogleSheetsToSupabase() {
   console.log('='.repeat(60));
 
   try {
-    // Step 1: Fetch Google Sheets data
-    console.log('\n[1/4] Fetching data from Google Sheets...');
-    const response = await axios.get(GOOGLE_SHEET_URL);
-    const csvText = response.data;
-    console.log('✓ Successfully fetched CSV data');
+    // Step 1: Fetch Roster data
+    console.log('\n[1/5] Fetching Roster data from Google Sheets...');
+    const rosterResponse = await axios.get(ROSTER_SHEET_URL);
+    const rosterCsvText = rosterResponse.data;
+    console.log('✓ Successfully fetched Roster CSV data');
 
-    // Step 2: Parse and transform data
-    console.log('\n[2/4] Parsing and transforming creators...');
-    const rawData = parseCSV(csvText);
-    const creators = mapToCreators(rawData);
+    // Step 2: Parse and transform creators
+    console.log('\n[2/5] Parsing and transforming creators...');
+    const rosterData = parseCSV(rosterCsvText);
+    const creators = mapToCreators(rosterData);
     console.log(`✓ Parsed ${creators.length} creators from Google Sheets`);
 
     if (creators.length === 0) {
       throw new Error('No creators found in Google Sheets');
     }
 
-    // Step 3: Import creators to Supabase
-    console.log('\n[3/4] Importing creators to Supabase...');
+    // Create creator name -> ID mapping
+    const creatorMapping = {};
+    creators.forEach(creator => {
+      creatorMapping[creator.name] = creator.id;
+    });
+
+    // Step 3: Fetch Deliverables data
+    console.log('\n[3/5] Fetching Deliverables data from Google Sheets...');
+    const deliverablesResponse = await axios.get(DELIVERABLES_SHEET_URL);
+    const deliverablesCsvText = deliverablesResponse.data;
+    console.log('✓ Successfully fetched Deliverables CSV data');
+
+    // Step 4: Parse and transform campaigns
+    console.log('\n[4/5] Parsing and transforming campaigns...');
+    const deliverablesData = parseCSV(deliverablesCsvText);
+    const campaigns = mapToCampaigns(deliverablesData, creatorMapping);
+    console.log(`✓ Parsed ${campaigns.length} campaigns from Google Sheets`);
+
+    // Step 5: Import creators to Supabase
+    console.log('\n[5/5] Importing creators to Supabase...');
     let creatorsImported = 0;
     let creatorsUpdated = 0;
     let creatorsErrorCount = 0;
@@ -280,13 +385,14 @@ async function importGoogleSheetsToSupabase() {
       }
     }
 
-    // Step 4: Import campaigns to Supabase
-    console.log('\n[4/4] Importing campaigns to Supabase...');
+    // Step 6: Import campaigns to Supabase
+    console.log('\n[6/6] Importing campaigns and posts to Supabase...');
     let campaignsImported = 0;
     let campaignsUpdated = 0;
     let campaignsErrorCount = 0;
+    let postsImported = 0;
 
-    for (const campaign of INITIAL_CAMPAIGNS) {
+    for (const campaign of campaigns) {
       try {
         // Check if campaign already exists
         const { data: existing } = await supabase
@@ -303,9 +409,8 @@ async function importGoogleSheetsToSupabase() {
               title: campaign.title,
               description: campaign.description,
               status: campaign.status,
-              estimated_cost: campaign.estimated_cost,
               estimated_impressions: campaign.estimated_impressions,
-              created_at: new Date().toISOString()
+              created_at: campaign.created_at
             })
             .eq('id', campaign.id);
 
@@ -320,9 +425,8 @@ async function importGoogleSheetsToSupabase() {
               title: campaign.title,
               description: campaign.description,
               status: campaign.status,
-              estimated_cost: campaign.estimated_cost,
               estimated_impressions: campaign.estimated_impressions,
-              created_at: new Date().toISOString()
+              created_at: campaign.created_at
             }]);
 
           if (insertError) throw insertError;
@@ -330,8 +434,42 @@ async function importGoogleSheetsToSupabase() {
           console.log(`  ✓ Imported campaign: ${campaign.title}`);
         }
 
+        // Import posts for this campaign
+        for (const post of campaign.posts) {
+          try {
+            const { error: postError } = await supabase
+              .from('posts')
+              .insert([{
+                creator_id: post.creator_id,
+                campaign_id: campaign.id,
+                link: post.tweet_url,
+                impressions: post.impressions.toString(),
+                platform: 'X',
+                date: campaign.created_at
+              }]);
+
+            if (postError) {
+              // If post already exists, try to update it
+              await supabase
+                .from('posts')
+                .update({
+                  impressions: post.impressions.toString(),
+                  link: post.tweet_url
+                })
+                .eq('creator_id', post.creator_id)
+                .eq('campaign_id', campaign.id)
+                .eq('link', post.tweet_url);
+            }
+
+            postsImported++;
+          } catch (postError) {
+            console.error(`  ✗ Failed to import post for ${post.creator_name}:`, postError.message);
+          }
+        }
+
         // Insert creator associations
-        for (const creatorId of campaign.creators) {
+        const uniqueCreatorIds = [...new Set(campaign.posts.map(p => p.creator_id))];
+        for (const creatorId of uniqueCreatorIds) {
           await supabase
             .from('campaign_creators')
             .upsert({
@@ -353,7 +491,8 @@ async function importGoogleSheetsToSupabase() {
     console.log('Import Summary:');
     console.log('='.repeat(60));
     console.log(`Creators - Total: ${creators.length}, Imported: ${creatorsImported}, Updated: ${creatorsUpdated}, Errors: ${creatorsErrorCount}`);
-    console.log(`Campaigns - Total: ${INITIAL_CAMPAIGNS.length}, Imported: ${campaignsImported}, Updated: ${campaignsUpdated}, Errors: ${campaignsErrorCount}`);
+    console.log(`Campaigns - Total: ${campaigns.length}, Imported: ${campaignsImported}, Updated: ${campaignsUpdated}, Errors: ${campaignsErrorCount}`);
+    console.log(`Posts - Imported: ${postsImported}`);
     console.log('='.repeat(60));
 
     if (creatorsErrorCount === 0 && campaignsErrorCount === 0) {
