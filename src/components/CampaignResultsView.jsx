@@ -70,8 +70,9 @@ const CampaignResultsView = ({ campaign, onResultsUpdated }) => {
     }
   };
 
-  const handleExportCSV = () => {
-    const excludedHandles = getExcludedAccounts().map(a => `@${a.handle}`).join(', ');
+  const handleExportCSV = async () => {
+    const excludedAccounts = await getExcludedAccounts();
+    const excludedHandles = excludedAccounts.map(a => `@${a.handle}`).join(', ');
 
     // Format dates in EST
     const formatDateEST = (dateStr) => {

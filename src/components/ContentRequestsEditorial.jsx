@@ -1,7 +1,8 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Plus, Calendar, User, CheckCircle, Clock, XCircle, Trash2, Edit2, Save, X, Search, RefreshCw, Eye, DollarSign, Download, FileText } from 'lucide-react';
+import { Plus, Calendar, User, CheckCircle, Clock, XCircle, Trash2, Edit2, Save, X, Search, RefreshCw, Eye, DollarSign, Download, FileText, Loader2 } from 'lucide-react';
 import ContentRequestModal from './ContentRequestModal';
 import { INITIAL_REQUESTS } from '../data/initialRequests';
+import { extractTweetId, fetchTweets } from '../services/twitterService';
 
 const ContentRequestsEditorial = ({ creators, setCreators }) => {
   const resetToCampaigns = () => {
@@ -61,6 +62,7 @@ const ContentRequestsEditorial = ({ creators, setCreators }) => {
     cost: '',
     date: new Date().toISOString().split('T')[0]
   });
+  const [fetchingTweetData, setFetchingTweetData] = useState(false);
 
   // Save requests to localStorage whenever it changes
   useEffect(() => {
@@ -151,6 +153,59 @@ const ContentRequestsEditorial = ({ creators, setCreators }) => {
       cost: '',
       date: new Date().toISOString().split('T')[0]
     });
+    setFetchingTweetData(false);
+  };
+
+  // Fetch tweet metrics from Twitter API
+  const fetchTweetMetrics = async (url) => {
+    // Only fetch for X/Twitter platform
+    if (contentForm.platform !== 'X') {
+      return;
+    }
+
+    const tweetId = extractTweetId(url);
+    if (!tweetId) {
+      console.log('Invalid Twitter URL');
+      return;
+    }
+
+    setFetchingTweetData(true);
+
+    try {
+      const response = await fetchTweets([tweetId]);
+
+      if (response.data && response.data.length > 0) {
+        const tweet = response.data[0];
+        const metrics = tweet.public_metrics;
+
+        // Update form with fetched metrics
+        setContentForm(prev => ({
+          ...prev,
+          impressions: metrics.impression_count?.toString() || '',
+          likes: metrics.like_count?.toString() || '',
+          comments: metrics.reply_count?.toString() || ''
+        }));
+
+        console.log('Successfully fetched tweet metrics:', metrics);
+      } else {
+        console.warn('No tweet data found');
+      }
+    } catch (error) {
+      console.error('Failed to fetch tweet metrics:', error);
+      // Don't show alert, just log - user can still enter manually
+    } finally {
+      setFetchingTweetData(false);
+    }
+  };
+
+  // Handle link input change with automatic metric fetching
+  const handleLinkChange = (newLink) => {
+    setContentForm({ ...contentForm, link: newLink });
+
+    // Auto-fetch metrics when a valid Twitter URL is pasted
+    if (contentForm.platform === 'X' && newLink.includes('/status/')) {
+      fetchTweetMetrics(newLink);
+    }
   };
 
   const submitContent = () => {
@@ -209,8 +264,11 @@ const ContentRequestsEditorial = ({ creators, setCreators }) => {
     let filtered = requests;
 
     // Filter by status
-    if (filterStatus !== 'all') {
-      filtered = filtered.filter(req => req.status === filterStatus);
+    if (filterStatus === 'completed') {
+      filtered = filtered.filter(req => req.status === 'completed');
+    } else if (filterStatus === 'all') {
+      // Show only ongoing (non-completed) requests
+      filtered = filtered.filter(req => req.status !== 'completed');
     }
 
     // Filter by creator
@@ -451,19 +509,26 @@ const ContentRequestsEditorial = ({ creators, setCreators }) => {
         <div className="flex flex-col gap-4">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div className="flex gap-2 flex-wrap">
-              {['all', 'pending', 'in-progress', 'completed', 'cancelled'].map((status) => (
-                <button
-                  key={status}
-                  onClick={() => setFilterStatus(status)}
-                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
-                    filterStatus === status
-                      ? 'bg-gradient-to-r from-[var(--color-accent-primary)] to-[var(--color-accent-secondary)] text-white shadow-lg shadow-[var(--color-accent-primary)]/25'
-                      : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)] border border-[var(--color-border)]'
-                  }`}
-                >
-                  {status.charAt(0).toUpperCase() + status.slice(1).replace('-', ' ')}
-                </button>
-              ))}
+              <button
+                onClick={() => setFilterStatus('all')}
+                className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
+                  filterStatus === 'all' || (filterStatus !== 'completed')
+                    ? 'bg-gradient-to-r from-[var(--color-accent-primary)] to-[var(--color-accent-secondary)] text-white shadow-lg shadow-[var(--color-accent-primary)]/25'
+                    : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)] border border-[var(--color-border)]'
+                }`}
+              >
+                Ongoing
+              </button>
+              <button
+                onClick={() => setFilterStatus('completed')}
+                className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
+                  filterStatus === 'completed'
+                    ? 'bg-gradient-to-r from-[var(--color-accent-primary)] to-[var(--color-accent-secondary)] text-white shadow-lg shadow-[var(--color-accent-primary)]/25'
+                    : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)] border border-[var(--color-border)]'
+                }`}
+              >
+                Completed
+              </button>
             </div>
             <div className="flex gap-2">
               <button
@@ -639,130 +704,132 @@ const ContentRequestsEditorial = ({ creators, setCreators }) => {
                   </div>
                 </div>
               ) : (
-                <div className="flex items-center justify-between">
-                  <div className="flex items-start space-x-4 flex-1">
-                    {getStatusIcon(request.status)}
-                    <div className="flex-1 min-w-0">
-                      <h4 className="text-lg font-semibold text-[var(--color-text-primary)] mb-1">
-                        {request.title}
-                      </h4>
-                      <p className="text-sm text-[var(--color-text-secondary)] mb-2">{request.description}</p>
-                      <div className="flex items-center gap-4 text-sm text-[var(--color-text-tertiary)] mb-2">
-                        <div className="flex items-center text-mono">
-                          <User className="h-4 w-4 mr-1" />
-                          {(request.creators || []).map(c => c.name).join(', ')}
-                        </div>
-                        {request.startDate && (
+                <div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-start space-x-4 flex-1">
+                      {getStatusIcon(request.status)}
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-lg font-semibold text-[var(--color-text-primary)] mb-1">
+                          {request.title}
+                        </h4>
+                        <p className="text-sm text-[var(--color-text-secondary)] mb-2">{request.description}</p>
+                        <div className="flex items-center gap-4 text-sm text-[var(--color-text-tertiary)] mb-2">
+                          <div className="flex items-center text-mono">
+                            <User className="h-4 w-4 mr-1" />
+                            {(request.creators || []).map(c => c.name).join(', ')}
+                          </div>
+                          {request.startDate && (
+                            <div className="flex items-center text-mono">
+                              <Calendar className="h-4 w-4 mr-1" />
+                              Started: {new Date(request.startDate).toLocaleDateString()}
+                            </div>
+                          )}
                           <div className="flex items-center text-mono">
                             <Calendar className="h-4 w-4 mr-1" />
-                            Started: {new Date(request.startDate).toLocaleDateString()}
+                            Due: {new Date(request.dueDate).toLocaleDateString()}
                           </div>
-                        )}
-                        <div className="flex items-center text-mono">
-                          <Calendar className="h-4 w-4 mr-1" />
-                          Due: {new Date(request.dueDate).toLocaleDateString()}
                         </div>
-                      </div>
-                      {(() => {
-                        // For pending requests, show estimated metrics
-                        if (request.status === 'pending') {
-                          const estimated = getEstimatedMetrics(request);
-                          return (
-                            <div className="flex items-center gap-4 text-sm font-medium">
-                              <div className="flex items-center text-[var(--color-accent-primary)]">
-                                <Eye className="h-4 w-4 mr-1" />
-                                <span className="text-mono">
-                                  {estimated.estimatedImpressions > 0
-                                    ? `~${estimated.estimatedImpressions.toLocaleString()} est. impressions`
-                                    : 'N/A est. impressions'}
-                                </span>
-                              </div>
-                              {estimated.estimatedCost > 0 && (
-                                <div className="flex items-center text-green-500">
-                                  <DollarSign className="h-4 w-4 mr-1" />
-                                  <span className="text-mono">
-                                    ~${estimated.estimatedCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} est. cost
-                                  </span>
-                                </div>
-                              )}
-                            </div>
-                          );
-                        } else {
-                          // For other statuses, show actual metrics
-                          const metrics = getCampaignMetrics(request);
-                          if (metrics.totalImpressions > 0 || metrics.totalCost > 0) {
+                        {(() => {
+                          // For pending requests, show estimated metrics
+                          if (request.status === 'pending') {
+                            const estimated = getEstimatedMetrics(request);
                             return (
                               <div className="flex items-center gap-4 text-sm font-medium">
-                                {metrics.totalImpressions > 0 && (
-                                  <div className="flex items-center text-[var(--color-accent-primary)]">
-                                    <Eye className="h-4 w-4 mr-1" />
-                                    <span className="text-mono">
-                                      {metrics.totalImpressions.toLocaleString()} impressions
-                                    </span>
-                                  </div>
-                                )}
-                                {metrics.totalCost > 0 && (
+                                <div className="flex items-center text-[var(--color-accent-primary)]">
+                                  <Eye className="h-4 w-4 mr-1" />
+                                  <span className="text-mono">
+                                    {estimated.estimatedImpressions > 0
+                                      ? `~${estimated.estimatedImpressions.toLocaleString()} est. impressions`
+                                      : 'N/A est. impressions'}
+                                  </span>
+                                </div>
+                                {estimated.estimatedCost > 0 && (
                                   <div className="flex items-center text-green-500">
                                     <DollarSign className="h-4 w-4 mr-1" />
                                     <span className="text-mono">
-                                      ${metrics.totalCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                      ~${estimated.estimatedCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} est. cost
                                     </span>
                                   </div>
                                 )}
                               </div>
                             );
+                          } else {
+                            // For other statuses, show actual metrics
+                            const metrics = getCampaignMetrics(request);
+                            if (metrics.totalImpressions > 0 || metrics.totalCost > 0) {
+                              return (
+                                <div className="flex items-center gap-4 text-sm font-medium">
+                                  {metrics.totalImpressions > 0 && (
+                                    <div className="flex items-center text-[var(--color-accent-primary)]">
+                                      <Eye className="h-4 w-4 mr-1" />
+                                      <span className="text-mono">
+                                        {metrics.totalImpressions.toLocaleString()} impressions
+                                      </span>
+                                    </div>
+                                  )}
+                                  {metrics.totalCost > 0 && (
+                                    <div className="flex items-center text-green-500">
+                                      <DollarSign className="h-4 w-4 mr-1" />
+                                      <span className="text-mono">
+                                        ${metrics.totalCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            }
                           }
-                        }
-                        return null;
-                      })()}
+                          return null;
+                        })()}
+                      </div>
+                    </div>
+                    <div className="ml-4 flex items-center gap-2">
+                      <span className={`inline-flex items-center px-3 py-1 rounded-lg text-sm font-medium ${getStatusColor(request.status)}`}>
+                        {request.status}
+                      </span>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          startAddContent(request);
+                        }}
+                        className="p-2 text-[var(--color-text-tertiary)] hover:text-green-500 hover:bg-green-500/10 rounded transition-colors"
+                        title="Add content"
+                      >
+                        <FileText className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          startEditRequest(request);
+                        }}
+                        className="p-2 text-[var(--color-text-tertiary)] hover:text-[var(--color-accent-primary)] hover:bg-[var(--color-bg-tertiary)] rounded transition-colors"
+                        title="Edit request"
+                      >
+                        <Edit2 className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deleteRequest(request.id);
+                        }}
+                        className="p-2 text-[var(--color-text-tertiary)] hover:text-red-500 hover:bg-red-500/10 rounded transition-colors"
+                        title="Delete request"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
                     </div>
                   </div>
-                  <div className="ml-4 flex items-center gap-2">
-                    <span className={`inline-flex items-center px-3 py-1 rounded-lg text-sm font-medium ${getStatusColor(request.status)}`}>
-                      {request.status}
-                    </span>
+
+                  {/* Add Content Button - Full Width */}
+                  <div className="mt-4 pt-4 border-t border-[var(--color-border)]">
                     <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        startAddContent(request);
-                      }}
-                      className="p-2 text-[var(--color-text-tertiary)] hover:text-green-500 hover:bg-green-500/10 rounded transition-colors"
-                      title="Add content"
+                      onClick={() => startAddContent(request)}
+                      className="w-full inline-flex items-center justify-center px-4 py-2.5 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors"
                     >
-                      <FileText className="h-4 w-4" />
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        startEditRequest(request);
-                      }}
-                      className="p-2 text-[var(--color-text-tertiary)] hover:text-[var(--color-accent-primary)] hover:bg-[var(--color-bg-tertiary)] rounded transition-colors"
-                      title="Edit request"
-                    >
-                      <Edit2 className="h-4 w-4" />
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        deleteRequest(request.id);
-                      }}
-                      className="p-2 text-[var(--color-text-tertiary)] hover:text-red-500 hover:bg-red-500/10 rounded transition-colors"
-                      title="Delete request"
-                    >
-                      <Trash2 className="h-4 w-4" />
+                      <FileText className="h-4 w-4 mr-2" />
+                      Add Content
                     </button>
                   </div>
-                </div>
-
-                {/* Add Content Button - Full Width */}
-                <div className="mt-4 pt-4 border-t border-[var(--color-border)]">
-                  <button
-                    onClick={() => startAddContent(request)}
-                    className="w-full inline-flex items-center justify-center px-4 py-2.5 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors"
-                  >
-                    <FileText className="h-4 w-4 mr-2" />
-                    Add Content
-                  </button>
                 </div>
               )}
             </li>
@@ -849,7 +916,7 @@ const ContentRequestsEditorial = ({ creators, setCreators }) => {
                 </label>
                 <input
                   type="text"
-                  placeholder="Brief description of the content"
+                  placeholder=""
                   value={contentForm.description}
                   onChange={(e) => setContentForm({ ...contentForm, description: e.target.value })}
                   className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent-primary)]"
@@ -878,14 +945,26 @@ const ContentRequestsEditorial = ({ creators, setCreators }) => {
               <div>
                 <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">
                   Link (Post URL)
+                  {fetchingTweetData && (
+                    <span className="ml-2 text-xs text-blue-500 inline-flex items-center">
+                      <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                      Fetching metrics...
+                    </span>
+                  )}
                 </label>
                 <input
                   type="url"
                   placeholder="https://..."
                   value={contentForm.link}
-                  onChange={(e) => setContentForm({ ...contentForm, link: e.target.value })}
-                  className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent-primary)]"
+                  onChange={(e) => handleLinkChange(e.target.value)}
+                  disabled={fetchingTweetData}
+                  className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent-primary)] disabled:opacity-50 disabled:cursor-not-allowed"
                 />
+                {contentForm.platform === 'X' && (
+                  <p className="text-xs text-[var(--color-text-tertiary)] mt-1">
+                    Paste a Twitter/X URL to automatically fetch impressions, likes, and replies
+                  </p>
+                )}
               </div>
 
               {/* Date and Cost in a grid */}
@@ -920,6 +999,11 @@ const ContentRequestsEditorial = ({ creators, setCreators }) => {
               <div className="border-t border-[var(--color-border)] pt-4">
                 <h4 className="text-sm font-medium text-[var(--color-text-primary)] mb-3">
                   Performance Metrics
+                  {contentForm.platform === 'X' && (
+                    <span className="ml-2 text-xs text-green-500">
+                      (Auto-filled from Twitter API)
+                    </span>
+                  )}
                 </h4>
                 <div className="grid grid-cols-3 gap-3">
                   <div>
@@ -932,7 +1016,8 @@ const ContentRequestsEditorial = ({ creators, setCreators }) => {
                       placeholder="e.g., 10000"
                       value={contentForm.impressions}
                       onChange={(e) => setContentForm({ ...contentForm, impressions: e.target.value })}
-                      className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent-primary)]"
+                      disabled={fetchingTweetData}
+                      className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent-primary)] disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                   </div>
 
@@ -945,20 +1030,22 @@ const ContentRequestsEditorial = ({ creators, setCreators }) => {
                       placeholder="e.g., 500"
                       value={contentForm.likes}
                       onChange={(e) => setContentForm({ ...contentForm, likes: e.target.value })}
-                      className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent-primary)]"
+                      disabled={fetchingTweetData}
+                      className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent-primary)] disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">
-                      Comments <span className="text-xs text-[var(--color-text-tertiary)]">(optional)</span>
+                      Replies <span className="text-xs text-[var(--color-text-tertiary)]">(optional)</span>
                     </label>
                     <input
                       type="text"
                       placeholder="e.g., 50"
                       value={contentForm.comments}
                       onChange={(e) => setContentForm({ ...contentForm, comments: e.target.value })}
-                      className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent-primary)]"
+                      disabled={fetchingTweetData}
+                      className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent-primary)] disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                   </div>
                 </div>

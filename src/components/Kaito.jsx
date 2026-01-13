@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { TrendingUp, Award, Eye, Users, RefreshCw, AlertCircle, Search, Filter, ChevronDown, ChevronUp, ExternalLink, Calendar } from 'lucide-react';
 import { KaitoService } from '../services/kaitoService';
+import { getExcludedAccounts, normalizeHandle } from '../services/flashCampaignServiceSupabase';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 
@@ -14,6 +15,8 @@ export default function Kaito() {
   const [endDate, setEndDate] = useState(new Date('2025-12-31'));
   const [expandedCreatorId, setExpandedCreatorId] = useState(null);
   const [totalReceived, setTotalReceived] = useState(0);
+  const [excludedAccounts, setExcludedAccounts] = useState([]);
+  const [hideExcluded, setHideExcluded] = useState(false);
 
   // Format dates for API
   const formatDateForAPI = (date) => {
@@ -91,16 +94,20 @@ export default function Kaito() {
     }
   }, [startDate, endDate]);
 
+  // Load excluded accounts on mount
+  useEffect(() => {
+    const loadExcludedAccounts = async () => {
+      const accounts = await getExcludedAccounts();
+      setExcludedAccounts(accounts);
+    };
+    loadExcludedAccounts();
+  }, []);
+
   // Fetch on mount only
   useEffect(() => {
     fetchLeaderboard();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  // Calculate total impressions across all creators
-  const totalImpressions = useMemo(() => {
-    return leaderboardData.reduce((sum, creator) => sum + (creator.impressions || 0), 0);
-  }, [leaderboardData]);
 
   const categories = useMemo(() => {
     const cats = new Set(leaderboardData.map(c => c.category));
@@ -109,6 +116,15 @@ export default function Kaito() {
 
   const filteredLeaderboard = useMemo(() => {
     let filtered = leaderboardData;
+
+    // Filter by exclusion list if enabled
+    if (hideExcluded && excludedAccounts.length > 0) {
+      const excludedHandles = excludedAccounts.map(a => normalizeHandle(a.handle));
+      filtered = filtered.filter(c => {
+        const creatorHandle = normalizeHandle(c.handle);
+        return !excludedHandles.includes(creatorHandle);
+      });
+    }
 
     if (categoryFilter !== 'all') {
       filtered = filtered.filter(c => c.category === categoryFilter);
@@ -124,7 +140,12 @@ export default function Kaito() {
     }
 
     return filtered;
-  }, [leaderboardData, categoryFilter, searchTerm]);
+  }, [leaderboardData, categoryFilter, searchTerm, hideExcluded, excludedAccounts]);
+
+  // Calculate total impressions across filtered creators
+  const totalImpressions = useMemo(() => {
+    return filteredLeaderboard.reduce((sum, creator) => sum + (creator.impressions || 0), 0);
+  }, [filteredLeaderboard]);
 
   const getRankBadgeColor = (rank) => {
     if (rank === 1) return 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200';
@@ -217,7 +238,9 @@ export default function Kaito() {
               </div>
             </div>
             <div className="text-left sm:text-right">
-              <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Top {totalReceived} Creators</p>
+              <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+                {filteredLeaderboard.length} of {totalReceived} Creators
+              </p>
               <p className="text-xs text-gray-400 dark:text-gray-500">
                 {startDate.toLocaleDateString()} - {endDate.toLocaleDateString()}
               </p>
@@ -273,6 +296,23 @@ export default function Kaito() {
               ))}
             </select>
           </div>
+
+          {/* Exclusion Filter Toggle */}
+          {excludedAccounts.length > 0 && (
+            <div className="flex items-center gap-2">
+              <label className="flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={hideExcluded}
+                  onChange={(e) => setHideExcluded(e.target.checked)}
+                  className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                />
+                <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
+                  Hide {excludedAccounts.length} excluded account{excludedAccounts.length !== 1 ? 's' : ''}
+                </span>
+              </label>
+            </div>
+          )}
         </div>
       </div>
 
@@ -299,15 +339,17 @@ export default function Kaito() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                {filteredLeaderboard.map((creator) => (
+                {filteredLeaderboard.map((creator, index) => {
+                  const displayRank = index + 1;
+                  return (
                   <>
                     <tr key={creator.rank} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                       <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
-                        <div className={`inline-flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-full ${getRankBadgeColor(creator.rank)} font-bold text-xs sm:text-sm`}>
-                          {creator.rank <= 3 ? (
+                        <div className={`inline-flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-full ${getRankBadgeColor(displayRank)} font-bold text-xs sm:text-sm`}>
+                          {displayRank <= 3 ? (
                             <Award className="h-3 w-3 sm:h-4 sm:w-4" />
                           ) : (
-                            creator.rank
+                            displayRank
                           )}
                         </div>
                       </td>
@@ -379,7 +421,8 @@ export default function Kaito() {
                       </tr>
                     )}
                   </>
-                ))}
+                );
+                })}
               </tbody>
             </table>
             </div>

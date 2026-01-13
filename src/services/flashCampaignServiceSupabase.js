@@ -449,7 +449,8 @@ export const fetchCampaignResults = async (campaignId) => {
   const leaderboardData = rawLeaderboardData.map(creator => ({
     ...creator,
     handle: creator.username ? `@${creator.username}` : null,
-    name: creator.displayname || creator.username || 'Unknown'
+    name: creator.displayname || creator.username || 'Unknown',
+    tweetUrls: creator.tweet_urls || [] // Transform snake_case to camelCase
   }));
 
   console.log(`[Campaign ${campaign.name}] Transformed ${leaderboardData.length} creators from Kaito`);
@@ -496,84 +497,142 @@ export const fetchCampaignResults = async (campaignId) => {
     return;
   }
 
-  // STEP 3: Fetch tweet content from Twitter API and cache in Supabase
-  console.log(`[Campaign ${campaign.name}] Fetching tweets from Twitter API...`);
-  const twitterTweets = await batchFetchTweets(tweetIds);
-  console.log(`[Campaign ${campaign.name}] Fetched ${twitterTweets.length} tweets from Twitter`);
-
-  // STEP 4: Cache tweets in Supabase
-  console.log(`[Campaign ${campaign.name}] Caching tweets in Supabase...`);
-  const tweetsToCache = twitterTweets.map(tweet => ({
-    id: tweet.id,
-    campaign_id: campaignId,
-    author_id: tweet.author_id,
-    author_username: tweetMetadata[tweet.id]?.creatorUsername || 'unknown',
-    author_name: tweetMetadata[tweet.id]?.creatorName || 'Unknown',
-    text: tweet.text,
-    created_at: tweet.created_at,
-    impressions: tweet.public_metrics?.impression_count || 0,
-    retweets: tweet.public_metrics?.retweet_count || 0,
-    likes: tweet.public_metrics?.like_count || 0,
-    replies: tweet.public_metrics?.reply_count || 0,
-    quotes: tweet.public_metrics?.quote_count || 0,
-    bookmarks: tweet.public_metrics?.bookmark_count || 0,
-    url: tweetMetadata[tweet.id]?.tweetUrl || `https://twitter.com/i/status/${tweet.id}`,
-    fetched_at: new Date().toISOString()
-  }));
-
-  if (tweetsToCache.length > 0) {
-    const { error: cacheError } = await supabase
-      .from('campaign_tweets')
-      .insert(tweetsToCache);
-
-    if (cacheError) {
-      console.error(`[Campaign ${campaign.name}] Error caching tweets:`, cacheError);
-    } else {
-      console.log(`[Campaign ${campaign.name}] Cached ${tweetsToCache.length} tweets in Supabase`);
-    }
-  }
-
-  // STEP 5: Scan cached tweets for phrase matches
-  console.log(`[Campaign ${campaign.name}] Scanning for phrase matches...`);
-  const matchedTweets = [];
-
-  twitterTweets.forEach(tweet => {
-    const matchedPhrase = findMatchingPhrase(tweet.text, campaign.keyPhrases);
-    if (matchedPhrase) {
-      const metadata = tweetMetadata[tweet.id];
-      matchedTweets.push({
-        tweetId: tweet.id,
-        tweetUrl: metadata?.tweetUrl || `https://twitter.com/i/status/${tweet.id}`,
-        tweetText: tweet.text.substring(0, 200),
-        matchedPhrase,
-        creatorName: metadata?.creatorName || 'Unknown',
-        creatorHandle: metadata?.creatorHandle || '@unknown',
-        creatorRank: metadata?.creatorRank || 0,
-        creatorUserId: metadata?.creatorUserId || '',
-        impressions: tweet.public_metrics?.impression_count || 0,
-        retweets: tweet.public_metrics?.retweet_count || 0,
-        likes: tweet.public_metrics?.like_count || 0,
-        replies: tweet.public_metrics?.reply_count || 0,
-        quotes: tweet.public_metrics?.quote_count || 0,
-        bookmarks: tweet.public_metrics?.bookmark_count || 0,
-        createdAt: tweet.created_at
-      });
-    }
+  // STEP 3: Cache tweet URLs from Kaito FIRST (with placeholder data)
+  console.log(`[Campaign ${campaign.name}] Caching tweet URLs from Kaito...`);
+  const tweetsFromKaito = tweetIds.map(tweetId => {
+    const metadata = tweetMetadata[tweetId];
+    return {
+      id: tweetId,
+      campaign_id: campaignId,
+      author_id: metadata?.creatorUserId || 'unknown',
+      author_username: metadata?.creatorUsername || 'unknown',
+      author_name: metadata?.creatorName || 'Unknown',
+      text: 'Content pending Twitter API fetch', // Placeholder
+      created_at: new Date().toISOString(),
+      impressions: 0,
+      retweets: 0,
+      likes: 0,
+      replies: 0,
+      quotes: 0,
+      bookmarks: 0,
+      url: metadata?.tweetUrl || `https://twitter.com/i/status/${tweetId}`,
+      fetched_at: new Date().toISOString()
+    };
   });
 
-  console.log(`[Campaign ${campaign.name}] Found ${matchedTweets.length} matching tweets`);
+  const { error: cacheError } = await supabase
+    .from('campaign_tweets')
+    .insert(tweetsFromKaito);
+
+  if (cacheError) {
+    console.error(`[Campaign ${campaign.name}] Error caching tweets:`, cacheError);
+  } else {
+    console.log(`[Campaign ${campaign.name}] ✓ Cached ${tweetsFromKaito.length} tweet URLs in Supabase`);
+  }
+
+  // STEP 4: Try to fetch tweet content from Twitter API (optional enhancement)
+  let twitterTweets = [];
+  let tweetContentFetched = false;
+
+  try {
+    console.log(`[Campaign ${campaign.name}] Attempting to fetch tweet content from Twitter API...`);
+    twitterTweets = await batchFetchTweets(tweetIds);
+    console.log(`[Campaign ${campaign.name}] ✓ Fetched ${twitterTweets.length} tweets from Twitter`);
+    tweetContentFetched = true;
+
+    // Update cached tweets with real content
+    if (twitterTweets.length > 0) {
+      console.log(`[Campaign ${campaign.name}] Updating cached tweets with real content...`);
+
+      for (const tweet of twitterTweets) {
+        const { error: updateError } = await supabase
+          .from('campaign_tweets')
+          .update({
+            text: tweet.text,
+            created_at: tweet.created_at,
+            impressions: tweet.public_metrics?.impression_count || 0,
+            retweets: tweet.public_metrics?.retweet_count || 0,
+            likes: tweet.public_metrics?.like_count || 0,
+            replies: tweet.public_metrics?.reply_count || 0,
+            quotes: tweet.public_metrics?.quote_count || 0,
+            bookmarks: tweet.public_metrics?.bookmark_count || 0,
+            author_id: tweet.author_id
+          })
+          .eq('id', tweet.id)
+          .eq('campaign_id', campaignId);
+
+        if (updateError) {
+          console.error(`[Campaign ${campaign.name}] Error updating tweet ${tweet.id}:`, updateError);
+        }
+      }
+
+      console.log(`[Campaign ${campaign.name}] ✓ Updated ${twitterTweets.length} tweets with real content`);
+    }
+  } catch (error) {
+    console.warn(`[Campaign ${campaign.name}] ⚠️ Twitter API failed (${error.message}). Continuing with cached URLs for manual verification.`);
+    tweetContentFetched = false;
+  }
+
+  // STEP 5: Prepare results based on what we have
+  const allCachedTweets = tweetIds.map(tweetId => {
+    const metadata = tweetMetadata[tweetId];
+    const twitterTweet = twitterTweets.find(t => t.id === tweetId);
+
+    const impressions = twitterTweet?.public_metrics?.impression_count || 0;
+    const retweets = twitterTweet?.public_metrics?.retweet_count || 0;
+    const likes = twitterTweet?.public_metrics?.like_count || 0;
+    const replies = twitterTweet?.public_metrics?.reply_count || 0;
+    const quotes = twitterTweet?.public_metrics?.quote_count || 0;
+    const bookmarks = twitterTweet?.public_metrics?.bookmark_count || 0;
+
+    // Calculate engagement rate
+    const totalEngagement = retweets + likes + replies + quotes + bookmarks;
+    const engagementRate = impressions > 0 ? ((totalEngagement / impressions) * 100).toFixed(2) + '%' : '0%';
+
+    return {
+      tweetId,
+      tweetUrl: metadata?.tweetUrl || `https://twitter.com/i/status/${tweetId}`,
+      tweetText: twitterTweet?.text || 'Manual verification required',
+      matchedPhrase: twitterTweet ? findMatchingPhrase(twitterTweet.text, campaign.keyPhrases) : null,
+      creatorName: metadata?.creatorName || 'Unknown',
+      creatorHandle: metadata?.creatorHandle || '@unknown',
+      creatorRank: metadata?.creatorRank || 0,
+      creatorUserId: metadata?.creatorUserId || '',
+      totalImpressions: impressions,
+      totalRetweets: retweets,
+      totalLikes: likes,
+      totalReplies: replies,
+      totalQuotes: quotes,
+      totalBookmarks: bookmarks,
+      engagementRate,
+      createdAt: twitterTweet?.created_at || new Date().toISOString(),
+      requiresManualVerification: !tweetContentFetched
+    };
+  });
+
+  // Filter for matches only if we have tweet content
+  const eligibleTweets = tweetContentFetched
+    ? allCachedTweets.filter(tweet => tweet.matchedPhrase)
+    : allCachedTweets; // Return all for manual verification if no content
+
+  console.log(`[Campaign ${campaign.name}] ${eligibleTweets.length} tweets ready for review`);
 
   // STEP 6: Save results
   const results = {
     fetchedAt: new Date().toISOString(),
-    eligibleTweets: matchedTweets,
-    totalTweetsCached: tweetsToCache.length
+    eligibleTweets,
+    totalTweetsCached: tweetIds.length,
+    twitterApiSuccess: tweetContentFetched,
+    twitterApiUsed: tweetContentFetched, // For UI compatibility
+    note: tweetContentFetched
+      ? `Found ${eligibleTweets.length} matching tweets`
+      : 'Twitter API unavailable. All tweets require manual verification for key phrases.'
   };
 
   await updateCampaignResults(campaignId, results);
   await updateCampaignStatus(campaignId, 'completed');
 
-  console.log(`[Campaign ${campaign.name}] ✓ Processing complete: ${matchedTweets.length} matching tweets out of ${tweetsToCache.length} cached`);
+  console.log(`[Campaign ${campaign.name}] ✓ Processing complete: ${eligibleTweets.length} tweets saved (${tweetIds.length} cached in Supabase)`);
 };
 
 export default {
