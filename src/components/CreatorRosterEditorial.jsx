@@ -27,7 +27,7 @@ export default function CreatorRosterEditorial({ creators, setCreators }) {
   const [filterActivity, setFilterActivity] = useState('all');
   const [sortBy, setSortBy] = useState('name');
 
-  const AVAILABLE_PLATFORMS = ['X', 'TikTok', 'Instagram', 'YouTube'];
+  const AVAILABLE_PLATFORMS = ['X', 'TikTok', 'Instagram', 'YouTube', 'Facebook'];
 
   const togglePlatform = (platform) => {
     const platforms = editForm.platforms || [];
