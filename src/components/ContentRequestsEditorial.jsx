@@ -1135,8 +1135,13 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
                   Select Creators ({contentForm.selectedCreatorIds.length} selected) *
                 </label>
                 <div className="max-h-48 overflow-y-auto border border-[var(--color-border)] rounded-lg p-3 bg-[var(--color-bg-tertiary)] space-y-2">
-                  {creators
-                    .filter(c => (addingContentForRequest.creators || []).some(rc => rc.id === c.id))
+                  {(() => {
+                    console.log('Add Content Modal - Campaign creators:', addingContentForRequest.creators);
+                    console.log('Add Content Modal - All creators:', creators.map(c => ({ id: c.id, name: c.name })));
+                    const filteredCreators = creators.filter(c => (addingContentForRequest.creators || []).some(rc => rc.id === c.id));
+                    console.log('Add Content Modal - Filtered creators:', filteredCreators.map(c => ({ id: c.id, name: c.name })));
+                    return filteredCreators;
+                  })()
                     .map((creator) => (
                       <label
                         key={creator.id}
