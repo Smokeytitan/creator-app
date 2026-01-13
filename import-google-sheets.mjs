@@ -129,6 +129,91 @@ function mapToCreators(rawData) {
   return creators;
 }
 
+// Initial campaigns data
+const INITIAL_CAMPAIGNS = [
+  {
+    id: 1,
+    title: "Revolut x Mastercard",
+    description: "Content campaign promoting Revolut x Mastercard partnership.",
+    creators: [1, 2, 3, 4], // Creator IDs
+    status: "completed",
+    estimated_cost: 14050,
+    estimated_impressions: 320800
+  },
+  {
+    id: 2,
+    title: "POL Token Status on Robinhood US",
+    description: "Campaign covering POL token availability on Robinhood US platform.",
+    creators: [1, 2, 3, 4],
+    status: "completed",
+    estimated_cost: 14050,
+    estimated_impressions: 320800
+  },
+  {
+    id: 3,
+    title: "ETH Foundation Polygon Payments Overview",
+    description: "Content highlighting ETH Foundation's payments on Polygon network.",
+    creators: [1, 2, 3, 4],
+    status: "completed",
+    estimated_cost: 14050,
+    estimated_impressions: 320800
+  },
+  {
+    id: 4,
+    title: "Highest Day of Stablecoin Transactions",
+    description: "Campaign showcasing record-breaking stablecoin transaction volume.",
+    creators: [1, 2, 3],
+    status: "completed",
+    estimated_cost: 10050,
+    estimated_impressions: 273500
+  },
+  {
+    id: 5,
+    title: "Madhurigi Hardfork",
+    description: "Content campaign covering the Madhurigi hardfork event.",
+    creators: [1, 2, 3, 4],
+    status: "completed",
+    estimated_cost: 14050,
+    estimated_impressions: 320800
+  },
+  {
+    id: 6,
+    title: "P2P Stablecoin Volume Stats Via Dune",
+    description: "Campaign highlighting P2P stablecoin volume statistics from Dune Analytics.",
+    creators: [1, 2, 3, 4],
+    status: "completed",
+    estimated_cost: 14050,
+    estimated_impressions: 320800
+  },
+  {
+    id: 7,
+    title: "S2 Polygon/Kaito Campaign",
+    description: "Season 2 campaign collaboration between Polygon and Kaito.",
+    creators: [1, 2, 3, 4],
+    status: "completed",
+    estimated_cost: 14050,
+    estimated_impressions: 320800
+  },
+  {
+    id: 8,
+    title: "Shift4",
+    description: "Content campaign promoting Shift4 integration or partnership.",
+    creators: [1, 2, 3, 4],
+    status: "completed",
+    estimated_cost: 14050,
+    estimated_impressions: 320800
+  },
+  {
+    id: 9,
+    title: "End Of Year Video",
+    description: "Year-end recap video campaign highlighting achievements.",
+    creators: [1, 2, 4],
+    status: "completed",
+    estimated_cost: 10500,
+    estimated_impressions: 239100
+  }
+];
+
 /**
  * Main import function
  */
@@ -139,13 +224,13 @@ async function importGoogleSheetsToSupabase() {
 
   try {
     // Step 1: Fetch Google Sheets data
-    console.log('\n[1/3] Fetching data from Google Sheets...');
+    console.log('\n[1/4] Fetching data from Google Sheets...');
     const response = await axios.get(GOOGLE_SHEET_URL);
     const csvText = response.data;
     console.log('✓ Successfully fetched CSV data');
 
     // Step 2: Parse and transform data
-    console.log('\n[2/3] Parsing and transforming data...');
+    console.log('\n[2/4] Parsing and transforming creators...');
     const rawData = parseCSV(csvText);
     const creators = mapToCreators(rawData);
     console.log(`✓ Parsed ${creators.length} creators from Google Sheets`);
@@ -154,11 +239,11 @@ async function importGoogleSheetsToSupabase() {
       throw new Error('No creators found in Google Sheets');
     }
 
-    // Step 3: Import to Supabase
-    console.log('\n[3/3] Importing to Supabase...');
-    let importedCount = 0;
-    let updatedCount = 0;
-    let errorCount = 0;
+    // Step 3: Import creators to Supabase
+    console.log('\n[3/4] Importing creators to Supabase...');
+    let creatorsImported = 0;
+    let creatorsUpdated = 0;
+    let creatorsErrorCount = 0;
 
     for (const creator of creators) {
       try {
@@ -177,7 +262,7 @@ async function importGoogleSheetsToSupabase() {
             .eq('id', creator.id);
 
           if (updateError) throw updateError;
-          updatedCount++;
+          creatorsUpdated++;
           console.log(`  ✓ Updated: ${creator.name}`);
         } else {
           // Insert new creator
@@ -186,12 +271,80 @@ async function importGoogleSheetsToSupabase() {
             .insert([creator]);
 
           if (insertError) throw insertError;
-          importedCount++;
+          creatorsImported++;
           console.log(`  ✓ Imported: ${creator.name}`);
         }
       } catch (error) {
-        errorCount++;
+        creatorsErrorCount++;
         console.error(`  ✗ Failed to import ${creator.name}:`, error.message);
+      }
+    }
+
+    // Step 4: Import campaigns to Supabase
+    console.log('\n[4/4] Importing campaigns to Supabase...');
+    let campaignsImported = 0;
+    let campaignsUpdated = 0;
+    let campaignsErrorCount = 0;
+
+    for (const campaign of INITIAL_CAMPAIGNS) {
+      try {
+        // Check if campaign already exists
+        const { data: existing } = await supabase
+          .from('campaigns')
+          .select('id')
+          .eq('id', campaign.id)
+          .single();
+
+        // Insert/update campaign
+        if (existing) {
+          const { error: updateError } = await supabase
+            .from('campaigns')
+            .update({
+              title: campaign.title,
+              description: campaign.description,
+              status: campaign.status,
+              estimated_cost: campaign.estimated_cost,
+              estimated_impressions: campaign.estimated_impressions,
+              created_at: new Date().toISOString()
+            })
+            .eq('id', campaign.id);
+
+          if (updateError) throw updateError;
+          campaignsUpdated++;
+          console.log(`  ✓ Updated campaign: ${campaign.title}`);
+        } else {
+          const { error: insertError } = await supabase
+            .from('campaigns')
+            .insert([{
+              id: campaign.id,
+              title: campaign.title,
+              description: campaign.description,
+              status: campaign.status,
+              estimated_cost: campaign.estimated_cost,
+              estimated_impressions: campaign.estimated_impressions,
+              created_at: new Date().toISOString()
+            }]);
+
+          if (insertError) throw insertError;
+          campaignsImported++;
+          console.log(`  ✓ Imported campaign: ${campaign.title}`);
+        }
+
+        // Insert creator associations
+        for (const creatorId of campaign.creators) {
+          await supabase
+            .from('campaign_creators')
+            .upsert({
+              campaign_id: campaign.id,
+              creator_id: creatorId
+            }, {
+              onConflict: 'campaign_id,creator_id'
+            });
+        }
+
+      } catch (error) {
+        campaignsErrorCount++;
+        console.error(`  ✗ Failed to import campaign ${campaign.title}:`, error.message);
       }
     }
 
@@ -199,13 +352,11 @@ async function importGoogleSheetsToSupabase() {
     console.log('\n' + '='.repeat(60));
     console.log('Import Summary:');
     console.log('='.repeat(60));
-    console.log(`Total creators in sheet: ${creators.length}`);
-    console.log(`Newly imported: ${importedCount}`);
-    console.log(`Updated existing: ${updatedCount}`);
-    console.log(`Errors: ${errorCount}`);
+    console.log(`Creators - Total: ${creators.length}, Imported: ${creatorsImported}, Updated: ${creatorsUpdated}, Errors: ${creatorsErrorCount}`);
+    console.log(`Campaigns - Total: ${INITIAL_CAMPAIGNS.length}, Imported: ${campaignsImported}, Updated: ${campaignsUpdated}, Errors: ${campaignsErrorCount}`);
     console.log('='.repeat(60));
 
-    if (errorCount === 0) {
+    if (creatorsErrorCount === 0 && campaignsErrorCount === 0) {
       console.log('\n✓ Import completed successfully!');
     } else {
       console.log('\n⚠ Import completed with errors. See details above.');
