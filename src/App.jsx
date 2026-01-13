@@ -64,21 +64,29 @@ export default function App() {
 
         if (loadedCreators && loadedCreators.length > 0) {
           // Merge with existing posts data from localStorage
-          const existingCreators = creators;
-          const mergedCreators = loadedCreators.map(newCreator => {
-            const existing = existingCreators.find(
-              c => c.name.toLowerCase() === newCreator.name.toLowerCase() ||
-                   c.handle.toLowerCase() === newCreator.handle.toLowerCase()
-            );
-            return {
-              ...newCreator,
-              posts: existing?.posts || [], // Preserve existing posts
-              costPerPost: newCreator.costPerPost || existing?.costPerPost || '', // Preserve or update costPerPost
-              platforms: existing?.platforms || newCreator.platforms || [] // Preserve platforms
-            };
-          });
+          setCreators(existingCreators => {
+            // First, merge Google Sheets creators with existing data
+            const mergedCreators = loadedCreators.map(newCreator => {
+              const existing = existingCreators.find(
+                c => c.name.toLowerCase() === newCreator.name.toLowerCase() ||
+                     c.handle.toLowerCase() === newCreator.handle.toLowerCase()
+              );
+              return {
+                ...newCreator,
+                posts: existing?.posts || [], // Preserve existing posts
+                costPerPost: newCreator.costPerPost || existing?.costPerPost || '', // Preserve or update costPerPost
+                platforms: existing?.platforms || newCreator.platforms || [] // Preserve platforms
+              };
+            });
 
-          setCreators(mergedCreators);
+            // Then, add any locally-created creators that aren't in Google Sheets
+            const loadedHandles = new Set(loadedCreators.map(c => c.handle.toLowerCase()));
+            const localOnlyCreators = existingCreators.filter(
+              c => !loadedHandles.has(c.handle.toLowerCase())
+            );
+
+            return [...mergedCreators, ...localOnlyCreators];
+          });
           console.log('Successfully loaded creators from Google Sheets');
         } else {
           console.warn('No creators found in Google Sheet, using existing data');
@@ -91,7 +99,8 @@ export default function App() {
     };
 
     loadCreators();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run on mount to avoid infinite loops
 
   // Save creators to localStorage whenever it changes
   useEffect(() => {
@@ -250,7 +259,7 @@ export default function App() {
           ) : (
             <>
               {activeTab === 'roster' && <CreatorRosterEditorial creators={creators} setCreators={setCreators} />}
-              {activeTab === 'requests' && <ContentRequestsEditorial creators={creators} />}
+              {activeTab === 'requests' && <ContentRequestsEditorial creators={creators} setCreators={setCreators} />}
               {activeTab === 'analytics' && <Analytics creators={creators} requests={requests} />}
               {activeTab === 'kaito' && <FlashCampaignManager />}
               {activeTab === 'botanalytics' && <BotAnalyticsEditorial />}

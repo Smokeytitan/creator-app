@@ -1,9 +1,9 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Plus, Calendar, User, CheckCircle, Clock, XCircle, Trash2, Edit2, Save, X, Search, RefreshCw, Eye, DollarSign, Download } from 'lucide-react';
+import { Plus, Calendar, User, CheckCircle, Clock, XCircle, Trash2, Edit2, Save, X, Search, RefreshCw, Eye, DollarSign, Download, FileText } from 'lucide-react';
 import ContentRequestModal from './ContentRequestModal';
 import { INITIAL_REQUESTS } from '../data/initialRequests';
 
-const ContentRequestsEditorial = ({ creators }) => {
+const ContentRequestsEditorial = ({ creators, setCreators }) => {
   const resetToCampaigns = () => {
     if (confirm('This will load all campaigns from Google Sheets. Your current requests will be replaced. Are you sure?')) {
       setRequests(INITIAL_REQUESTS);
@@ -46,6 +46,20 @@ const ContentRequestsEditorial = ({ creators }) => {
     selectedCreatorIds: [],
     dueDate: '',
     status: 'pending'
+  });
+
+  // Add content state
+  const [addingContentForRequest, setAddingContentForRequest] = useState(null);
+  const [contentForm, setContentForm] = useState({
+    selectedCreatorIds: [],
+    description: '',
+    platform: 'X', // X, Facebook, Instagram, YouTube, TikTok
+    link: '',
+    impressions: '',
+    likes: '',
+    comments: '',
+    cost: '',
+    date: new Date().toISOString().split('T')[0]
   });
 
   // Save requests to localStorage whenever it changes
@@ -107,6 +121,88 @@ const ContentRequestsEditorial = ({ creators }) => {
     if (confirm('Are you sure you want to delete this request?')) {
       setRequests(requests.filter(req => req.id !== requestId));
     }
+  };
+
+  const startAddContent = (request) => {
+    setAddingContentForRequest(request);
+    setContentForm({
+      selectedCreatorIds: [],
+      description: '',
+      platform: 'X',
+      link: '',
+      impressions: '',
+      likes: '',
+      comments: '',
+      cost: '',
+      date: new Date().toISOString().split('T')[0]
+    });
+  };
+
+  const cancelAddContent = () => {
+    setAddingContentForRequest(null);
+    setContentForm({
+      selectedCreatorIds: [],
+      description: '',
+      platform: 'X',
+      link: '',
+      impressions: '',
+      likes: '',
+      comments: '',
+      cost: '',
+      date: new Date().toISOString().split('T')[0]
+    });
+  };
+
+  const submitContent = () => {
+    if (contentForm.selectedCreatorIds.length === 0) {
+      alert('Please select at least one creator');
+      return;
+    }
+
+    if (!contentForm.description.trim()) {
+      alert('Description is required');
+      return;
+    }
+
+    // Require impressions for non-X platforms
+    if (contentForm.platform !== 'X' && !contentForm.impressions.trim()) {
+      alert('Impressions are required for platforms other than X');
+      return;
+    }
+
+    const request = addingContentForRequest;
+
+    // Create post for each selected creator
+    setCreators(creators.map(creator => {
+      if (contentForm.selectedCreatorIds.includes(creator.id)) {
+        const newPost = {
+          id: Date.now() + Math.random(), // Ensure unique IDs
+          description: `${request.title} - ${contentForm.description}`,
+          platform: contentForm.platform,
+          date: contentForm.date,
+          cost: contentForm.cost,
+          link: contentForm.link,
+          impressions: contentForm.impressions
+        };
+
+        // Add optional metrics if provided
+        if (contentForm.likes) {
+          newPost.likes = contentForm.likes;
+        }
+        if (contentForm.comments) {
+          newPost.comments = contentForm.comments;
+        }
+
+        return {
+          ...creator,
+          posts: [...(creator.posts || []), newPost]
+        };
+      }
+      return creator;
+    }));
+
+    cancelAddContent();
+    alert(`Content added to ${contentForm.selectedCreatorIds.length} creator(s) for "${request.title}"!`);
   };
 
   const filteredRequests = useMemo(() => {
@@ -626,6 +722,13 @@ const ContentRequestsEditorial = ({ creators }) => {
                       {request.status}
                     </span>
                     <button
+                      onClick={() => startAddContent(request)}
+                      className="p-2 text-[var(--color-text-tertiary)] hover:text-green-500 hover:bg-green-500/10 rounded transition-colors"
+                      title="Add content"
+                    >
+                      <FileText className="h-4 w-4" />
+                    </button>
+                    <button
                       onClick={() => startEditRequest(request)}
                       className="p-2 text-[var(--color-text-tertiary)] hover:text-[var(--color-accent-primary)] hover:bg-[var(--color-bg-tertiary)] rounded transition-colors"
                       title="Edit request"
@@ -662,6 +765,204 @@ const ContentRequestsEditorial = ({ creators }) => {
             setShowModal(false);
           }}
         />
+      )}
+
+      {/* Add Content Modal */}
+      {addingContentForRequest && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={cancelAddContent}>
+          <div className="bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-semibold text-[var(--color-text-primary)]">
+                Add Content for: {addingContentForRequest.title}
+              </h3>
+              <button
+                onClick={cancelAddContent}
+                className="p-1 text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)] rounded transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {/* Creator Selection */}
+              <div>
+                <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-2">
+                  Select Creators ({contentForm.selectedCreatorIds.length} selected) *
+                </label>
+                <div className="max-h-48 overflow-y-auto border border-[var(--color-border)] rounded-lg p-3 bg-[var(--color-bg-tertiary)] space-y-2">
+                  {creators
+                    .filter(c => (addingContentForRequest.creators || []).some(rc => rc.id === c.id))
+                    .map((creator) => (
+                      <label
+                        key={creator.id}
+                        className="flex items-center space-x-2 cursor-pointer hover:bg-[var(--color-bg-secondary)] p-2 rounded"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={contentForm.selectedCreatorIds.includes(creator.id)}
+                          onChange={(e) => {
+                            const isChecked = e.target.checked;
+                            setContentForm({
+                              ...contentForm,
+                              selectedCreatorIds: isChecked
+                                ? [...contentForm.selectedCreatorIds, creator.id]
+                                : contentForm.selectedCreatorIds.filter(id => id !== creator.id)
+                            });
+                          }}
+                          className="h-4 w-4 text-[var(--color-accent-primary)] focus:ring-[var(--color-accent-primary)] border-[var(--color-border)] rounded"
+                        />
+                        <span className="text-sm text-[var(--color-text-primary)]">
+                          {creator.name} ({creator.handle})
+                        </span>
+                      </label>
+                    ))}
+                </div>
+                <p className="text-xs text-[var(--color-text-tertiary)] mt-1">
+                  Only showing creators assigned to this content request
+                </p>
+              </div>
+
+              {/* Description */}
+              <div>
+                <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">
+                  Description *
+                </label>
+                <input
+                  type="text"
+                  placeholder="Brief description of the content"
+                  value={contentForm.description}
+                  onChange={(e) => setContentForm({ ...contentForm, description: e.target.value })}
+                  className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent-primary)]"
+                />
+              </div>
+
+              {/* Platform Selection */}
+              <div>
+                <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">
+                  Platform *
+                </label>
+                <select
+                  value={contentForm.platform}
+                  onChange={(e) => setContentForm({ ...contentForm, platform: e.target.value })}
+                  className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent-primary)]"
+                >
+                  <option value="X">X (Twitter)</option>
+                  <option value="Facebook">Facebook</option>
+                  <option value="Instagram">Instagram</option>
+                  <option value="YouTube">YouTube</option>
+                  <option value="TikTok">TikTok</option>
+                </select>
+              </div>
+
+              {/* Link */}
+              <div>
+                <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">
+                  Link (Post URL)
+                </label>
+                <input
+                  type="url"
+                  placeholder="https://..."
+                  value={contentForm.link}
+                  onChange={(e) => setContentForm({ ...contentForm, link: e.target.value })}
+                  className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent-primary)]"
+                />
+              </div>
+
+              {/* Date and Cost in a grid */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">
+                    Date
+                  </label>
+                  <input
+                    type="date"
+                    value={contentForm.date}
+                    onChange={(e) => setContentForm({ ...contentForm, date: e.target.value })}
+                    className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent-primary)]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">
+                    Cost
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g., $1,250.00"
+                    value={contentForm.cost}
+                    onChange={(e) => setContentForm({ ...contentForm, cost: e.target.value })}
+                    className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent-primary)]"
+                  />
+                </div>
+              </div>
+
+              {/* Metrics Section */}
+              <div className="border-t border-[var(--color-border)] pt-4">
+                <h4 className="text-sm font-medium text-[var(--color-text-primary)] mb-3">
+                  Performance Metrics
+                </h4>
+                <div className="grid grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">
+                      Impressions {contentForm.platform !== 'X' && '*'}
+                      {contentForm.platform === 'X' && <span className="text-xs text-[var(--color-text-tertiary)]">(optional)</span>}
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g., 10000"
+                      value={contentForm.impressions}
+                      onChange={(e) => setContentForm({ ...contentForm, impressions: e.target.value })}
+                      className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent-primary)]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">
+                      Likes <span className="text-xs text-[var(--color-text-tertiary)]">(optional)</span>
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g., 500"
+                      value={contentForm.likes}
+                      onChange={(e) => setContentForm({ ...contentForm, likes: e.target.value })}
+                      className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent-primary)]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">
+                      Comments <span className="text-xs text-[var(--color-text-tertiary)]">(optional)</span>
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g., 50"
+                      value={contentForm.comments}
+                      onChange={(e) => setContentForm({ ...contentForm, comments: e.target.value })}
+                      className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent-primary)]"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Action buttons */}
+              <div className="flex gap-3 pt-4">
+                <button
+                  onClick={submitContent}
+                  className="flex-1 inline-flex items-center justify-center px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg hover:shadow-lg hover:shadow-green-500/25 transition-all duration-200 font-medium"
+                >
+                  <FileText className="h-4 w-4 mr-2" />
+                  Add Content
+                </button>
+                <button
+                  onClick={cancelAddContent}
+                  className="px-4 py-2 bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] rounded-lg hover:bg-[var(--color-bg-secondary)] border border-[var(--color-border)] transition-all duration-200"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -807,7 +807,7 @@ export default function CreatorRosterEditorial({ creators, setCreators }) {
 
                 <div className="flex-grow"></div>
 
-                <div className="mt-auto pt-4 border-t border-[var(--color-border)]">
+                <div className="mt-auto pt-4 border-t border-[var(--color-border)] space-y-2">
                   <button
                     onClick={(e) => toggleViewPosts(c.id, e)}
                     className="inline-flex items-center px-3 py-2 text-sm bg-[var(--color-accent-primary)]/10 text-[var(--color-accent-primary)] hover:bg-[var(--color-accent-primary)]/20 rounded-lg font-medium transition-colors w-full justify-center border border-[var(--color-accent-primary)]/20"
@@ -945,7 +945,14 @@ export default function CreatorRosterEditorial({ creators, setCreators }) {
                             ) : (
                               <div className="flex items-start justify-between">
                                 <div className="flex-1">
-                                  <p className="font-semibold text-[var(--color-text-primary)] mb-2">{post.description}</p>
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <p className="font-semibold text-[var(--color-text-primary)]">{post.description}</p>
+                                    {post.platform && (
+                                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-[var(--color-bg-tertiary)] text-[var(--color-text-secondary)] border border-[var(--color-border)]">
+                                        {post.platform}
+                                      </span>
+                                    )}
+                                  </div>
                                   <div className="flex flex-wrap items-center gap-3 text-[var(--color-text-secondary)] text-sm">
                                     {post.date && (
                                       <span className="inline-flex items-center text-mono">
@@ -965,6 +972,16 @@ export default function CreatorRosterEditorial({ creators, setCreators }) {
                                         {post.impressions} impressions
                                       </span>
                                     )}
+                                    {post.likes && (
+                                      <span className="inline-flex items-center text-mono">
+                                        ❤️ {post.likes} likes
+                                      </span>
+                                    )}
+                                    {post.comments && (
+                                      <span className="inline-flex items-center text-mono">
+                                        💬 {post.comments} comments
+                                      </span>
+                                    )}
                                   </div>
                                   {post.link && (
                                     <a
@@ -973,7 +990,7 @@ export default function CreatorRosterEditorial({ creators, setCreators }) {
                                       rel="noopener noreferrer"
                                       className="inline-flex items-center text-[var(--color-accent-primary)] hover:text-[var(--color-accent-secondary)] font-medium mt-2 text-sm hover:underline"
                                     >
-                                      View Post on X →
+                                      View Post {post.platform ? `on ${post.platform}` : ''} →
                                     </a>
                                   )}
                                 </div>
