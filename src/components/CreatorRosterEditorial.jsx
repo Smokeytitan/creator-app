@@ -82,6 +82,7 @@ export default function CreatorRosterEditorial({ creators, setCreators }) {
     }
 
     try {
+      console.log('Creating new creator with data:', editForm);
       const newCreator = await createCreator({
         name: editForm.name,
         handle: editForm.handle || '@' + editForm.name.toLowerCase().replace(/\s+/g, '_'),
@@ -90,10 +91,12 @@ export default function CreatorRosterEditorial({ creators, setCreators }) {
         platforms: editForm.platforms || []
       });
 
+      console.log('Creator created successfully:', newCreator);
       setCreators([...creators, newCreator]);
       setIsAdding(false);
       setEditForm({ name: '', handle: '', notes: '', costPerPost: '', platforms: [] });
     } catch (error) {
+      console.error('Failed to create creator:', error);
       alert('Failed to create creator: ' + error.message);
     }
   };
