@@ -571,6 +571,7 @@ export default function CreatorRosterEditorial({ creators, setCreators }) {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {isAdding && (
           <div className="card-editorial p-6 border-2 border-[var(--color-accent-primary)] min-h-[400px]" style={{ animation: 'fadeInUp 0.4s ease-out' }}>
+            {console.log('Add creator form is rendering, isAdding:', isAdding)}
             <div className="space-y-4">
               <div>
                 <label className="block text-xs font-medium text-[var(--color-text-tertiary)] mb-1 uppercase tracking-wide">Name *</label>
@@ -642,7 +643,11 @@ export default function CreatorRosterEditorial({ creators, setCreators }) {
               <div className="flex gap-2 pt-2">
                 <button
                   className="flex-1 px-4 py-2 text-sm bg-gradient-to-r from-[var(--color-accent-primary)] to-[var(--color-accent-secondary)] text-white rounded-lg hover:shadow-lg hover:shadow-[var(--color-accent-primary)]/25 transition-all duration-200 font-semibold"
-                  onClick={saveNew}
+                  onClick={(e) => {
+                    console.log('Create button clicked!');
+                    e.preventDefault();
+                    saveNew();
+                  }}
                 >
                   Create
                 </button>
