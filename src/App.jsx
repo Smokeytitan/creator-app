@@ -66,8 +66,9 @@ export default function App() {
         loadFromLocalStorage();
       }
 
-      // Try to merge with Google Sheets data
-      if (GOOGLE_SHEET_URL && GOOGLE_SHEET_URL !== 'YOUR_GOOGLE_SHEET_CSV_URL_HERE') {
+      // Skip Google Sheets merge when using Supabase (data should be imported via import script)
+      // Try to merge with Google Sheets data only if NOT using Supabase
+      if (!useSupabase && GOOGLE_SHEET_URL && GOOGLE_SHEET_URL !== 'YOUR_GOOGLE_SHEET_CSV_URL_HERE') {
         try {
           const sheetsService = new GoogleSheetsService(GOOGLE_SHEET_URL);
           const loadedCreators = await sheetsService.fetchCreators();
@@ -95,13 +96,6 @@ export default function App() {
               );
 
               const finalCreators = [...mergedCreators, ...localOnlyCreators];
-
-              // If using Supabase, save merged data back
-              if (useSupabase) {
-                bulkImportCreators(finalCreators).catch(err =>
-                  console.error('[App] Error saving Google Sheets merge to Supabase:', err)
-                );
-              }
 
               return finalCreators;
             });
