@@ -69,6 +69,111 @@ const ContentRequestsEditorial = ({ creators, setCreators }) => {
     localStorage.setItem('requests', JSON.stringify(requests));
   }, [requests]);
 
+  // Background tweet scanner - runs every 24 hours to update metrics
+  useEffect(() => {
+    const scanTweetsForUpdates = async () => {
+      console.log('Running background tweet scanner...');
+
+      // Get fresh creators data from state
+      setCreators(currentCreators => {
+        // Collect all X platform posts that need scanning
+        const tweetsToScan = [];
+
+        currentCreators.forEach(creator => {
+          (creator.posts || []).forEach(post => {
+            if (post.platform === 'X' && post.link) {
+              const tweetId = extractTweetId(post.link);
+              if (!tweetId) return;
+
+              // Check if tweet is old enough (48+ hours) and needs rescan (24+ hours since last scan)
+              if (isTweetOldEnough(post.date) && needsRescan(post.lastScanned)) {
+                tweetsToScan.push({
+                  creatorId: creator.id,
+                  postId: post.id,
+                  tweetId,
+                  link: post.link,
+                  date: post.date
+                });
+              }
+            }
+          });
+        });
+
+        if (tweetsToScan.length === 0) {
+          console.log('No tweets need scanning');
+          return currentCreators; // Return unchanged
+        }
+
+        console.log(`Scanning ${tweetsToScan.length} tweets for updates...`);
+
+        // Async function to handle batch fetching
+        (async () => {
+          // Batch fetch tweets (max 100 per request)
+          for (let i = 0; i < tweetsToScan.length; i += 100) {
+            const batch = tweetsToScan.slice(i, i + 100);
+            const tweetIds = batch.map(t => t.tweetId);
+
+            try {
+              const response = await fetchTweets(tweetIds);
+
+              if (response.data && response.data.length > 0) {
+                // Update creators with new metrics
+                setCreators(prevCreators => {
+                  return prevCreators.map(creator => {
+                    const creatorTweets = batch.filter(t => t.creatorId === creator.id);
+                    if (creatorTweets.length === 0) return creator;
+
+                    return {
+                      ...creator,
+                      posts: (creator.posts || []).map(post => {
+                        const tweetToUpdate = creatorTweets.find(t => t.postId === post.id);
+                        if (!tweetToUpdate) return post;
+
+                        const tweetData = response.data.find(t => t.id === tweetToUpdate.tweetId);
+                        if (!tweetData) return post;
+
+                        const metrics = tweetData.public_metrics;
+                        console.log(`Updated metrics for tweet ${tweetToUpdate.tweetId}:`, metrics);
+
+                        return {
+                          ...post,
+                          impressions: metrics.impression_count?.toString() || post.impressions,
+                          likes: metrics.like_count?.toString() || post.likes,
+                          comments: metrics.reply_count?.toString() || post.comments,
+                          lastScanned: new Date().toISOString()
+                        };
+                      })
+                    };
+                  });
+                });
+              }
+            } catch (error) {
+              console.error('Error scanning tweet batch:', error);
+            }
+
+            // Add delay to avoid rate limiting
+            if (i + 100 < tweetsToScan.length) {
+              await new Promise(resolve => setTimeout(resolve, 3000));
+            }
+          }
+
+          console.log('Background tweet scan complete');
+        })();
+
+        return currentCreators; // Return current state immediately
+      });
+    };
+
+    // Run scan on mount
+    scanTweetsForUpdates();
+
+    // Run scan every 24 hours
+    const interval = setInterval(scanTweetsForUpdates, 24 * 60 * 60 * 1000);
+
+    return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run once on mount
+
   const startEditRequest = (request) => {
     setEditingRequestId(request.id);
     setEditRequestForm({
@@ -156,8 +261,26 @@ const ContentRequestsEditorial = ({ creators, setCreators }) => {
     setFetchingTweetData(false);
   };
 
+  // Check if tweet is old enough to scan (48 hours)
+  const isTweetOldEnough = (tweetDate) => {
+    if (!tweetDate) return false;
+    const tweetTime = new Date(tweetDate).getTime();
+    const now = Date.now();
+    const hoursSincePost = (now - tweetTime) / (1000 * 60 * 60);
+    return hoursSincePost >= 48;
+  };
+
+  // Check if tweet needs rescanning (24 hours since last scan)
+  const needsRescan = (lastScanned) => {
+    if (!lastScanned) return true;
+    const lastScanTime = new Date(lastScanned).getTime();
+    const now = Date.now();
+    const hoursSinceScan = (now - lastScanTime) / (1000 * 60 * 60);
+    return hoursSinceScan >= 24;
+  };
+
   // Fetch tweet metrics from Twitter API
-  const fetchTweetMetrics = async (url) => {
+  const fetchTweetMetrics = async (url, skipAgeCheck = false) => {
     // Only fetch for X/Twitter platform
     if (contentForm.platform !== 'X') {
       return;
@@ -180,6 +303,12 @@ const ContentRequestsEditorial = ({ creators, setCreators }) => {
 
         // Extract date from created_at and format as YYYY-MM-DD
         const tweetDate = tweet.created_at ? new Date(tweet.created_at).toISOString().split('T')[0] : '';
+
+        // Check if tweet is at least 48 hours old (unless skipping age check for manual refresh)
+        if (!skipAgeCheck && tweetDate && !isTweetOldEnough(tweetDate)) {
+          console.log('Tweet is less than 48 hours old, metrics may not be final');
+          alert('This tweet is less than 48 hours old. Metrics may not be final yet. You can still add it, but consider rescanning later for accurate data.');
+        }
 
         // Update form with fetched metrics and date
         setContentForm(prev => ({
@@ -236,7 +365,8 @@ const ContentRequestsEditorial = ({ creators, setCreators }) => {
           date: contentForm.date,
           cost: contentForm.cost,
           link: contentForm.link,
-          impressions: contentForm.impressions
+          impressions: contentForm.impressions,
+          lastScanned: contentForm.platform === 'X' && contentForm.impressions ? new Date().toISOString() : null // Track when metrics were fetched
         };
 
         // Add optional metrics if provided
