@@ -62,33 +62,40 @@ export default function CreatorRosterEditorial({ creators, setCreators }) {
     setEditForm({ name: '', handle: '', notes: '', costPerPost: '', platforms: [] });
   };
 
-  const saveEdit = (creatorId) => {
-    setCreators(creators.map((c) =>
-      c.id === creatorId ? { ...c, ...editForm } : c
-    ));
-    setEditingId(null);
-    setEditForm({ name: '', handle: '', notes: '', costPerPost: '', platforms: [] });
+  const saveEdit = async (creatorId) => {
+    const updatedCreator = await updateCreatorInDB(creatorId, editForm);
+    if (updatedCreator) {
+      setCreators(creators.map((c) =>
+        c.id === creatorId ? updatedCreator : c
+      ));
+      setEditingId(null);
+      setEditForm({ name: '', handle: '', notes: '', costPerPost: '', platforms: [] });
+    } else {
+      alert('Failed to update creator');
+    }
   };
 
-  const saveNew = () => {
+  const saveNew = async () => {
     if (!editForm.name.trim()) {
       alert('Name is required');
       return;
     }
 
-    const newCreator = {
-      id: Date.now(),
-      name: editForm.name,
-      handle: editForm.handle || '@' + editForm.name.toLowerCase().replace(/\s+/g, '_'),
-      notes: editForm.notes,
-      costPerPost: editForm.costPerPost,
-      platforms: editForm.platforms || [],
-      posts: []
-    };
+    try {
+      const newCreator = await createCreator({
+        name: editForm.name,
+        handle: editForm.handle || '@' + editForm.name.toLowerCase().replace(/\s+/g, '_'),
+        notes: editForm.notes,
+        costPerPost: editForm.costPerPost,
+        platforms: editForm.platforms || []
+      });
 
-    setCreators([...creators, newCreator]);
-    setIsAdding(false);
-    setEditForm({ name: '', handle: '', notes: '', costPerPost: '', platforms: [] });
+      setCreators([...creators, newCreator]);
+      setIsAdding(false);
+      setEditForm({ name: '', handle: '', notes: '', costPerPost: '', platforms: [] });
+    } catch (error) {
+      alert('Failed to create creator: ' + error.message);
+    }
   };
 
   const deleteCreator = async (creatorId, e) => {
