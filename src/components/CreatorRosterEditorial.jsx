@@ -1,6 +1,7 @@
 import { useState, useRef, useMemo } from 'react';
 import { Upload, Plus, Trash2, FileText, X, DollarSign, Edit2, Search, Filter, SortAsc, Download, Eye, RefreshCw, Calendar } from 'lucide-react';
 import { IMPORTED_CREATORS } from '../data/importedCreators';
+import { deleteCreator as deleteCreatorFromDB, createCreator, updateCreator as updateCreatorInDB, addPost as addPostToDB, updatePost as updatePostInDB, deletePost as deletePostFromDB } from '../services/creatorsServiceSupabase';
 
 export default function CreatorRosterEditorial({ creators, setCreators }) {
   const resetToImportedData = () => {
@@ -88,10 +89,15 @@ export default function CreatorRosterEditorial({ creators, setCreators }) {
     setEditForm({ name: '', handle: '', notes: '', costPerPost: '', platforms: [] });
   };
 
-  const deleteCreator = (creatorId, e) => {
+  const deleteCreator = async (creatorId, e) => {
     e.stopPropagation();
     if (confirm('Are you sure you want to delete this creator?')) {
-      setCreators(creators.filter(c => c.id !== creatorId));
+      const success = await deleteCreatorFromDB(creatorId);
+      if (success) {
+        setCreators(creators.filter(c => c.id !== creatorId));
+      } else {
+        alert('Failed to delete creator');
+      }
     }
   };
 
