@@ -178,15 +178,19 @@ const ContentRequestsEditorial = ({ creators, setCreators }) => {
         const tweet = response.data[0];
         const metrics = tweet.public_metrics;
 
-        // Update form with fetched metrics
+        // Extract date from created_at and format as YYYY-MM-DD
+        const tweetDate = tweet.created_at ? new Date(tweet.created_at).toISOString().split('T')[0] : '';
+
+        // Update form with fetched metrics and date
         setContentForm(prev => ({
           ...prev,
           impressions: metrics.impression_count?.toString() || '',
           likes: metrics.like_count?.toString() || '',
-          comments: metrics.reply_count?.toString() || ''
+          comments: metrics.reply_count?.toString() || '',
+          date: tweetDate || prev.date // Use tweet date if available, otherwise keep current date
         }));
 
-        console.log('Successfully fetched tweet metrics:', metrics);
+        console.log('Successfully fetched tweet metrics:', metrics, 'Date:', tweetDate);
       } else {
         console.warn('No tweet data found');
       }
