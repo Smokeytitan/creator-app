@@ -228,7 +228,9 @@ export default function ContentRequestModal({ creators, onClose, onSubmit }) {
             className="px-4 py-2 rounded-md btn-polygon-primary  disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={() => {
               const selectedCreators = creators.filter(c => selectedCreatorIds.includes(c.id));
-              onSubmit({
+              console.log('ContentRequestModal - selectedCreatorIds:', selectedCreatorIds);
+              console.log('ContentRequestModal - selectedCreators:', selectedCreators);
+              const submitData = {
                 title,
                 description,
                 creators: selectedCreators.map(c => ({
@@ -238,7 +240,9 @@ export default function ContentRequestModal({ creators, onClose, onSubmit }) {
                 startDate: new Date().toISOString(),
                 dueDate: dueDate.toISOString(),
                 status: "pending",
-              });
+              };
+              console.log('ContentRequestModal - submitting:', submitData);
+              onSubmit(submitData);
             }}
             disabled={!title.trim() || selectedCreatorIds.length === 0}
           >
