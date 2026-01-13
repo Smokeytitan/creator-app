@@ -1197,11 +1197,25 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
                           checked={contentForm.selectedCreatorIds.includes(creator.id)}
                           onChange={(e) => {
                             const isChecked = e.target.checked;
+                            const newSelectedIds = isChecked
+                              ? [...contentForm.selectedCreatorIds, creator.id]
+                              : contentForm.selectedCreatorIds.filter(id => id !== creator.id);
+
+                            // Calculate total cost from all selected creators
+                            const totalCost = creators
+                              .filter(c => newSelectedIds.includes(c.id))
+                              .reduce((sum, c) => {
+                                if (c.costPerPost) {
+                                  const cost = parseFloat(c.costPerPost.replace(/[^0-9.-]+/g, ''));
+                                  return sum + (isNaN(cost) ? 0 : cost);
+                                }
+                                return sum;
+                              }, 0);
+
                             setContentForm({
                               ...contentForm,
-                              selectedCreatorIds: isChecked
-                                ? [...contentForm.selectedCreatorIds, creator.id]
-                                : contentForm.selectedCreatorIds.filter(id => id !== creator.id)
+                              selectedCreatorIds: newSelectedIds,
+                              cost: totalCost > 0 ? totalCost.toString() : ''
                             });
                           }}
                           className="h-4 w-4 text-[var(--color-accent-primary)] focus:ring-[var(--color-accent-primary)] border-[var(--color-border)] rounded"
