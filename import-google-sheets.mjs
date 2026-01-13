@@ -437,9 +437,10 @@ async function importGoogleSheetsToSupabase() {
         // Import posts for this campaign
         for (const post of campaign.posts) {
           try {
-            const { error: postError } = await supabase
+            const { error: postError} = await supabase
               .from('posts')
               .insert([{
+                id: Math.floor(Date.now() * 1000 + Math.random() * 1000),
                 creator_id: post.creator_id,
                 campaign_id: campaign.id,
                 link: post.tweet_url,
@@ -449,19 +450,11 @@ async function importGoogleSheetsToSupabase() {
               }]);
 
             if (postError) {
-              // If post already exists, try to update it
-              await supabase
-                .from('posts')
-                .update({
-                  impressions: post.impressions.toString(),
-                  link: post.tweet_url
-                })
-                .eq('creator_id', post.creator_id)
-                .eq('campaign_id', campaign.id)
-                .eq('link', post.tweet_url);
+              console.error(`  ✗ Error importing post: ${postError.message}`);
+              console.error(`     Details:`, postError);
+            } else {
+              postsImported++;
             }
-
-            postsImported++;
           } catch (postError) {
             console.error(`  ✗ Failed to import post for ${post.creator_name}:`, postError.message);
           }

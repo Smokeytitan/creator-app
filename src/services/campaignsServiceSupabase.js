@@ -31,6 +31,11 @@ export const getCampaigns = async () => {
             name,
             handle
           )
+        ),
+        posts (
+          id,
+          impressions,
+          cost
         )
       `)
       .order('created_at', { ascending: false });
@@ -85,22 +90,31 @@ export const getCampaignById = async (campaignId) => {
  * @param {object} row - Database row
  * @returns {object} App-formatted campaign
  */
-const transformFromDB = (row) => ({
-  id: row.id,
-  title: row.title,
-  description: row.description || '',
-  status: row.status,
-  estimatedCost: row.estimated_cost || 0,
-  estimatedImpressions: row.estimated_impressions || 0,
-  createdAt: row.created_at,
-  creators: (row.campaign_creators || [])
-    .filter(crc => crc.creator) // Filter out any null/undefined creators
-    .map(crc => ({
-      id: crc.creator.id,
-      name: crc.creator.name,
-      handle: crc.creator.handle
-    }))
-});
+const transformFromDB = (row) => {
+  // Calculate actual metrics from posts
+  const posts = row.posts || [];
+  const actualImpressions = posts.reduce((sum, post) => sum + parseInt(post.impressions || 0), 0);
+  const actualCost = posts.reduce((sum, post) => sum + parseFloat(post.cost || 0), 0);
+
+  return {
+    id: row.id,
+    title: row.title,
+    description: row.description || '',
+    status: row.status,
+    estimatedCost: row.estimated_cost || 0,
+    estimatedImpressions: row.estimated_impressions || 0,
+    actualCost: actualCost || 0,
+    actualImpressions: actualImpressions || 0,
+    createdAt: row.created_at,
+    creators: (row.campaign_creators || [])
+      .filter(crc => crc.creator) // Filter out any null/undefined creators
+      .map(crc => ({
+        id: crc.creator.id,
+        name: crc.creator.name,
+        handle: crc.creator.handle
+      }))
+  };
+};
 
 /**
  * Transform app format to database format
