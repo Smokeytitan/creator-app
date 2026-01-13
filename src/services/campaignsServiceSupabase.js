@@ -72,6 +72,15 @@ export const getCampaignById = async (campaignId) => {
             name,
             handle
           )
+        ),
+        posts (
+          id,
+          impressions,
+          cost,
+          link,
+          platform,
+          date,
+          creator_id
         )
       `)
       .eq('id', campaignId)
@@ -106,6 +115,15 @@ const transformFromDB = (row) => {
     actualCost: actualCost || 0,
     actualImpressions: actualImpressions || 0,
     createdAt: row.created_at,
+    posts: posts.map(post => ({
+      id: post.id,
+      link: post.link,
+      impressions: post.impressions,
+      cost: post.cost,
+      platform: post.platform,
+      date: post.date,
+      creatorId: post.creator_id
+    })),
     creators: (row.campaign_creators || [])
       .filter(crc => crc.creator) // Filter out any null/undefined creators
       .map(crc => ({
