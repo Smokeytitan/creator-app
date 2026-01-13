@@ -240,6 +240,8 @@ export default function ContentRequestModal({ creators, onClose, onSubmit }) {
                 startDate: new Date().toISOString(),
                 dueDate: dueDate.toISOString(),
                 status: "pending",
+                estimatedCost: estimatedCost,
+                estimatedImpressions: estimatedImpressions
               };
               console.log('ContentRequestModal - submitting:', submitData);
               onSubmit(submitData);
