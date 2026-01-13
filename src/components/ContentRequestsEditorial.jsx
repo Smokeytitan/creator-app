@@ -809,15 +809,14 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
         </div>
       </div>
 
-      {/* Requests List */}
-      <div className="card-editorial overflow-hidden" style={{ animation: 'fadeInUp 0.6s ease-out 0.3s both' }}>
-        <ul className="divide-y divide-[var(--color-border)]">
-          {filteredRequests.map((request, index) => (
-            <li
-              key={request.id}
-              className="p-4 sm:p-6 hover:bg-[var(--color-bg-tertiary)] transition-colors"
-              style={{ animation: `fadeInUp 0.3s ease-out ${index * 0.03}s both` }}
-            >
+      {/* Requests Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4" style={{ animation: 'fadeInUp 0.6s ease-out 0.3s both' }}>
+        {filteredRequests.map((request, index) => (
+          <div
+            key={request.id}
+            className="card-editorial p-4 sm:p-6 hover:shadow-lg transition-all duration-200"
+            style={{ animation: `fadeInUp 0.3s ease-out ${index * 0.03}s both` }}
+          >
               {editingRequestId === request.id ? (
                 <div className="space-y-4">
                   <div>
@@ -1076,11 +1075,10 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
                   </div>
                 </div>
               )}
-            </li>
-          ))}
-        </ul>
+          </div>
+        ))}
         {filteredRequests.length === 0 && (
-          <div className="text-center py-12">
+          <div className="col-span-full text-center py-12">
             <p className="text-[var(--color-text-secondary)]">No campaigns found.</p>
           </div>
         )}
