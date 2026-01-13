@@ -214,11 +214,6 @@ const ContentRequestsEditorial = ({ creators, setCreators }) => {
       return;
     }
 
-    if (!contentForm.description.trim()) {
-      alert('Description is required');
-      return;
-    }
-
     // Require impressions for non-X platforms
     if (contentForm.platform !== 'X' && !contentForm.impressions.trim()) {
       alert('Impressions are required for platforms other than X');
@@ -232,7 +227,7 @@ const ContentRequestsEditorial = ({ creators, setCreators }) => {
       if (contentForm.selectedCreatorIds.includes(creator.id)) {
         const newPost = {
           id: Date.now() + Math.random(), // Ensure unique IDs
-          description: `${request.title} - ${contentForm.description}`,
+          description: request.title,
           platform: contentForm.platform,
           date: contentForm.date,
           cost: contentForm.cost,
@@ -907,19 +902,6 @@ const ContentRequestsEditorial = ({ creators, setCreators }) => {
                 <p className="text-xs text-[var(--color-text-tertiary)] mt-1">
                   Only showing creators assigned to this content request
                 </p>
-              </div>
-
-              {/* Description */}
-              <div>
-                <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">
-                  Description *
-                </label>
-                <input
-                  type="text"
-                  value={contentForm.description}
-                  onChange={(e) => setContentForm({ ...contentForm, description: e.target.value })}
-                  className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent-primary)]"
-                />
               </div>
 
               {/* Platform Selection */}
