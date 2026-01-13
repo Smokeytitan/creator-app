@@ -3,6 +3,8 @@ import { Plus, Calendar, User, CheckCircle, Clock, XCircle, Trash2, Edit2, Save,
 import ContentRequestModal from './ContentRequestModal';
 import { INITIAL_REQUESTS } from '../data/initialRequests';
 import { extractTweetId, fetchTweets } from '../services/twitterService';
+import { createCampaign, updateCampaign, deleteCampaign as deleteCampaignSupabase, getCampaigns } from '../services/campaignsServiceSupabase';
+import { supabase } from '../lib/supabaseClient';
 
 const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setRequests }) => {
   const resetToCampaigns = () => {
@@ -155,7 +157,7 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
     });
   };
 
-  const saveEditRequest = () => {
+  const saveEditRequest = async () => {
     if (!editRequestForm.title.trim()) {
       alert('Title is required');
       return;
@@ -166,21 +168,47 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
       return;
     }
 
-    const selectedCreators = creators.filter(c => editRequestForm.selectedCreatorIds.includes(c.id));
+    if (!supabase) {
+      // Fallback to local state if Supabase not configured
+      const selectedCreators = creators.filter(c => editRequestForm.selectedCreatorIds.includes(c.id));
+      setRequests(requests.map(req =>
+        req.id === editingRequestId
+          ? {
+              ...req,
+              title: editRequestForm.title,
+              description: editRequestForm.description,
+              creators: selectedCreators.map(c => ({ id: c.id, name: c.name })),
+              dueDate: new Date(editRequestForm.dueDate).toISOString(),
+              status: editRequestForm.status
+            }
+          : req
+      ));
+      setEditingRequestId(null);
+      return;
+    }
 
-    setRequests(requests.map(req =>
-      req.id === editingRequestId
-        ? {
-            ...req,
-            title: editRequestForm.title,
-            description: editRequestForm.description,
-            creators: selectedCreators.map(c => ({ id: c.id, name: c.name })),
-            dueDate: new Date(editRequestForm.dueDate).toISOString(),
-            status: editRequestForm.status
-          }
-        : req
-    ));
-    setEditingRequestId(null);
+    try {
+      // Update campaign in Supabase
+      const updated = await updateCampaign(editingRequestId, {
+        title: editRequestForm.title,
+        description: editRequestForm.description,
+        creators: editRequestForm.selectedCreatorIds,
+        status: editRequestForm.status
+      });
+
+      if (updated) {
+        // Update local state with the response from Supabase
+        setRequests(requests.map(req =>
+          req.id === editingRequestId ? updated : req
+        ));
+        setEditingRequestId(null);
+      } else {
+        alert('Failed to update campaign');
+      }
+    } catch (error) {
+      console.error('Error updating campaign:', error);
+      alert('Failed to update campaign: ' + error.message);
+    }
   };
 
   const cancelEditRequest = () => {
@@ -194,9 +222,27 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
     });
   };
 
-  const deleteRequest = (requestId) => {
-    if (confirm('Are you sure you want to delete this request?')) {
+  const deleteRequest = async (requestId) => {
+    if (!confirm('Are you sure you want to delete this request?')) {
+      return;
+    }
+
+    if (!supabase) {
+      // Fallback to local state if Supabase not configured
       setRequests(requests.filter(req => req.id !== requestId));
+      return;
+    }
+
+    try {
+      const success = await deleteCampaignSupabase(requestId);
+      if (success) {
+        setRequests(requests.filter(req => req.id !== requestId));
+      } else {
+        alert('Failed to delete campaign');
+      }
+    } catch (error) {
+      console.error('Error deleting campaign:', error);
+      alert('Failed to delete campaign: ' + error.message);
     }
   };
 
@@ -946,9 +992,35 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
         <ContentRequestModal
           creators={creators}
           onClose={() => setShowModal(false)}
-          onSubmit={(newRequest) => {
-            setRequests([...requests, { ...newRequest, id: Date.now() }]);
-            setShowModal(false);
+          onSubmit={async (newRequest) => {
+            if (!supabase) {
+              // Fallback to local state if Supabase not configured
+              setRequests([...requests, { ...newRequest, id: Date.now() }]);
+              setShowModal(false);
+              return;
+            }
+
+            try {
+              // Create campaign in Supabase
+              const created = await createCampaign({
+                title: newRequest.title,
+                description: newRequest.description,
+                creators: newRequest.selectedCreatorIds || [],
+                status: newRequest.status || 'pending',
+                estimatedCost: newRequest.estimatedCost || 0,
+                estimatedImpressions: newRequest.estimatedImpressions || 0
+              });
+
+              if (created) {
+                setRequests([...requests, created]);
+                setShowModal(false);
+              } else {
+                alert('Failed to create campaign');
+              }
+            } catch (error) {
+              console.error('Error creating campaign:', error);
+              alert('Failed to create campaign: ' + error.message);
+            }
           }}
         />
       )}
