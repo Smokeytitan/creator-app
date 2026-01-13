@@ -959,26 +959,26 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
                               </div>
                             );
                           } else {
-                            // For other statuses, try actual metrics first, then fall back to estimated
-                            const metrics = getCampaignMetrics(request);
-                            const hasActualMetrics = metrics.totalImpressions > 0 || metrics.totalCost > 0;
+                            // For other statuses, use actual metrics from Supabase (if available), otherwise estimate
+                            const hasActualMetrics = (request.actualImpressions && request.actualImpressions > 0) ||
+                                                   (request.actualCost && request.actualCost > 0);
 
                             if (hasActualMetrics) {
                               return (
                                 <div className="flex items-center gap-4 text-sm font-medium">
-                                  {metrics.totalImpressions > 0 && (
+                                  {request.actualImpressions > 0 && (
                                     <div className="flex items-center text-[var(--color-accent-primary)]">
                                       <Eye className="h-4 w-4 mr-1" />
                                       <span className="text-mono">
-                                        {metrics.totalImpressions.toLocaleString()} impressions
+                                        {request.actualImpressions.toLocaleString()} impressions
                                       </span>
                                     </div>
                                   )}
-                                  {metrics.totalCost > 0 && (
+                                  {request.actualCost > 0 && (
                                     <div className="flex items-center text-green-500">
                                       <DollarSign className="h-4 w-4 mr-1" />
                                       <span className="text-mono">
-                                        ${metrics.totalCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                        ${request.actualCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                       </span>
                                     </div>
                                   )}

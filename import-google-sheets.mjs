@@ -146,14 +146,14 @@ function mapToCampaigns(rawData, creatorMapping) {
   const campaigns = [];
 
   // Parse header to get creator column indices
+  // Format: Campaign, Request Date, Creator1, Creator2, Creator3, ...
   const creatorColumns = [];
-  for (let i = 2; i < headerRow.length; i += 2) {
+  for (let i = 2; i < headerRow.length; i++) {
     const creatorName = headerRow[i];
     if (creatorName && creatorName.trim()) {
       creatorColumns.push({
-        name: creatorName.trim(),
-        urlIndex: i,
-        impressionsIndex: i + 1
+        name: creatorName.trim().replace(/\r/g, ''), // Remove carriage returns
+        urlIndex: i
       });
     }
   }
@@ -179,21 +179,18 @@ function mapToCampaigns(rawData, creatorMapping) {
 
     // Extract posts for each creator
     for (const creatorCol of creatorColumns) {
-      const tweetUrl = row[creatorCol.urlIndex]?.trim();
-      const impressions = row[creatorCol.impressionsIndex]?.trim();
+      const tweetUrl = row[creatorCol.urlIndex]?.trim().replace(/\r/g, '');
 
-      // Create post if there's a tweet URL (impressions optional)
-      if (tweetUrl) {
+      // Create post if there's a tweet URL
+      if (tweetUrl && tweetUrl.startsWith('http')) {
         const creatorId = creatorMapping[creatorCol.name];
         if (creatorId) {
-          const impressionValue = impressions ? parseInt(impressions.replace(/,/g, '')) || 0 : 0;
           campaign.posts.push({
             creator_id: creatorId,
             creator_name: creatorCol.name,
             tweet_url: tweetUrl,
-            impressions: impressionValue
+            impressions: 0 // Will be fetched from Twitter API
           });
-          totalImpressions += impressionValue;
         }
       }
     }
