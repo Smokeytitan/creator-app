@@ -722,27 +722,47 @@ const ContentRequestsEditorial = ({ creators, setCreators }) => {
                       {request.status}
                     </span>
                     <button
-                      onClick={() => startAddContent(request)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        startAddContent(request);
+                      }}
                       className="p-2 text-[var(--color-text-tertiary)] hover:text-green-500 hover:bg-green-500/10 rounded transition-colors"
                       title="Add content"
                     >
                       <FileText className="h-4 w-4" />
                     </button>
                     <button
-                      onClick={() => startEditRequest(request)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        startEditRequest(request);
+                      }}
                       className="p-2 text-[var(--color-text-tertiary)] hover:text-[var(--color-accent-primary)] hover:bg-[var(--color-bg-tertiary)] rounded transition-colors"
                       title="Edit request"
                     >
                       <Edit2 className="h-4 w-4" />
                     </button>
                     <button
-                      onClick={() => deleteRequest(request.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteRequest(request.id);
+                      }}
                       className="p-2 text-[var(--color-text-tertiary)] hover:text-red-500 hover:bg-red-500/10 rounded transition-colors"
                       title="Delete request"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
                   </div>
+                </div>
+
+                {/* Add Content Button - Full Width */}
+                <div className="mt-4 pt-4 border-t border-[var(--color-border)]">
+                  <button
+                    onClick={() => startAddContent(request)}
+                    className="w-full inline-flex items-center justify-center px-4 py-2.5 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors"
+                  >
+                    <FileText className="h-4 w-4 mr-2" />
+                    Add Content
+                  </button>
                 </div>
               )}
             </li>
