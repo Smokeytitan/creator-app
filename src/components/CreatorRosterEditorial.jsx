@@ -51,6 +51,7 @@ export default function CreatorRosterEditorial({ creators, setCreators }) {
   };
 
   const startAdd = () => {
+    console.log('Starting to add new creator');
     setIsAdding(true);
     setEditingId(null);
     setEditForm({ name: '', handle: '', notes: '', costPerPost: '', platforms: [] });
