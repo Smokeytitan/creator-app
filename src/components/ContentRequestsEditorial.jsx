@@ -1089,10 +1089,14 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
 
             try {
               // Create campaign in Supabase
+              // Extract creator IDs from the creators array
+              const creatorIds = (newRequest.creators || []).map(c => c.id);
+              console.log('Creating campaign with creators:', creatorIds);
+
               const created = await createCampaign({
                 title: newRequest.title,
                 description: newRequest.description,
-                creators: newRequest.selectedCreatorIds || [],
+                creators: creatorIds,
                 status: newRequest.status || 'pending',
                 estimatedCost: newRequest.estimatedCost || 0,
                 estimatedImpressions: newRequest.estimatedImpressions || 0
