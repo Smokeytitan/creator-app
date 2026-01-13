@@ -19,7 +19,6 @@ export default function CreatorRosterEditorial({ creators, setCreators }) {
   const [addingPostId, setAddingPostId] = useState(null);
   const [editingPostId, setEditingPostId] = useState(null);
   const [postForm, setPostForm] = useState({ description: '', date: '', cost: '', link: '', impressions: '' });
-  const fileInputRef = useRef(null);
   const excelFileInputRef = useRef(null);
   const [importing, setImporting] = useState(false);
 
@@ -262,36 +261,6 @@ export default function CreatorRosterEditorial({ creators, setCreators }) {
     return creators;
   };
 
-  const handleFileUpload = (event) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const text = e.target?.result;
-        const importedCreators = parseCSV(text);
-
-        if (importedCreators.length > 0) {
-          setCreators(importedCreators);
-          alert(`Successfully imported ${importedCreators.length} creators!`);
-        } else {
-          alert('No valid creator data found in CSV file.');
-        }
-      } catch (error) {
-        console.error('Error parsing CSV:', error);
-        alert('Error parsing CSV file. Please check the format.');
-      }
-    };
-
-    reader.readAsText(file);
-
-    // Reset input so the same file can be uploaded again
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  };
-
   const exportToCSV = () => {
     // Use filtered creators for export
     const dataToExport = filteredCreators.length > 0 ? filteredCreators : creators;
@@ -487,13 +456,6 @@ export default function CreatorRosterEditorial({ creators, setCreators }) {
               <span className="sm:hidden">New</span>
             </button>
             <input
-              ref={fileInputRef}
-              type="file"
-              accept=".csv"
-              onChange={handleFileUpload}
-              className="hidden"
-            />
-            <input
               ref={excelFileInputRef}
               type="file"
               accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
@@ -508,14 +470,6 @@ export default function CreatorRosterEditorial({ creators, setCreators }) {
               <FileSpreadsheet className="w-4 h-4 mr-2" />
               <span className="hidden sm:inline">{importing ? 'Importing...' : 'Import Excel'}</span>
               <span className="sm:hidden">{importing ? '...' : 'Excel'}</span>
-            </button>
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              className="inline-flex items-center px-4 py-2 bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] text-[var(--color-text-primary)] rounded-lg hover:bg-[var(--color-bg-secondary)] hover:border-[var(--color-border-hover)] transition-all duration-200 text-sm font-semibold"
-            >
-              <Upload className="w-4 h-4 mr-2" />
-              <span className="hidden sm:inline">Import CSV</span>
-              <span className="sm:hidden">CSV</span>
             </button>
             <button
               onClick={exportToCSV}
