@@ -964,6 +964,11 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
                                                    (request.actualCost && request.actualCost > 0);
 
                             if (hasActualMetrics) {
+                              // Calculate CPM (Cost Per Mille/1000 impressions)
+                              const cpm = request.actualImpressions > 0
+                                ? (request.actualCost / request.actualImpressions) * 1000
+                                : 0;
+
                               return (
                                 <div className="flex items-center gap-4 text-sm font-medium">
                                   {request.actualImpressions > 0 && (
@@ -979,6 +984,13 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
                                       <DollarSign className="h-4 w-4 mr-1" />
                                       <span className="text-mono">
                                         ${request.actualCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                      </span>
+                                    </div>
+                                  )}
+                                  {cpm > 0 && (
+                                    <div className="flex items-center text-blue-400">
+                                      <span className="text-mono text-xs">
+                                        ${cpm.toFixed(2)} CPM
                                       </span>
                                     </div>
                                   )}
