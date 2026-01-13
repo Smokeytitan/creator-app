@@ -167,7 +167,13 @@ export default function App() {
               <button
                 onClick={() => {
                   if (window.confirm('Clear local cache and reload? This will remove all localStorage data.')) {
+                    // Save current tab and theme before clearing
+                    const currentTab = localStorage.getItem('activeTab');
+                    const currentTheme = localStorage.getItem('theme-mode');
                     localStorage.clear();
+                    // Restore tab and theme
+                    if (currentTab) localStorage.setItem('activeTab', currentTab);
+                    if (currentTheme) localStorage.setItem('theme-mode', currentTheme);
                     window.location.reload();
                   }
                 }}
