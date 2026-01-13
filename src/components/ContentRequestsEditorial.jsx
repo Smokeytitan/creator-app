@@ -1033,16 +1033,6 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          startAddContent(request);
-                        }}
-                        className="p-2 text-[var(--color-text-tertiary)] hover:text-green-500 hover:bg-green-500/10 rounded transition-colors"
-                        title="Add content"
-                      >
-                        <FileText className="h-4 w-4" />
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
                           startEditRequest(request);
                         }}
                         className="p-2 text-[var(--color-text-tertiary)] hover:text-[var(--color-accent-primary)] hover:bg-[var(--color-bg-tertiary)] rounded transition-colors"
