@@ -64,7 +64,7 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
   const [contentForm, setContentForm] = useState({
     selectedCreatorIds: [],
     description: '',
-    platform: 'X', // X, Facebook, Instagram, YouTube, TikTok
+    platforms: ['X'], // Array of platforms: X, Facebook, Instagram, YouTube, TikTok
     link: '',
     impressions: '',
     likes: '',
@@ -284,7 +284,7 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
     setContentForm({
       selectedCreatorIds: [],
       description: '',
-      platform: 'X',
+      platforms: ['X'],
       link: '',
       impressions: '',
       likes: '',
@@ -299,7 +299,7 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
     setContentForm({
       selectedCreatorIds: [],
       description: '',
-      platform: 'X',
+      platforms: ['X'],
       link: '',
       impressions: '',
       likes: '',
@@ -384,58 +384,99 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
   const handleLinkChange = (newLink) => {
     setContentForm({ ...contentForm, link: newLink });
 
-    // Auto-fetch metrics when a valid Twitter URL is pasted
-    if (contentForm.platform === 'X' && newLink.includes('/status/')) {
+    // Auto-fetch metrics when a valid Twitter URL is pasted and X is selected
+    if (contentForm.platforms.includes('X') && newLink.includes('/status/')) {
       fetchTweetMetrics(newLink);
     }
   };
 
-  const submitContent = () => {
+  const submitContent = async () => {
     if (contentForm.selectedCreatorIds.length === 0) {
       alert('Please select at least one creator');
       return;
     }
 
+    if (contentForm.platforms.length === 0) {
+      alert('Please select at least one platform');
+      return;
+    }
+
     // Require impressions for non-X platforms
-    if (contentForm.platform !== 'X' && !contentForm.impressions.trim()) {
-      alert('Impressions are required for platforms other than X');
+    const hasNonXPlatform = contentForm.platforms.some(p => p !== 'X');
+    if (hasNonXPlatform && !contentForm.impressions.trim()) {
+      alert('Impressions are required when including platforms other than X');
       return;
     }
 
     const request = addingContentForRequest;
 
-    // Create post for each selected creator
-    setCreators(creators.map(creator => {
-      if (contentForm.selectedCreatorIds.includes(creator.id)) {
-        const newPost = {
-          id: Date.now() + Math.random(), // Ensure unique IDs
-          description: request.title,
-          platform: contentForm.platform,
-          date: contentForm.date,
-          cost: contentForm.cost,
-          link: contentForm.link,
-          impressions: contentForm.impressions,
-          lastScanned: contentForm.platform === 'X' && contentForm.impressions ? new Date().toISOString() : null // Track when metrics were fetched
-        };
+    if (!supabase) {
+      // Fallback to local state if Supabase not configured
+      setCreators(creators.map(creator => {
+        if (contentForm.selectedCreatorIds.includes(creator.id)) {
+          // Create a post for each selected platform
+          const newPosts = contentForm.platforms.map(platform => ({
+            id: Date.now() + Math.random(),
+            description: request.title,
+            platform: platform,
+            date: contentForm.date,
+            cost: contentForm.cost,
+            link: contentForm.link,
+            impressions: contentForm.impressions,
+            likes: contentForm.likes || '',
+            comments: contentForm.comments || '',
+            lastScanned: platform === 'X' && contentForm.impressions ? new Date().toISOString() : null
+          }));
 
-        // Add optional metrics if provided
-        if (contentForm.likes) {
-          newPost.likes = contentForm.likes;
+          return {
+            ...creator,
+            posts: [...(creator.posts || []), ...newPosts]
+          };
         }
-        if (contentForm.comments) {
-          newPost.comments = contentForm.comments;
-        }
+        return creator;
+      }));
+      cancelAddContent();
+      alert(`Content added to ${contentForm.selectedCreatorIds.length} creator(s) across ${contentForm.platforms.length} platform(s) for "${request.title}"!`);
+      return;
+    }
 
-        return {
-          ...creator,
-          posts: [...(creator.posts || []), newPost]
-        };
+    // Use Supabase
+    try {
+      let totalPostsCreated = 0;
+
+      // For each selected creator
+      for (const creatorId of contentForm.selectedCreatorIds) {
+        // Create a post for each selected platform
+        for (const platform of contentForm.platforms) {
+          const postData = {
+            description: request.title,
+            platform: platform,
+            date: contentForm.date,
+            cost: contentForm.cost,
+            link: contentForm.link,
+            impressions: contentForm.impressions,
+            likes: contentForm.likes || '',
+            comments: contentForm.comments || '',
+            lastScanned: platform === 'X' && contentForm.impressions ? new Date().toISOString() : null
+          };
+
+          const updatedCreator = await addPost(creatorId, postData, request.id);
+          if (updatedCreator) {
+            // Update local state with the updated creator
+            setCreators(currentCreators =>
+              currentCreators.map(c => c.id === creatorId ? updatedCreator : c)
+            );
+            totalPostsCreated++;
+          }
+        }
       }
-      return creator;
-    }));
 
-    cancelAddContent();
-    alert(`Content added to ${contentForm.selectedCreatorIds.length} creator(s) for "${request.title}"!`);
+      cancelAddContent();
+      alert(`Successfully added ${totalPostsCreated} posts to ${contentForm.selectedCreatorIds.length} creator(s) across ${contentForm.platforms.length} platform(s) for "${request.title}"!`);
+    } catch (error) {
+      console.error('Error adding content:', error);
+      alert('Failed to add content: ' + error.message);
+    }
   };
 
   const filteredRequests = useMemo(() => {
@@ -1178,20 +1219,35 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
 
               {/* Platform Selection */}
               <div>
-                <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">
-                  Platform *
+                <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-2">
+                  Platforms ({contentForm.platforms.length} selected) *
                 </label>
-                <select
-                  value={contentForm.platform}
-                  onChange={(e) => setContentForm({ ...contentForm, platform: e.target.value })}
-                  className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent-primary)]"
-                >
-                  <option value="X">X (Twitter)</option>
-                  <option value="Facebook">Facebook</option>
-                  <option value="Instagram">Instagram</option>
-                  <option value="YouTube">YouTube</option>
-                  <option value="TikTok">TikTok</option>
-                </select>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                  {['X', 'Facebook', 'Instagram', 'YouTube', 'TikTok'].map((platform) => (
+                    <label
+                      key={platform}
+                      className="flex items-center space-x-2 cursor-pointer hover:bg-[var(--color-bg-secondary)] p-2 rounded border border-[var(--color-border)]"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={contentForm.platforms.includes(platform)}
+                        onChange={(e) => {
+                          const isChecked = e.target.checked;
+                          setContentForm({
+                            ...contentForm,
+                            platforms: isChecked
+                              ? [...contentForm.platforms, platform]
+                              : contentForm.platforms.filter(p => p !== platform)
+                          });
+                        }}
+                        className="h-4 w-4 text-[var(--color-accent-primary)] focus:ring-[var(--color-accent-primary)] border-[var(--color-border)] rounded"
+                      />
+                      <span className="text-sm text-[var(--color-text-primary)]">
+                        {platform === 'X' ? 'X (Twitter)' : platform}
+                      </span>
+                    </label>
+                  ))}
+                </div>
               </div>
 
               {/* Link */}
@@ -1213,7 +1269,7 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
                   disabled={fetchingTweetData}
                   className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent-primary)] disabled:opacity-50 disabled:cursor-not-allowed"
                 />
-                {contentForm.platform === 'X' && (
+                {contentForm.platforms.includes('X') && (
                   <p className="text-xs text-[var(--color-text-tertiary)] mt-1">
                     Paste a Twitter/X URL to automatically fetch impressions, likes, and replies
                   </p>
@@ -1252,17 +1308,17 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
               <div className="border-t border-[var(--color-border)] pt-4">
                 <h4 className="text-sm font-medium text-[var(--color-text-primary)] mb-3">
                   Performance Metrics
-                  {contentForm.platform === 'X' && (
+                  {contentForm.platforms.includes('X') && (
                     <span className="ml-2 text-xs text-green-500">
-                      (Auto-filled from Twitter API)
+                      (Auto-filled from Twitter API when X URL is provided)
                     </span>
                   )}
                 </h4>
                 <div className="grid grid-cols-3 gap-3">
                   <div>
                     <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">
-                      Impressions {contentForm.platform !== 'X' && '*'}
-                      {contentForm.platform === 'X' && <span className="text-xs text-[var(--color-text-tertiary)]">(optional)</span>}
+                      Impressions {contentForm.platforms.length > 0 && !contentForm.platforms.includes('X') && '*'}
+                      {contentForm.platforms.includes('X') && contentForm.platforms.length === 1 && <span className="text-xs text-[var(--color-text-tertiary)]">(optional)</span>}
                     </label>
                     <input
                       type="text"
