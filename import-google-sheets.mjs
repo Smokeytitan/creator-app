@@ -9,6 +9,7 @@ import { createClient } from '@supabase/supabase-js';
 import axios from 'axios';
 import * as fs from 'fs';
 import * as path from 'path';
+import fetch from 'node-fetch';
 
 // Load environment variables from .env
 function loadEnv() {
@@ -181,16 +182,18 @@ function mapToCampaigns(rawData, creatorMapping) {
       const tweetUrl = row[creatorCol.urlIndex]?.trim();
       const impressions = row[creatorCol.impressionsIndex]?.trim();
 
-      if (tweetUrl && impressions) {
+      // Create post if there's a tweet URL (impressions optional)
+      if (tweetUrl) {
         const creatorId = creatorMapping[creatorCol.name];
         if (creatorId) {
+          const impressionValue = impressions ? parseInt(impressions.replace(/,/g, '')) || 0 : 0;
           campaign.posts.push({
             creator_id: creatorId,
             creator_name: creatorCol.name,
             tweet_url: tweetUrl,
-            impressions: parseInt(impressions.replace(/,/g, '')) || 0
+            impressions: impressionValue
           });
-          totalImpressions += parseInt(impressions.replace(/,/g, '')) || 0;
+          totalImpressions += impressionValue;
         }
       }
     }
@@ -213,6 +216,58 @@ function parseDateString(dateStr) {
   } catch (error) {
     console.warn(`Failed to parse date: ${dateStr}`);
     return new Date().toISOString();
+  }
+}
+
+/**
+ * Extract tweet ID from Twitter URL
+ */
+function extractTweetId(url) {
+  if (!url) return null;
+  const match = url.match(/status\/(\d+)/);
+  return match ? match[1] : null;
+}
+
+/**
+ * Fetch tweet data from Twitter API
+ */
+async function fetchTweetData(tweetIds) {
+  if (!tweetIds || tweetIds.length === 0) return {};
+
+  try {
+    const response = await fetch('http://localhost:5175/api/twitter', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ tweetIds })
+    });
+
+    if (!response.ok) {
+      console.error(`Twitter API error: ${response.status}`);
+      return {};
+    }
+
+    const data = await response.json();
+
+    // Build map of tweet ID -> public metrics
+    const tweetMap = {};
+    if (data.data) {
+      data.data.forEach(tweet => {
+        tweetMap[tweet.id] = {
+          impressions: tweet.public_metrics?.impression_count || 0,
+          likes: tweet.public_metrics?.like_count || 0,
+          retweets: tweet.public_metrics?.retweet_count || 0,
+          replies: tweet.public_metrics?.reply_count || 0,
+          quotes: tweet.public_metrics?.quote_count || 0
+        };
+      });
+    }
+
+    return tweetMap;
+  } catch (error) {
+    console.error('Error fetching tweet data:', error.message);
+    return {};
   }
 }
 
@@ -350,6 +405,12 @@ async function importGoogleSheetsToSupabase() {
     let creatorsUpdated = 0;
     let creatorsErrorCount = 0;
 
+    // Build creator cost lookup for calculating post costs
+    const creatorCostLookup = {};
+    creators.forEach(creator => {
+      creatorCostLookup[creator.id] = parseFloat(creator.cost_per_post?.replace(/[$,]/g, '') || '0');
+    });
+
     for (const creator of creators) {
       try {
         // Check if creator already exists
@@ -385,8 +446,36 @@ async function importGoogleSheetsToSupabase() {
       }
     }
 
-    // Step 6: Import campaigns to Supabase
-    console.log('\n[6/6] Importing campaigns and posts to Supabase...');
+    // Step 6: Collect all tweet IDs and fetch Twitter data
+    console.log('\n[6/7] Fetching tweet data from Twitter API...');
+    const allTweetIds = [];
+    const tweetUrlToId = {};
+
+    campaigns.forEach(campaign => {
+      campaign.posts.forEach(post => {
+        const tweetId = extractTweetId(post.tweet_url);
+        if (tweetId) {
+          allTweetIds.push(tweetId);
+          tweetUrlToId[post.tweet_url] = tweetId;
+        }
+      });
+    });
+
+    console.log(`  Found ${allTweetIds.length} tweet URLs`);
+
+    // Fetch tweet data in batches of 100 (Twitter API limit)
+    const tweetDataMap = {};
+    for (let i = 0; i < allTweetIds.length; i += 100) {
+      const batch = allTweetIds.slice(i, i + 100);
+      console.log(`  Fetching batch ${Math.floor(i/100) + 1}/${Math.ceil(allTweetIds.length/100)} (${batch.length} tweets)...`);
+      const batchData = await fetchTweetData(batch);
+      Object.assign(tweetDataMap, batchData);
+    }
+
+    console.log(`  ✓ Fetched data for ${Object.keys(tweetDataMap).length} tweets`);
+
+    // Step 7: Import campaigns to Supabase
+    console.log('\n[7/7] Importing campaigns and posts to Supabase...');
     let campaignsImported = 0;
     let campaignsUpdated = 0;
     let campaignsErrorCount = 0;
@@ -437,6 +526,14 @@ async function importGoogleSheetsToSupabase() {
         // Import posts for this campaign
         for (const post of campaign.posts) {
           try {
+            // Calculate cost from creator's rate
+            const costPerPost = creatorCostLookup[post.creator_id] || 0;
+
+            // Get Twitter data for this tweet
+            const tweetId = tweetUrlToId[post.tweet_url];
+            const twitterData = tweetDataMap[tweetId];
+            const impressions = twitterData?.impressions || post.impressions || 0;
+
             const { error: postError} = await supabase
               .from('posts')
               .insert([{
@@ -444,7 +541,8 @@ async function importGoogleSheetsToSupabase() {
                 creator_id: post.creator_id,
                 campaign_id: campaign.id,
                 link: post.tweet_url,
-                impressions: post.impressions.toString(),
+                impressions: impressions.toString(),
+                cost: costPerPost.toString(),
                 platform: 'X',
                 date: campaign.created_at
               }]);
