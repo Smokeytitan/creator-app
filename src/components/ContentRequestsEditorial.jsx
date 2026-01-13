@@ -623,38 +623,48 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
     let estimatedImpressions = 0;
     let estimatedCost = 0;
 
-    // Get the campaign creators
-    const campaignCreators = request.creators || [];
+    // First, try to use stored estimated values from the campaign itself
+    if (request.estimatedImpressions && request.estimatedImpressions > 0) {
+      estimatedImpressions = request.estimatedImpressions;
+    }
+    if (request.estimatedCost && request.estimatedCost > 0) {
+      estimatedCost = request.estimatedCost;
+    }
 
-    // For each creator in the campaign
-    campaignCreators.forEach(campaignCreator => {
-      // Find the creator in the full creators list
-      const creator = creators.find(c => c.id === campaignCreator.id);
-      if (!creator) return;
+    // If no stored values, calculate from creators
+    if (estimatedImpressions === 0 || estimatedCost === 0) {
+      const campaignCreators = request.creators || [];
 
-      // Calculate average impressions from their posts
-      const posts = creator.posts || [];
-      if (posts.length > 0) {
-        const totalCreatorImpressions = posts.reduce((sum, post) => {
-          if (post.impressions) {
-            const impressions = parseFloat(post.impressions.replace(/[^0-9.-]+/g, ''));
-            if (!isNaN(impressions)) {
-              return sum + impressions;
-            }
+      campaignCreators.forEach(campaignCreator => {
+        const creator = creators.find(c => c.id === campaignCreator.id);
+        if (!creator) return;
+
+        // Calculate average impressions from their posts (only if not already set)
+        if (estimatedImpressions === 0) {
+          const posts = creator.posts || [];
+          if (posts.length > 0) {
+            const totalCreatorImpressions = posts.reduce((sum, post) => {
+              if (post.impressions) {
+                const impressions = parseFloat(post.impressions.replace(/[^0-9.-]+/g, ''));
+                if (!isNaN(impressions)) {
+                  return sum + impressions;
+                }
+              }
+              return sum;
+            }, 0);
+            estimatedImpressions += Math.round(totalCreatorImpressions / posts.length);
           }
-          return sum;
-        }, 0);
-        estimatedImpressions += Math.round(totalCreatorImpressions / posts.length);
-      }
-
-      // Get cost per post from creator
-      if (creator.costPerPost) {
-        const cost = parseFloat(creator.costPerPost.replace(/[^0-9.-]+/g, ''));
-        if (!isNaN(cost)) {
-          estimatedCost += cost;
         }
-      }
-    });
+
+        // Get cost per post from creator (only if not already set)
+        if (estimatedCost === 0 && creator.costPerPost) {
+          const cost = parseFloat(creator.costPerPost.replace(/[^0-9.-]+/g, ''));
+          if (!isNaN(cost)) {
+            estimatedCost += cost;
+          }
+        }
+      });
+    }
 
     return {
       estimatedImpressions,

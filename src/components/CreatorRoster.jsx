@@ -1,6 +1,8 @@
 import { useState, useRef, useMemo } from 'react';
 import { Upload, Plus, Trash2, FileText, X, DollarSign, Edit2, Search, Filter, SortAsc, Download, Eye, RefreshCw, Calendar } from 'lucide-react';
 import { IMPORTED_CREATORS } from '../data/importedCreators';
+import { createCreator, updateCreator, deleteCreator as deleteCreatorSupabase, addPost, updatePost as updatePostSupabase, deletePost as deletePostSupabase } from '../services/creatorsServiceSupabase';
+import { supabase } from '../lib/supabaseClient';
 
 export default function CreatorRoster({ creators, setCreators }) {
   const resetToImportedData = () => {
@@ -59,39 +61,98 @@ export default function CreatorRoster({ creators, setCreators }) {
     setEditForm({ name: '', handle: '', notes: '', costPerPost: '', platforms: [] });
   };
 
-  const saveEdit = (creatorId) => {
-    setCreators(creators.map((c) =>
-      c.id === creatorId ? { ...c, ...editForm } : c
-    ));
-    setEditingId(null);
-    setEditForm({ name: '', handle: '', notes: '', costPerPost: '', platforms: [] });
+  const saveEdit = async (creatorId) => {
+    if (!supabase) {
+      // Fallback to local state if Supabase not configured
+      setCreators(creators.map((c) =>
+        c.id === creatorId ? { ...c, ...editForm } : c
+      ));
+      setEditingId(null);
+      setEditForm({ name: '', handle: '', notes: '', costPerPost: '', platforms: [] });
+      return;
+    }
+
+    try {
+      const updated = await updateCreator(creatorId, editForm);
+      if (updated) {
+        setCreators(creators.map((c) =>
+          c.id === creatorId ? updated : c
+        ));
+        setEditingId(null);
+        setEditForm({ name: '', handle: '', notes: '', costPerPost: '', platforms: [] });
+      } else {
+        alert('Failed to update creator');
+      }
+    } catch (error) {
+      console.error('Error updating creator:', error);
+      alert('Failed to update creator: ' + error.message);
+    }
   };
 
-  const saveNew = () => {
+  const saveNew = async () => {
     if (!editForm.name.trim()) {
       alert('Name is required');
       return;
     }
 
-    const newCreator = {
-      id: Date.now(),
+    const newCreatorData = {
       name: editForm.name,
       handle: editForm.handle || '@' + editForm.name.toLowerCase().replace(/\s+/g, '_'),
       notes: editForm.notes,
       costPerPost: editForm.costPerPost,
-      platforms: editForm.platforms || [],
-      posts: []
+      platforms: editForm.platforms || []
     };
 
-    setCreators([...creators, newCreator]);
-    setIsAdding(false);
-    setEditForm({ name: '', handle: '', notes: '', costPerPost: '', platforms: [] });
+    if (!supabase) {
+      // Fallback to local state if Supabase not configured
+      const newCreator = {
+        id: Date.now(),
+        ...newCreatorData,
+        posts: []
+      };
+      setCreators([...creators, newCreator]);
+      setIsAdding(false);
+      setEditForm({ name: '', handle: '', notes: '', costPerPost: '', platforms: [] });
+      return;
+    }
+
+    try {
+      const created = await createCreator(newCreatorData);
+      if (created) {
+        setCreators([...creators, created]);
+        setIsAdding(false);
+        setEditForm({ name: '', handle: '', notes: '', costPerPost: '', platforms: [] });
+      } else {
+        alert('Failed to create creator');
+      }
+    } catch (error) {
+      console.error('Error creating creator:', error);
+      alert('Failed to create creator: ' + error.message);
+    }
   };
 
-  const deleteCreator = (creatorId, e) => {
+  const deleteCreator = async (creatorId, e) => {
     e.stopPropagation();
-    if (confirm('Are you sure you want to delete this creator?')) {
+    if (!confirm('Are you sure you want to delete this creator?')) {
+      return;
+    }
+
+    if (!supabase) {
+      // Fallback to local state if Supabase not configured
       setCreators(creators.filter(c => c.id !== creatorId));
+      return;
+    }
+
+    try {
+      const success = await deleteCreatorSupabase(creatorId);
+      if (success) {
+        setCreators(creators.filter(c => c.id !== creatorId));
+      } else {
+        alert('Failed to delete creator');
+      }
+    } catch (error) {
+      console.error('Error deleting creator:', error);
+      alert('Failed to delete creator: ' + error.message);
     }
   };
 
@@ -120,39 +181,69 @@ export default function CreatorRoster({ creators, setCreators }) {
     setPostForm({ description: '', date: '', cost: '', link: '', impressions: '' });
   };
 
-  const savePost = (creatorId, e) => {
+  const savePost = async (creatorId, e) => {
     e.stopPropagation();
     if (!postForm.description.trim()) {
       alert('Description is required');
       return;
     }
 
-    const newPost = {
-      id: Date.now(),
+    const newPostData = {
       description: postForm.description,
       date: postForm.date || new Date().toISOString().split('T')[0],
       cost: postForm.cost,
       link: postForm.link,
-      impressions: postForm.impressions
+      impressions: postForm.impressions,
+      platform: 'X' // Default platform
     };
 
-    setCreators(creators.map(c => {
-      if (c.id === creatorId) {
-        return {
-          ...c,
-          posts: [...(c.posts || []), newPost]
-        };
-      }
-      return c;
-    }));
+    if (!supabase) {
+      // Fallback to local state if Supabase not configured
+      const newPost = {
+        id: Date.now(),
+        ...newPostData
+      };
 
-    setAddingPostId(null);
-    setPostForm({ description: '', date: '', cost: '', link: '', impressions: '' });
+      setCreators(creators.map(c => {
+        if (c.id === creatorId) {
+          return {
+            ...c,
+            posts: [...(c.posts || []), newPost]
+          };
+        }
+        return c;
+      }));
+
+      setAddingPostId(null);
+      setPostForm({ description: '', date: '', cost: '', link: '', impressions: '' });
+      return;
+    }
+
+    try {
+      const updatedCreator = await addPost(creatorId, newPostData);
+      if (updatedCreator) {
+        setCreators(creators.map(c =>
+          c.id === creatorId ? updatedCreator : c
+        ));
+        setAddingPostId(null);
+        setPostForm({ description: '', date: '', cost: '', link: '', impressions: '' });
+      } else {
+        alert('Failed to add post');
+      }
+    } catch (error) {
+      console.error('Error adding post:', error);
+      alert('Failed to add post: ' + error.message);
+    }
   };
 
-  const deletePost = (creatorId, postId, e) => {
+  const deletePost = async (creatorId, postId, e) => {
     e.stopPropagation();
-    if (confirm('Are you sure you want to delete this post?')) {
+    if (!confirm('Are you sure you want to delete this post?')) {
+      return;
+    }
+
+    if (!supabase) {
+      // Fallback to local state if Supabase not configured
       setCreators(creators.map(c => {
         if (c.id === creatorId) {
           return {
@@ -162,6 +253,27 @@ export default function CreatorRoster({ creators, setCreators }) {
         }
         return c;
       }));
+      return;
+    }
+
+    try {
+      const success = await deletePostSupabase(postId);
+      if (success) {
+        setCreators(creators.map(c => {
+          if (c.id === creatorId) {
+            return {
+              ...c,
+              posts: (c.posts || []).filter(p => p.id !== postId)
+            };
+          }
+          return c;
+        }));
+      } else {
+        alert('Failed to delete post');
+      }
+    } catch (error) {
+      console.error('Error deleting post:', error);
+      alert('Failed to delete post: ' + error.message);
     }
   };
 
@@ -184,37 +296,75 @@ export default function CreatorRoster({ creators, setCreators }) {
     setPostForm({ description: '', date: '', cost: '', link: '', impressions: '' });
   };
 
-  const saveEditPost = (creatorId, postId, e) => {
+  const saveEditPost = async (creatorId, postId, e) => {
     e.stopPropagation();
     if (!postForm.description.trim()) {
       alert('Description is required');
       return;
     }
 
-    setCreators(creators.map(c => {
-      if (c.id === creatorId) {
-        return {
-          ...c,
-          posts: (c.posts || []).map(p => {
-            if (p.id === postId) {
-              return {
-                ...p,
-                description: postForm.description,
-                date: postForm.date,
-                cost: postForm.cost,
-                link: postForm.link,
-                impressions: postForm.impressions
-              };
-            }
-            return p;
-          })
-        };
-      }
-      return c;
-    }));
+    const postUpdates = {
+      description: postForm.description,
+      date: postForm.date,
+      cost: postForm.cost,
+      link: postForm.link,
+      impressions: postForm.impressions
+    };
 
-    setEditingPostId(null);
-    setPostForm({ description: '', date: '', cost: '', link: '', impressions: '' });
+    if (!supabase) {
+      // Fallback to local state if Supabase not configured
+      setCreators(creators.map(c => {
+        if (c.id === creatorId) {
+          return {
+            ...c,
+            posts: (c.posts || []).map(p => {
+              if (p.id === postId) {
+                return {
+                  ...p,
+                  ...postUpdates
+                };
+              }
+              return p;
+            })
+          };
+        }
+        return c;
+      }));
+
+      setEditingPostId(null);
+      setPostForm({ description: '', date: '', cost: '', link: '', impressions: '' });
+      return;
+    }
+
+    try {
+      const success = await updatePostSupabase(postId, postUpdates);
+      if (success) {
+        setCreators(creators.map(c => {
+          if (c.id === creatorId) {
+            return {
+              ...c,
+              posts: (c.posts || []).map(p => {
+                if (p.id === postId) {
+                  return {
+                    ...p,
+                    ...postUpdates
+                  };
+                }
+                return p;
+              })
+            };
+          }
+          return c;
+        }));
+        setEditingPostId(null);
+        setPostForm({ description: '', date: '', cost: '', link: '', impressions: '' });
+      } else {
+        alert('Failed to update post');
+      }
+    } catch (error) {
+      console.error('Error updating post:', error);
+      alert('Failed to update post: ' + error.message);
+    }
   };
 
   const parseCSV = (text) => {
