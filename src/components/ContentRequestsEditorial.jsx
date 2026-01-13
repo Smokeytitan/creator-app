@@ -4,38 +4,13 @@ import ContentRequestModal from './ContentRequestModal';
 import { INITIAL_REQUESTS } from '../data/initialRequests';
 import { extractTweetId, fetchTweets } from '../services/twitterService';
 
-const ContentRequestsEditorial = ({ creators, setCreators }) => {
+const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setRequests }) => {
   const resetToCampaigns = () => {
     if (confirm('This will load all campaigns from Google Sheets. Your current requests will be replaced. Are you sure?')) {
       setRequests(INITIAL_REQUESTS);
       alert('Campaign data has been loaded from Google Sheets!');
     }
   };
-  const [requests, setRequests] = useState(() => {
-    const stored = localStorage.getItem('requests');
-    if (stored) {
-      try {
-        const parsedRequests = JSON.parse(stored);
-        // Migrate old format (single creator) to new format (multiple creators)
-        return parsedRequests.map(req => {
-          if (req.creatorId && !req.creators) {
-            return {
-              ...req,
-              creators: [{
-                id: req.creatorId,
-                name: req.creatorName
-              }]
-            };
-          }
-          return req;
-        });
-      } catch (e) {
-        console.error('Failed to parse requests from localStorage:', e);
-        return INITIAL_REQUESTS;
-      }
-    }
-    return INITIAL_REQUESTS;
-  });
   const [showModal, setShowModal] = useState(false);
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterCreatorId, setFilterCreatorId] = useState('all');
@@ -63,11 +38,6 @@ const ContentRequestsEditorial = ({ creators, setCreators }) => {
     date: new Date().toISOString().split('T')[0]
   });
   const [fetchingTweetData, setFetchingTweetData] = useState(false);
-
-  // Save requests to localStorage whenever it changes
-  useEffect(() => {
-    localStorage.setItem('requests', JSON.stringify(requests));
-  }, [requests]);
 
   // Background tweet scanner - runs every 24 hours to update metrics
   useEffect(() => {
