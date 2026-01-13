@@ -1177,7 +1177,7 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
               {/* Creator Selection */}
               <div>
                 <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-2">
-                  Select Creators ({contentForm.selectedCreatorIds.length} selected) *
+                  Select Creator {contentForm.selectedCreatorIds.length > 0 && '(1 selected)'} *
                 </label>
                 <div className="max-h-48 overflow-y-auto border border-[var(--color-border)] rounded-lg p-3 bg-[var(--color-bg-tertiary)] space-y-2">
                   {(() => {
@@ -1187,44 +1187,54 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
                     console.log('Add Content Modal - Filtered creators:', filteredCreators.map(c => ({ id: c.id, name: c.name })));
                     return filteredCreators;
                   })()
-                    .map((creator) => (
-                      <label
-                        key={creator.id}
-                        className="flex items-center space-x-2 cursor-pointer hover:bg-[var(--color-bg-secondary)] p-2 rounded"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={contentForm.selectedCreatorIds.includes(creator.id)}
-                          onChange={(e) => {
-                            const isChecked = e.target.checked;
-                            const newSelectedIds = isChecked
-                              ? [...contentForm.selectedCreatorIds, creator.id]
-                              : contentForm.selectedCreatorIds.filter(id => id !== creator.id);
+                    .map((creator) => {
+                      const isSelected = contentForm.selectedCreatorIds.includes(creator.id);
+                      const isDisabled = contentForm.selectedCreatorIds.length > 0 && !isSelected;
 
-                            // Calculate total cost from all selected creators
-                            const totalCost = creators
-                              .filter(c => newSelectedIds.includes(c.id))
-                              .reduce((sum, c) => {
-                                if (c.costPerPost) {
-                                  const cost = parseFloat(c.costPerPost.replace(/[^0-9.-]+/g, ''));
-                                  return sum + (isNaN(cost) ? 0 : cost);
-                                }
-                                return sum;
-                              }, 0);
+                      return (
+                        <label
+                          key={creator.id}
+                          className={`flex items-center space-x-2 p-2 rounded ${
+                            isDisabled
+                              ? 'opacity-50 cursor-not-allowed'
+                              : 'cursor-pointer hover:bg-[var(--color-bg-secondary)]'
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            disabled={isDisabled}
+                            onChange={(e) => {
+                              const isChecked = e.target.checked;
 
-                            setContentForm({
-                              ...contentForm,
-                              selectedCreatorIds: newSelectedIds,
-                              cost: totalCost > 0 ? totalCost.toString() : ''
-                            });
-                          }}
-                          className="h-4 w-4 text-[var(--color-accent-primary)] focus:ring-[var(--color-accent-primary)] border-[var(--color-border)] rounded"
-                        />
-                        <span className="text-sm text-[var(--color-text-primary)]">
-                          {creator.name} ({creator.handle})
-                        </span>
-                      </label>
-                    ))}
+                              if (isChecked) {
+                                // When selecting, only allow this one creator
+                                const cost = creator.costPerPost
+                                  ? parseFloat(creator.costPerPost.replace(/[^0-9.-]+/g, ''))
+                                  : 0;
+
+                                setContentForm({
+                                  ...contentForm,
+                                  selectedCreatorIds: [creator.id],
+                                  cost: !isNaN(cost) && cost > 0 ? cost.toString() : ''
+                                });
+                              } else {
+                                // When deselecting, clear selection and cost
+                                setContentForm({
+                                  ...contentForm,
+                                  selectedCreatorIds: [],
+                                  cost: ''
+                                });
+                              }
+                            }}
+                            className="h-4 w-4 text-[var(--color-accent-primary)] focus:ring-[var(--color-accent-primary)] border-[var(--color-border)] rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                          />
+                          <span className="text-sm text-[var(--color-text-primary)]">
+                            {creator.name} ({creator.handle})
+                          </span>
+                        </label>
+                      );
+                    })}
                 </div>
                 <p className="text-xs text-[var(--color-text-tertiary)] mt-1">
                   Only showing creators assigned to this campaign
