@@ -1,7 +1,8 @@
 import { useState, useRef, useMemo } from 'react';
-import { Upload, Plus, Trash2, FileText, X, DollarSign, Edit2, Search, Filter, SortAsc, Download, Eye, RefreshCw, Calendar } from 'lucide-react';
+import { Upload, Plus, Trash2, FileText, X, DollarSign, Edit2, Search, Filter, SortAsc, Download, Eye, RefreshCw, Calendar, FileSpreadsheet } from 'lucide-react';
 import { IMPORTED_CREATORS } from '../data/importedCreators';
-import { deleteCreator as deleteCreatorFromDB, createCreator, updateCreator as updateCreatorInDB, addPost as addPostToDB, updatePost as updatePostInDB, deletePost as deletePostFromDB } from '../services/creatorsServiceSupabase';
+import { deleteCreator as deleteCreatorFromDB, createCreator, updateCreator as updateCreatorInDB, addPost as addPostToDB, updatePost as updatePostInDB, deletePost as deletePostFromDB, getCreators } from '../services/creatorsServiceSupabase';
+import { importExcelWorkbook } from '../services/excelImportService';
 
 export default function CreatorRosterEditorial({ creators, setCreators }) {
   const resetToImportedData = () => {
@@ -19,6 +20,8 @@ export default function CreatorRosterEditorial({ creators, setCreators }) {
   const [editingPostId, setEditingPostId] = useState(null);
   const [postForm, setPostForm] = useState({ description: '', date: '', cost: '', link: '', impressions: '' });
   const fileInputRef = useRef(null);
+  const excelFileInputRef = useRef(null);
+  const [importing, setImporting] = useState(false);
 
   // Search and filter state
   const [searchTerm, setSearchTerm] = useState('');
@@ -356,6 +359,66 @@ export default function CreatorRosterEditorial({ creators, setCreators }) {
     document.body.removeChild(link);
   };
 
+  const handleExcelImport = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    const validTypes = [
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
+      'application/vnd.ms-excel' // .xls
+    ];
+
+    if (!validTypes.includes(file.type) && !file.name.endsWith('.xlsx') && !file.name.endsWith('.xls')) {
+      alert('Please upload a valid Excel file (.xlsx or .xls)');
+      return;
+    }
+
+    setImporting(true);
+
+    try {
+      const results = await importExcelWorkbook(file);
+
+      // Refresh creators list
+      const updatedCreators = await getCreators();
+      setCreators(updatedCreators);
+
+      // Show results
+      let message = 'Excel Import Complete!\n\n';
+
+      if (results.roster) {
+        message += `Creators:\n`;
+        message += `  Created: ${results.roster.created.length}\n`;
+        message += `  Updated: ${results.roster.updated.length}\n`;
+        if (results.roster.errors.length > 0) {
+          message += `  Errors: ${results.roster.errors.length}\n`;
+        }
+        message += '\n';
+      }
+
+      if (results.deliverables) {
+        message += `Campaigns:\n`;
+        message += `  Created: ${results.deliverables.created.length}\n`;
+        message += `  Updated: ${results.deliverables.updated.length}\n`;
+        message += `  Posts Imported: ${results.deliverables.posts}\n`;
+        if (results.deliverables.errors.length > 0) {
+          message += `  Errors: ${results.deliverables.errors.length}\n`;
+        }
+      }
+
+      alert(message);
+    } catch (error) {
+      console.error('Excel import error:', error);
+      alert(`Import failed: ${error.message}`);
+    } finally {
+      setImporting(false);
+      // Reset file input
+      if (excelFileInputRef.current) {
+        excelFileInputRef.current.value = '';
+      }
+    }
+  };
+
   // Filter and sort creators
   const filteredCreators = useMemo(() => {
     let filtered = [...creators];
@@ -430,13 +493,29 @@ export default function CreatorRosterEditorial({ creators, setCreators }) {
               onChange={handleFileUpload}
               className="hidden"
             />
+            <input
+              ref={excelFileInputRef}
+              type="file"
+              accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
+              onChange={handleExcelImport}
+              className="hidden"
+            />
+            <button
+              onClick={() => excelFileInputRef.current?.click()}
+              disabled={importing}
+              className="inline-flex items-center px-4 py-2 bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] text-[var(--color-text-primary)] rounded-lg hover:bg-[var(--color-bg-secondary)] hover:border-[var(--color-border-hover)] transition-all duration-200 text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <FileSpreadsheet className="w-4 h-4 mr-2" />
+              <span className="hidden sm:inline">{importing ? 'Importing...' : 'Import Excel'}</span>
+              <span className="sm:hidden">{importing ? '...' : 'Excel'}</span>
+            </button>
             <button
               onClick={() => fileInputRef.current?.click()}
               className="inline-flex items-center px-4 py-2 bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] text-[var(--color-text-primary)] rounded-lg hover:bg-[var(--color-bg-secondary)] hover:border-[var(--color-border-hover)] transition-all duration-200 text-sm font-semibold"
             >
               <Upload className="w-4 h-4 mr-2" />
               <span className="hidden sm:inline">Import CSV</span>
-              <span className="sm:hidden">Import</span>
+              <span className="sm:hidden">CSV</span>
             </button>
             <button
               onClick={exportToCSV}

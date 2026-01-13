@@ -20,7 +20,8 @@
     "react-datepicker": "^9.1.0",
     "react-dom": "^19.2.0",
     "recharts": "^3.6.0",
-    "vercel": "^50.1.6"
+    "vercel": "^50.1.6",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
