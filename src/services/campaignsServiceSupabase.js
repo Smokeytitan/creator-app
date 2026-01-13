@@ -29,7 +29,9 @@ export const getCampaigns = async () => {
           creator:creators (
             id,
             name,
-            handle
+            handle,
+            cost_per_post,
+            platforms
           )
         ),
         posts (
@@ -62,7 +64,7 @@ export const getCampaignById = async (campaignId) => {
   if (!supabase) return null;
 
   try {
-    const { data, error } = await supabase
+    const { data, error} = await supabase
       .from('campaigns')
       .select(`
         *,
@@ -70,7 +72,9 @@ export const getCampaignById = async (campaignId) => {
           creator:creators (
             id,
             name,
-            handle
+            handle,
+            cost_per_post,
+            platforms
           )
         ),
         posts (
@@ -129,7 +133,9 @@ const transformFromDB = (row) => {
       .map(crc => ({
         id: crc.creator.id,
         name: crc.creator.name,
-        handle: crc.creator.handle
+        handle: crc.creator.handle,
+        costPerPost: crc.creator.cost_per_post || '',
+        platforms: crc.creator.platforms || []
       }))
   };
 };
