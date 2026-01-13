@@ -22,19 +22,8 @@ export default function ContentRequestModal({ creators, onClose, onSubmit }) {
     return creators.map(creator => {
       console.log('Processing creator in modal:', creator.name, 'costPerPost:', creator.costPerPost);
       const posts = creator.posts || [];
-      if (posts.length === 0) return { id: creator.id, avgImpressions: 0, costPerPost: 0 };
 
-      const totalImpressions = posts.reduce((sum, post) => {
-        if (post.impressions) {
-          const impressions = parseFloat(post.impressions.replace(/[^0-9.-]+/g, ''));
-          if (!isNaN(impressions)) {
-            return sum + impressions;
-          }
-        }
-        return sum;
-      }, 0);
-
-      // Parse cost per post
+      // Parse cost per post (regardless of post count)
       let costPerPost = 0;
       if (creator.costPerPost) {
         const cost = parseFloat(creator.costPerPost.replace(/[^0-9.-]+/g, ''));
@@ -44,9 +33,24 @@ export default function ContentRequestModal({ creators, onClose, onSubmit }) {
         }
       }
 
+      // Calculate average impressions only if posts exist
+      let avgImpressions = 0;
+      if (posts.length > 0) {
+        const totalImpressions = posts.reduce((sum, post) => {
+          if (post.impressions) {
+            const impressions = parseFloat(post.impressions.replace(/[^0-9.-]+/g, ''));
+            if (!isNaN(impressions)) {
+              return sum + impressions;
+            }
+          }
+          return sum;
+        }, 0);
+        avgImpressions = Math.round(totalImpressions / posts.length);
+      }
+
       return {
         id: creator.id,
-        avgImpressions: posts.length > 0 ? Math.round(totalImpressions / posts.length) : 0,
+        avgImpressions,
         costPerPost
       };
     });
