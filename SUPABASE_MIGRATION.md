@@ -1,193 +1,87 @@
 # Supabase Migration Guide
 
-This guide will help you complete the migration from localStorage to Supabase for background campaign processing.
+This guide explains how to migrate your Content Requests App from localStorage to Supabase for persistent, cloud-based storage.
 
-## ✅ What's Been Set Up
+## Overview
 
-1. **Supabase Client** - Configured at `src/lib/supabaseClient.js`
-2. **Environment Variables** - Added to `.env` and `.env.example`
-3. **Database Schema** - SQL file ready at `supabase-schema.sql`
-4. **New Service Layer** - `src/services/flashCampaignServiceSupabase.js` (Supabase version)
-5. **Vercel Cron Job** - Updated `api/cron-check-campaigns.js` and `vercel.json`
-6. **Migration Utility** - `src/utils/migrateToSupabase.js` for data migration
+The app now supports **dual storage modes**:
+- **Supabase** (preferred): Cloud database with real-time sync, team collaboration, and unlimited storage
+- **localStorage** (fallback): Browser-only storage, limited to ~5-10MB, single-user
 
-## 📋 Steps to Complete Migration
+## What's Been Migrated
 
-### Step 1: Create Database Tables
+All data now uses Supabase when configured:
+- ✅ **Creators** (roster) - Main table with creator info
+- ✅ **Posts** (tweets/content) - Individual posts with Twitter API metrics
+- ✅ **Content Requests** (campaigns) - Campaign management
+- ✅ **Flash Campaigns** - Kaito-based flash campaigns
+- ✅ **Excluded Accounts** - Global exclusion list
 
-1. Go to your Supabase project dashboard: https://supabase.com/dashboard/project/ibqqffnwawkualsynlrt
-2. Navigate to **SQL Editor** (left sidebar)
-3. Click **"New Query"**
-4. Copy the entire contents of `supabase-schema.sql` file
-5. Paste into the SQL editor
-6. Click **"Run"** to execute the schema
+## Prerequisites
 
-This will create:
-- `flash_campaigns` table
-- `excluded_accounts` table
-- Indexes for performance
-- Row Level Security policies
-- Auto-update triggers
+1. **Supabase Account**: Sign up at [supabase.com](https://supabase.com)
+2. **Environment Variables**: You need `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`
 
-### Step 2: Migrate Existing Data (Optional)
+## Step 1: Create Supabase Project
 
-If you have existing campaigns or exclusions in localStorage that you want to keep:
+1. Go to [supabase.com](https://supabase.com) and create a new project
+2. Wait for the database to provision (~2 minutes)
+3. Go to Project Settings → API
+4. Copy:
+   - **Project URL** (`https://your-project.supabase.co`)
+   - **Anon/Public Key** (`eyJhbG...`)
 
-1. Open your browser console in the app (F12 → Console tab)
-2. Run this command:
-   ```javascript
-   import { migrateLocalStorageToSupabase } from './src/utils/migrateToSupabase.js';
-   await migrateLocalStorageToSupabase();
-   ```
-3. Check the console for migration progress
-4. Once successful, you can clear localStorage with:
-   ```javascript
-   import { clearLocalStorageAfterMigration } from './src/utils/migrateToSupabase.js';
-   clearLocalStorageAfterMigration();
-   ```
+## Step 2: Set Environment Variables
 
-**Note:** If you don't have any existing campaigns, you can skip this step and start fresh.
+### Local Development
 
-### Step 3: Update Flash Campaign Components
+Create `.env` file in project root:
 
-We need to update the components to use the new Supabase service. The main changes:
-
-1. Import the Supabase version of the service
-2. Make all data operations async (add `await`)
-3. Update component lifecycle hooks to handle async
-
-**Files to update:**
-- `src/components/FlashCampaignDashboard.jsx`
-- `src/components/CampaignCreationModal.jsx`
-- `src/components/CampaignResultsView.jsx`
-- `src/components/ExclusionListManager.jsx`
-
-Replace imports:
-```javascript
-// OLD
-import { getCampaigns, ... } from '../services/flashCampaignService';
-
-// NEW
-import { getCampaigns, ... } from '../services/flashCampaignServiceSupabase';
-```
-
-Add `await` to all service calls:
-```javascript
-// OLD
-const campaigns = getCampaigns();
-
-// NEW
-const campaigns = await getCampaigns();
-```
-
-### Step 4: Deploy to Vercel
-
-1. **Set Environment Variables in Vercel:**
-   ```bash
-   vercel env add VITE_SUPABASE_URL
-   # Paste: https://ibqqffnwawkualsynlrt.supabase.co
-
-   vercel env add VITE_SUPABASE_ANON_KEY
-   # Paste: sb_publishable_nyXVq3lwJvKzX5h0QV6n4g_TeyGf1gt
-
-   vercel env add CRON_SECRET
-   # Generate a random secret: openssl rand -base64 32
-   ```
-
-2. **Deploy:**
-   ```bash
-   vercel --prod
-   ```
-
-3. **Verify Cron Job:**
-   - Go to Vercel project dashboard
-   - Navigate to **Settings → Cron Jobs**
-   - You should see: `/api/cron-check-campaigns` running every minute
-
-### Step 5: Test Background Processing
-
-1. Create a test campaign with an end time 2-3 minutes in the future
-2. Close your browser completely
-3. Wait for the end time to pass
-4. Open browser and check the campaign - it should show results were fetched!
-
-## 🔍 Troubleshooting
-
-### Cron Job Not Running
-
-Check Vercel logs:
 ```bash
-vercel logs --follow
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ```
 
-Look for `[CRON]` prefixed messages.
+### Vercel Production
 
-### Database Connection Issues
+```bash
+vercel env add VITE_SUPABASE_URL production
+vercel env add VITE_SUPABASE_ANON_KEY production
+```
 
-Test Supabase connection in browser console:
+## Step 3: Run Database Migration
+
+### Supabase Dashboard
+
+1. Go to your Supabase project
+2. Click **SQL Editor** in sidebar
+3. Click **New Query**
+4. Copy contents of `supabase/migrations/001_create_creators_and_requests.sql`
+5. Paste into SQL Editor
+6. Click **Run**
+7. Verify tables were created in **Table Editor**
+
+## Step 4: Migrate Data from localStorage
+
+Open browser console and run:
+
 ```javascript
-import { supabase } from './src/lib/supabaseClient.js';
-const { data, error } = await supabase.from('flash_campaigns').select('*');
-console.log(data, error);
+import { migrateLocalStorageToSupabase, backupLocalStorage } from './src/utils/migrateToSupabase.js';
+
+// Backup first!
+backupLocalStorage();
+
+// Then migrate
+const result = await migrateLocalStorageToSupabase();
+console.log('Migration results:', result);
 ```
 
-### Migration Errors
+## Step 5: Verify and Deploy
 
-If migration fails, you can manually insert data via Supabase dashboard:
-1. Go to **Table Editor**
-2. Select `flash_campaigns` or `excluded_accounts`
-3. Click **"Insert row"** to add data manually
+1. Verify data in Supabase Table Editor
+2. Deploy to Vercel with environment variables set
+3. Test all functionality
 
-## 📊 Database Schema Reference
+---
 
-### flash_campaigns table
-
-| Column | Type | Description |
-|--------|------|-------------|
-| id | bigint | Campaign ID (timestamp) |
-| name | text | Campaign name |
-| description | text | Optional description |
-| start_date_time | timestamptz | Start date/time (EST) |
-| end_date_time | timestamptz | End date/time (EST) |
-| key_phrases | text[] | Array of phrases to match |
-| reward_pool | text | Optional reward info |
-| status | text | scheduled/active/completed/cancelled |
-| created_at | timestamptz | Creation timestamp |
-| updated_at | timestamptz | Last update timestamp |
-| results | jsonb | Results object (JSON) |
-
-### excluded_accounts table
-
-| Column | Type | Description |
-|--------|------|-------------|
-| id | bigint | Exclusion ID |
-| handle | text | Twitter handle (unique) |
-| reason | text | Optional reason |
-| added_at | timestamptz | Added timestamp |
-
-## 🎯 Next Steps
-
-Once migration is complete:
-
-1. **Delete old service** (optional cleanup):
-   ```bash
-   rm src/services/flashCampaignService.js
-   ```
-
-2. **Test thoroughly:**
-   - Create campaign
-   - Add exclusions
-   - Test automatic processing
-   - Verify CSV export
-
-3. **Monitor cron job:**
-   - Check Vercel logs regularly
-   - Ensure campaigns are processing automatically
-
-## 📞 Need Help?
-
-If you run into issues:
-1. Check Supabase logs in dashboard (Logs section)
-2. Check Vercel logs: `vercel logs`
-3. Check browser console for errors
-4. Verify all environment variables are set correctly
+For detailed instructions, see inline comments in migration files.

@@ -8,6 +8,9 @@ import ChannelManagerEditorial from './components/ChannelManagerEditorial';
 import { GoogleSheetsService } from './services/googleSheetsService';
 import ThemeToggle from './components/ThemeToggle';
 import { IMPORTED_CREATORS } from './data/importedCreators';
+import { getCreators, bulkImportCreators } from './services/creatorsServiceSupabase';
+import { getCampaigns } from './services/campaignsServiceSupabase';
+import { supabase } from './lib/supabaseClient';
 
 // Google Sheets CSV export URL
 const GOOGLE_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1J75nBdYNyQivMdi7XihhpYr6aXOnCNcJIAjTQLwjkXk/export?format=csv&gid=1537582832';
@@ -21,91 +24,130 @@ export default function App() {
     return stored || 'channels';
   });
   const [loading, setLoading] = useState(true);
-  const [creators, setCreators] = useState(() => {
-    const stored = localStorage.getItem('creators');
-    if (stored) {
-      try {
-        return JSON.parse(stored);
-      } catch (e) {
-        console.error('Failed to parse creators from localStorage:', e);
-        return DEFAULT_CREATORS;
-      }
-    }
-    return DEFAULT_CREATORS;
-  });
+  const [creators, setCreators] = useState([]);
+  const [requests, setRequests] = useState([]);
+  const [useSupabase, setUseSupabase] = useState(!!supabase);
 
-  // Load requests for analytics
-  const [requests, setRequests] = useState(() => {
-    const stored = localStorage.getItem('requests');
-    if (stored) {
-      try {
-        return JSON.parse(stored);
-      } catch (e) {
-        console.error('Failed to parse requests from localStorage:', e);
-        return [];
-      }
-    }
-    return [];
-  });
-
-  // Load creators from Google Sheets on mount
+  // Load data on mount (Supabase or localStorage fallback)
   useEffect(() => {
-    const loadCreators = async () => {
-      // Skip if no valid URL is configured
-      if (!GOOGLE_SHEET_URL || GOOGLE_SHEET_URL === 'YOUR_GOOGLE_SHEET_CSV_URL_HERE') {
-        console.warn('Google Sheet URL not configured. Using local data.');
-        setLoading(false);
-        return;
-      }
+    const loadData = async () => {
+      setLoading(true);
 
-      try {
-        const sheetsService = new GoogleSheetsService(GOOGLE_SHEET_URL);
-        const loadedCreators = await sheetsService.fetchCreators();
+      if (useSupabase) {
+        // Load from Supabase
+        console.log('[App] Loading data from Supabase...');
+        try {
+          const [loadedCreators, loadedRequests] = await Promise.all([
+            getCreators(),
+            getCampaigns()
+          ]);
 
-        if (loadedCreators && loadedCreators.length > 0) {
-          // Merge with existing posts data from localStorage
-          setCreators(existingCreators => {
-            // First, merge Google Sheets creators with existing data
-            const mergedCreators = loadedCreators.map(newCreator => {
-              const existing = existingCreators.find(
-                c => c.name.toLowerCase() === newCreator.name.toLowerCase() ||
-                     c.handle.toLowerCase() === newCreator.handle.toLowerCase()
-              );
-              return {
-                ...newCreator,
-                posts: existing?.posts || [], // Preserve existing posts
-                costPerPost: newCreator.costPerPost || existing?.costPerPost || '', // Preserve or update costPerPost
-                platforms: existing?.platforms || newCreator.platforms || [] // Preserve platforms
-              };
-            });
+          setCreators(loadedCreators);
+          setRequests(loadedRequests);
+          console.log(`[App] ✓ Loaded ${loadedCreators.length} creators and ${loadedRequests.length} requests from Supabase`);
 
-            // Then, add any locally-created creators that aren't in Google Sheets
-            const loadedHandles = new Set(loadedCreators.map(c => c.handle.toLowerCase()));
-            const localOnlyCreators = existingCreators.filter(
-              c => !loadedHandles.has(c.handle.toLowerCase())
-            );
-
-            return [...mergedCreators, ...localOnlyCreators];
-          });
-          console.log('Successfully loaded creators from Google Sheets');
-        } else {
-          console.warn('No creators found in Google Sheet, using existing data');
+          // If Supabase is empty but localStorage has data, prompt for migration
+          if (loadedCreators.length === 0) {
+            const localCreators = localStorage.getItem('creators');
+            if (localCreators && JSON.parse(localCreators).length > 0) {
+              console.warn('[App] Supabase is empty but localStorage has data. Consider running migration.');
+              // You could show a migration prompt here
+            }
+          }
+        } catch (error) {
+          console.error('[App] Error loading from Supabase:', error);
+          // Fallback to localStorage
+          console.log('[App] Falling back to localStorage...');
+          loadFromLocalStorage();
         }
-      } catch (error) {
-        console.error('Failed to load from Google Sheets, using existing data:', error);
-      } finally {
-        setLoading(false);
+      } else {
+        // Load from localStorage
+        console.log('[App] Supabase not configured. Using localStorage.');
+        loadFromLocalStorage();
       }
+
+      // Try to merge with Google Sheets data
+      if (GOOGLE_SHEET_URL && GOOGLE_SHEET_URL !== 'YOUR_GOOGLE_SHEET_CSV_URL_HERE') {
+        try {
+          const sheetsService = new GoogleSheetsService(GOOGLE_SHEET_URL);
+          const loadedCreators = await sheetsService.fetchCreators();
+
+          if (loadedCreators && loadedCreators.length > 0) {
+            setCreators(existingCreators => {
+              // Merge Google Sheets creators with existing data
+              const mergedCreators = loadedCreators.map(newCreator => {
+                const existing = existingCreators.find(
+                  c => c.name.toLowerCase() === newCreator.name.toLowerCase() ||
+                       c.handle.toLowerCase() === newCreator.handle.toLowerCase()
+                );
+                return {
+                  ...newCreator,
+                  posts: existing?.posts || [],
+                  costPerPost: newCreator.costPerPost || existing?.costPerPost || '',
+                  platforms: existing?.platforms || newCreator.platforms || []
+                };
+              });
+
+              // Add any locally-created creators that aren't in Google Sheets
+              const loadedHandles = new Set(loadedCreators.map(c => c.handle.toLowerCase()));
+              const localOnlyCreators = existingCreators.filter(
+                c => !loadedHandles.has(c.handle.toLowerCase())
+              );
+
+              const finalCreators = [...mergedCreators, ...localOnlyCreators];
+
+              // If using Supabase, save merged data back
+              if (useSupabase) {
+                bulkImportCreators(finalCreators).catch(err =>
+                  console.error('[App] Error saving Google Sheets merge to Supabase:', err)
+                );
+              }
+
+              return finalCreators;
+            });
+            console.log('[App] ✓ Merged with Google Sheets data');
+          }
+        } catch (error) {
+          console.error('[App] Failed to load from Google Sheets:', error);
+        }
+      }
+
+      setLoading(false);
     };
 
-    loadCreators();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Only run on mount to avoid infinite loops
+    const loadFromLocalStorage = () => {
+      const storedCreators = localStorage.getItem('creators');
+      const storedRequests = localStorage.getItem('requests');
 
-  // Save creators to localStorage whenever it changes
+      const parsedCreators = storedCreators
+        ? JSON.parse(storedCreators)
+        : DEFAULT_CREATORS;
+
+      const parsedRequests = storedRequests
+        ? JSON.parse(storedRequests)
+        : [];
+
+      setCreators(parsedCreators);
+      setRequests(parsedRequests);
+      console.log('[App] ✓ Loaded from localStorage');
+    };
+
+    loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run on mount
+
+  // Save to localStorage as backup (even when using Supabase)
   useEffect(() => {
-    localStorage.setItem('creators', JSON.stringify(creators));
-  }, [creators]);
+    if (!loading && creators.length > 0) {
+      localStorage.setItem('creators', JSON.stringify(creators));
+    }
+  }, [creators, loading]);
+
+  useEffect(() => {
+    if (!loading && requests.length > 0) {
+      localStorage.setItem('requests', JSON.stringify(requests));
+    }
+  }, [requests, loading]);
 
   // Save active tab to localStorage whenever it changes
   useEffect(() => {
