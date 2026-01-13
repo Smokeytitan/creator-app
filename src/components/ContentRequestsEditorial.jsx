@@ -1,51 +1,11 @@
 import { useState, useMemo, useEffect } from 'react';
 import { Plus, Calendar, User, CheckCircle, Clock, XCircle, Trash2, Edit2, Save, X, Search, RefreshCw, Eye, DollarSign, Download, FileText, Loader2 } from 'lucide-react';
 import ContentRequestModal from './ContentRequestModal';
-import { INITIAL_REQUESTS } from '../data/initialRequests';
 import { extractTweetId, fetchTweets } from '../services/twitterService';
 import { createCampaign, updateCampaign, deleteCampaign as deleteCampaignSupabase, getCampaigns } from '../services/campaignsServiceSupabase';
 import { supabase } from '../lib/supabaseClient';
-import { migrateLocalStorageToSupabase } from '../utils/migrateToSupabase';
 
 const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setRequests }) => {
-  const [migrating, setMigrating] = useState(false);
-
-  const migrateData = async () => {
-    if (!confirm('This will migrate your localStorage campaigns to Supabase. Continue?')) {
-      return;
-    }
-
-    setMigrating(true);
-    try {
-      console.log('Starting migration...');
-      const response = await migrateLocalStorageToSupabase();
-      console.log('Migration response:', response);
-
-      if (!response || !response.success) {
-        throw new Error(response?.error || 'Migration failed');
-      }
-
-      const { results } = response;
-
-      const message = `Migration complete!\n\nCampaigns: ${results.requests.migrated}/${results.requests.total}\nCreators: ${results.creators.migrated}/${results.creators.total}\nPosts: ${results.posts.migrated}/${results.posts.total}\n\nThe page will refresh to load data from Supabase.`;
-
-      alert(message);
-
-      // Reload page to fetch fresh data from Supabase
-      window.location.reload();
-    } catch (error) {
-      console.error('Migration error:', error);
-      alert('Migration failed: ' + error.message);
-      setMigrating(false);
-    }
-  };
-
-  const resetToCampaigns = () => {
-    if (confirm('This will load all campaigns from Google Sheets. Your current requests will be replaced. Are you sure?')) {
-      setRequests(INITIAL_REQUESTS);
-      alert('Campaign data has been loaded from Google Sheets!');
-    }
-  };
   const [showModal, setShowModal] = useState(false);
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterCreatorId, setFilterCreatorId] = useState('all');
@@ -760,21 +720,6 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
               </button>
             </div>
             <div className="flex gap-2 flex-wrap">
-              {supabase && (
-                <button
-                  onClick={migrateData}
-                  disabled={migrating}
-                  className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-all duration-200 shadow-lg shadow-blue-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
-                  title="Migrate localStorage data to Supabase"
-                >
-                  {migrating ? (
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  ) : (
-                    <RefreshCw className="h-4 w-4 mr-2" />
-                  )}
-                  {migrating ? 'Migrating...' : 'Migrate Data'}
-                </button>
-              )}
               <button
                 onClick={exportCampaignsToCSV}
                 className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg bg-green-500 text-white hover:bg-green-600 transition-all duration-200 shadow-lg shadow-green-500/25"
@@ -782,14 +727,6 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
               >
                 <Download className="h-4 w-4 mr-2" />
                 Export CSV
-              </button>
-              <button
-                onClick={resetToCampaigns}
-                className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)] transition-all duration-200 border border-[var(--color-border)]"
-                title="Load campaigns from Google Sheets"
-              >
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Load Campaigns
               </button>
               <button
                 onClick={() => setShowModal(true)}
