@@ -17,12 +17,24 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
 
     setMigrating(true);
     try {
-      const results = await migrateLocalStorageToSupabase();
+      console.log('Starting migration...');
+      const response = await migrateLocalStorageToSupabase();
+      console.log('Migration response:', response);
+
+      if (!response || !response.success) {
+        throw new Error(response?.error || 'Migration failed');
+      }
+
+      const { results } = response;
+
       alert(`Migration complete!\nCampaigns: ${results.requests.migrated}/${results.requests.total}\nCreators: ${results.creators.migrated}/${results.creators.total}\nPosts: ${results.posts.migrated}/${results.posts.total}`);
 
       // Reload campaigns from Supabase
+      console.log('Reloading campaigns from Supabase...');
       const updated = await getCampaigns();
+      console.log('Loaded campaigns:', updated);
       setRequests(updated);
+      console.log('Campaigns state updated');
     } catch (error) {
       console.error('Migration error:', error);
       alert('Migration failed: ' + error.message);

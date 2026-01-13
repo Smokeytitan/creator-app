@@ -93,7 +93,13 @@ const transformFromDB = (row) => ({
   estimatedCost: row.estimated_cost || 0,
   estimatedImpressions: row.estimated_impressions || 0,
   createdAt: row.created_at,
-  creators: (row.campaign_creators || []).map(crc => crc.creator.id)
+  creators: (row.campaign_creators || [])
+    .filter(crc => crc.creator) // Filter out any null/undefined creators
+    .map(crc => ({
+      id: crc.creator.id,
+      name: crc.creator.name,
+      handle: crc.creator.handle
+    }))
 });
 
 /**
