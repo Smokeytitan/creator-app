@@ -27,18 +27,15 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
 
       const { results } = response;
 
-      alert(`Migration complete!\nCampaigns: ${results.requests.migrated}/${results.requests.total}\nCreators: ${results.creators.migrated}/${results.creators.total}\nPosts: ${results.posts.migrated}/${results.posts.total}`);
+      const message = `Migration complete!\n\nCampaigns: ${results.requests.migrated}/${results.requests.total}\nCreators: ${results.creators.migrated}/${results.creators.total}\nPosts: ${results.posts.migrated}/${results.posts.total}\n\nThe page will refresh to load data from Supabase.`;
 
-      // Reload campaigns from Supabase
-      console.log('Reloading campaigns from Supabase...');
-      const updated = await getCampaigns();
-      console.log('Loaded campaigns:', updated);
-      setRequests(updated);
-      console.log('Campaigns state updated');
+      alert(message);
+
+      // Reload page to fetch fresh data from Supabase
+      window.location.reload();
     } catch (error) {
       console.error('Migration error:', error);
       alert('Migration failed: ' + error.message);
-    } finally {
       setMigrating(false);
     }
   };
