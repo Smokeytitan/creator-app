@@ -162,7 +162,23 @@ export default function App() {
               <p className="text-xs text-[var(--color-text-tertiary)] text-mono uppercase tracking-wider">Creator Intelligence Platform</p>
             </div>
           </div>
-          <ThemeToggle />
+          <div className="flex items-center gap-3">
+            {useSupabase && (
+              <button
+                onClick={() => {
+                  if (window.confirm('Clear local cache and reload? This will remove all localStorage data.')) {
+                    localStorage.clear();
+                    window.location.reload();
+                  }
+                }}
+                className="px-3 py-1.5 text-xs font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] border border-[var(--color-border)] rounded-lg hover:bg-[var(--color-bg-tertiary)] transition-all"
+                title="Clear localStorage cache"
+              >
+                Clear Cache
+              </button>
+            )}
+            <ThemeToggle />
+          </div>
         </div>
       </div>
 
