@@ -20,6 +20,7 @@ export default function ContentRequestModal({ creators, onClose, onSubmit }) {
   // Calculate average impressions per creator
   const creatorStats = useMemo(() => {
     return creators.map(creator => {
+      console.log('Processing creator in modal:', creator.name, 'costPerPost:', creator.costPerPost);
       const posts = creator.posts || [];
       if (posts.length === 0) return { id: creator.id, avgImpressions: 0, costPerPost: 0 };
 
@@ -37,6 +38,7 @@ export default function ContentRequestModal({ creators, onClose, onSubmit }) {
       let costPerPost = 0;
       if (creator.costPerPost) {
         const cost = parseFloat(creator.costPerPost.replace(/[^0-9.-]+/g, ''));
+        console.log(`Parsed cost for ${creator.name}:`, cost);
         if (!isNaN(cost)) {
           costPerPost = cost;
         }
