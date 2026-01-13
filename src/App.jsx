@@ -193,7 +193,7 @@ export default function App() {
                 : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)] rounded-t-lg'
             }`}
           >
-            Requests
+            Campaigns
           </button>
           <button
             onClick={() => setActiveTab('kaito')}
@@ -251,7 +251,7 @@ export default function App() {
                   : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)]'
               }`}
             >
-              Content Requests
+              Campaigns
             </button>
 
             <button

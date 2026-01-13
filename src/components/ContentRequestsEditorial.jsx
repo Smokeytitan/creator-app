@@ -634,10 +634,10 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
       {/* Hero Header */}
       <div className="border-b border-[var(--color-border)] pb-8" style={{ animation: 'fadeInUp 0.4s ease-out' }}>
         <h1 className="text-display text-5xl mb-3 text-[var(--color-text-primary)]">
-          Content Requests
+          Campaigns
         </h1>
         <p className="text-[var(--color-text-secondary)] text-lg">
-          Manage campaign requests and track content delivery across creators
+          Manage campaigns and track content delivery across creators
         </p>
       </div>
 
@@ -697,7 +697,7 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
                 className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg bg-gradient-to-r from-[var(--color-accent-primary)] to-[var(--color-accent-secondary)] text-white hover:shadow-lg hover:shadow-[var(--color-accent-primary)]/25 transition-all duration-200"
               >
                 <Plus className="h-4 w-4 mr-2" />
-                New Request
+                New Campaign
               </button>
             </div>
           </div>
@@ -982,7 +982,7 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
         </ul>
         {filteredRequests.length === 0 && (
           <div className="text-center py-12">
-            <p className="text-[var(--color-text-secondary)]">No content requests found.</p>
+            <p className="text-[var(--color-text-secondary)]">No campaigns found.</p>
           </div>
         )}
       </div>
@@ -1076,7 +1076,7 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
                     ))}
                 </div>
                 <p className="text-xs text-[var(--color-text-tertiary)] mt-1">
-                  Only showing creators assigned to this content request
+                  Only showing creators assigned to this campaign
                 </p>
               </div>
 
