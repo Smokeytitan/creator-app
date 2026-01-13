@@ -185,7 +185,7 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
       title: request.title,
       description: request.description,
       selectedCreatorIds: (request.creators || []).map(c => c.id),
-      dueDate: new Date(request.dueDate).toISOString().slice(0, 10),
+      dueDate: request.dueDate ? new Date(request.dueDate).toISOString().slice(0, 10) : '',
       status: request.status
     });
   };
@@ -917,10 +917,12 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
                               Started: {new Date(request.startDate).toLocaleDateString()}
                             </div>
                           )}
-                          <div className="flex items-center text-mono">
-                            <Calendar className="h-4 w-4 mr-1" />
-                            Due: {new Date(request.dueDate).toLocaleDateString()}
-                          </div>
+                          {request.dueDate && (
+                            <div className="flex items-center text-mono">
+                              <Calendar className="h-4 w-4 mr-1" />
+                              Due: {new Date(request.dueDate).toLocaleDateString()}
+                            </div>
+                          )}
                         </div>
                         {(() => {
                           // For pending requests, show estimated metrics
