@@ -810,7 +810,7 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
       </div>
 
       {/* Requests Grid */}
-      <div className={`grid gap-4 ${filterStatus === 'completed' ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'}`} style={{ animation: 'fadeInUp 0.6s ease-out 0.3s both' }}>
+      <div className={`grid gap-4 ${filterStatus === 'completed' ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1'}`} style={{ animation: 'fadeInUp 0.6s ease-out 0.3s both' }}>
         {filteredRequests.map((request, index) => (
           <div
             key={request.id}
