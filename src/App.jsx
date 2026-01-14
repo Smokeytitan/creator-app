@@ -212,6 +212,16 @@ export default function App() {
             Campaigns
           </button>
           <button
+            onClick={() => setActiveTab('analytics')}
+            className={`flex-1 px-4 py-3 text-sm font-semibold whitespace-nowrap transition-all duration-200 ${
+              activeTab === 'analytics'
+                ? 'bg-gradient-to-r from-[var(--color-accent-primary)] to-[var(--color-accent-secondary)] text-white rounded-t-lg'
+                : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)] rounded-t-lg'
+            }`}
+          >
+            Analytics
+          </button>
+          <button
             onClick={() => setActiveTab('kaito')}
             className={`flex-1 px-4 py-3 text-sm font-semibold whitespace-nowrap transition-all duration-200 ${
               activeTab === 'kaito'
@@ -268,6 +278,17 @@ export default function App() {
               }`}
             >
               Campaigns
+            </button>
+
+            <button
+              onClick={() => setActiveTab('analytics')}
+              className={`px-4 py-3 text-sm font-semibold transition-all duration-200 text-left rounded-lg ${
+                activeTab === 'analytics'
+                  ? 'bg-gradient-to-r from-[var(--color-accent-primary)] to-[var(--color-accent-secondary)] text-white'
+                  : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)]'
+              }`}
+            >
+              Analytics
             </button>
 
             <button
