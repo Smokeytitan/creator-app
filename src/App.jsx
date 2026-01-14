@@ -337,7 +337,7 @@ export default function App() {
             </div>
           ) : (
             <>
-              {activeTab === 'roster' && <CreatorRosterEditorial creators={creators} setCreators={setCreators} />}
+              {activeTab === 'roster' && <CreatorRosterEditorial creators={creators} setCreators={setCreators} requests={requests} />}
               {activeTab === 'requests' && <ContentRequestsEditorial creators={creators} setCreators={setCreators} requests={requests} setRequests={setRequests} />}
               {activeTab === 'analytics' && <Analytics creators={creators} requests={requests} />}
               {activeTab === 'kaito' && <FlashCampaignManager />}
