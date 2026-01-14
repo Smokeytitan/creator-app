@@ -64,15 +64,32 @@ export default function CreatorRosterEditorial({ creators, setCreators }) {
   };
 
   const saveEdit = async (creatorId) => {
-    const updatedCreator = await updateCreatorInDB(creatorId, editForm);
-    if (updatedCreator) {
+    try {
+      const updatedCreator = await updateCreatorInDB(creatorId, editForm);
+      if (updatedCreator) {
+        setCreators(creators.map((c) =>
+          c.id === creatorId ? updatedCreator : c
+        ));
+        setEditingId(null);
+        setEditForm({ name: '', handle: '', notes: '', costPerPost: '', platforms: [] });
+      } else {
+        // Fallback: update local state if Supabase update fails
+        console.warn('Supabase update failed, updating local state only');
+        setCreators(creators.map((c) =>
+          c.id === creatorId ? { ...c, ...editForm } : c
+        ));
+        setEditingId(null);
+        setEditForm({ name: '', handle: '', notes: '', costPerPost: '', platforms: [] });
+      }
+    } catch (error) {
+      console.error('Error updating creator:', error);
+      // Fallback: update local state if error occurs
+      console.warn('Error occurred, updating local state only');
       setCreators(creators.map((c) =>
-        c.id === creatorId ? updatedCreator : c
+        c.id === creatorId ? { ...c, ...editForm } : c
       ));
       setEditingId(null);
       setEditForm({ name: '', handle: '', notes: '', costPerPost: '', platforms: [] });
-    } else {
-      alert('Failed to update creator');
     }
   };
 

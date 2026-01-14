@@ -3,6 +3,7 @@ import { Plus, Calendar, User, CheckCircle, Clock, XCircle, Trash2, Edit2, Save,
 import ContentRequestModal from './ContentRequestModal';
 import { extractTweetId, fetchTweets } from '../services/twitterService';
 import { createCampaign, updateCampaign, deleteCampaign as deleteCampaignSupabase, getCampaigns } from '../services/campaignsServiceSupabase';
+import { addPost } from '../services/creatorsServiceSupabase';
 import { supabase } from '../lib/supabaseClient';
 
 const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setRequests }) => {
@@ -25,10 +26,14 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
     selectedCreatorIds: [],
     description: '',
     platforms: ['X'], // Array of platforms: X, Facebook, Instagram, YouTube, TikTok
-    link: '',
-    impressions: '',
-    likes: '',
-    comments: '',
+    // Per-platform data structure: { platform: { link, impressions, likes, comments } }
+    platformData: {
+      'X': { link: '', impressions: '', likes: '', comments: '' },
+      'Facebook': { link: '', impressions: '', likes: '', comments: '' },
+      'Instagram': { link: '', impressions: '', likes: '', comments: '' },
+      'YouTube': { link: '', impressions: '', likes: '', comments: '' },
+      'TikTok': { link: '', impressions: '', likes: '', comments: '' }
+    },
     cost: '',
     date: new Date().toISOString().split('T')[0]
   });
@@ -245,10 +250,13 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
       selectedCreatorIds: [],
       description: '',
       platforms: ['X'],
-      link: '',
-      impressions: '',
-      likes: '',
-      comments: '',
+      platformData: {
+        'X': { link: '', impressions: '', likes: '', comments: '' },
+        'Facebook': { link: '', impressions: '', likes: '', comments: '' },
+        'Instagram': { link: '', impressions: '', likes: '', comments: '' },
+        'YouTube': { link: '', impressions: '', likes: '', comments: '' },
+        'TikTok': { link: '', impressions: '', likes: '', comments: '' }
+      },
       cost: '',
       date: new Date().toISOString().split('T')[0]
     });
@@ -260,10 +268,13 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
       selectedCreatorIds: [],
       description: '',
       platforms: ['X'],
-      link: '',
-      impressions: '',
-      likes: '',
-      comments: '',
+      platformData: {
+        'X': { link: '', impressions: '', likes: '', comments: '' },
+        'Facebook': { link: '', impressions: '', likes: '', comments: '' },
+        'Instagram': { link: '', impressions: '', likes: '', comments: '' },
+        'YouTube': { link: '', impressions: '', likes: '', comments: '' },
+        'TikTok': { link: '', impressions: '', likes: '', comments: '' }
+      },
       cost: '',
       date: new Date().toISOString().split('T')[0]
     });
@@ -290,11 +301,6 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
 
   // Fetch tweet metrics from Twitter API
   const fetchTweetMetrics = async (url, skipAgeCheck = false) => {
-    // Only fetch for X/Twitter platform
-    if (contentForm.platform !== 'X') {
-      return;
-    }
-
     const tweetId = extractTweetId(url);
     if (!tweetId) {
       console.log('Invalid Twitter URL');
@@ -319,12 +325,18 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
           alert('This tweet is less than 48 hours old. Metrics may not be final yet. You can still add it, but consider rescanning later for accurate data.');
         }
 
-        // Update form with fetched metrics and date
+        // Update form with fetched metrics for X platform
         setContentForm(prev => ({
           ...prev,
-          impressions: metrics.impression_count?.toString() || '',
-          likes: metrics.like_count?.toString() || '',
-          comments: metrics.reply_count?.toString() || '',
+          platformData: {
+            ...prev.platformData,
+            'X': {
+              ...prev.platformData['X'],
+              impressions: metrics.impression_count?.toString() || '',
+              likes: metrics.like_count?.toString() || '',
+              comments: metrics.reply_count?.toString() || ''
+            }
+          },
           date: tweetDate || prev.date // Use tweet date if available, otherwise keep current date
         }));
 
@@ -340,14 +352,37 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
     }
   };
 
-  // Handle link input change with automatic metric fetching
-  const handleLinkChange = (newLink) => {
-    setContentForm({ ...contentForm, link: newLink });
+  // Handle link input change with automatic metric fetching for X platform
+  const handlePlatformLinkChange = (platform, newLink) => {
+    setContentForm(prev => ({
+      ...prev,
+      platformData: {
+        ...prev.platformData,
+        [platform]: {
+          ...prev.platformData[platform],
+          link: newLink
+        }
+      }
+    }));
 
-    // Auto-fetch metrics when a valid Twitter URL is pasted and X is selected
-    if (contentForm.platforms.includes('X') && newLink.includes('/status/')) {
+    // Auto-fetch metrics when a valid Twitter URL is pasted for X platform
+    if (platform === 'X' && newLink.includes('/status/')) {
       fetchTweetMetrics(newLink);
     }
+  };
+
+  // Update platform data field
+  const updatePlatformData = (platform, field, value) => {
+    setContentForm(prev => ({
+      ...prev,
+      platformData: {
+        ...prev.platformData,
+        [platform]: {
+          ...prev.platformData[platform],
+          [field]: value
+        }
+      }
+    }));
   };
 
   const submitContent = async () => {
@@ -361,11 +396,15 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
       return;
     }
 
-    // Require impressions for non-X platforms
-    const hasNonXPlatform = contentForm.platforms.some(p => p !== 'X');
-    if (hasNonXPlatform && !contentForm.impressions.trim()) {
-      alert('Impressions are required when including platforms other than X');
-      return;
+    // Validate that each selected platform has required data
+    for (const platform of contentForm.platforms) {
+      const platformData = contentForm.platformData[platform];
+
+      // For non-X platforms, impressions are required
+      if (platform !== 'X' && !platformData.impressions.trim()) {
+        alert(`Impressions are required for ${platform}`);
+        return;
+      }
     }
 
     const request = addingContentForRequest;
@@ -374,19 +413,22 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
       // Fallback to local state if Supabase not configured
       setCreators(creators.map(creator => {
         if (contentForm.selectedCreatorIds.includes(creator.id)) {
-          // Create a post for each selected platform
-          const newPosts = contentForm.platforms.map(platform => ({
-            id: Date.now() + Math.random(),
-            description: request.title,
-            platform: platform,
-            date: contentForm.date,
-            cost: contentForm.cost,
-            link: contentForm.link,
-            impressions: contentForm.impressions,
-            likes: contentForm.likes || '',
-            comments: contentForm.comments || '',
-            lastScanned: platform === 'X' && contentForm.impressions ? new Date().toISOString() : null
-          }));
+          // Create a post for each selected platform with its specific data
+          const newPosts = contentForm.platforms.map(platform => {
+            const platformData = contentForm.platformData[platform];
+            return {
+              id: Date.now() + Math.random(),
+              description: request.title,
+              platform: platform,
+              date: contentForm.date,
+              cost: contentForm.cost,
+              link: platformData.link,
+              impressions: platformData.impressions,
+              likes: platformData.likes || '',
+              comments: platformData.comments || '',
+              lastScanned: platform === 'X' && platformData.impressions ? new Date().toISOString() : null
+            };
+          });
 
           return {
             ...creator,
@@ -403,21 +445,23 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
     // Use Supabase
     try {
       let totalPostsCreated = 0;
+      let supabaseFailed = false;
 
       // For each selected creator
       for (const creatorId of contentForm.selectedCreatorIds) {
-        // Create a post for each selected platform
+        // Create a post for each selected platform with its specific data
         for (const platform of contentForm.platforms) {
+          const platformData = contentForm.platformData[platform];
           const postData = {
             description: request.title,
             platform: platform,
             date: contentForm.date,
             cost: contentForm.cost,
-            link: contentForm.link,
-            impressions: contentForm.impressions,
-            likes: contentForm.likes || '',
-            comments: contentForm.comments || '',
-            lastScanned: platform === 'X' && contentForm.impressions ? new Date().toISOString() : null
+            link: platformData.link,
+            impressions: platformData.impressions,
+            likes: platformData.likes || '',
+            comments: platformData.comments || '',
+            lastScanned: platform === 'X' && platformData.impressions ? new Date().toISOString() : null
           };
 
           const updatedCreator = await addPost(creatorId, postData, request.id);
@@ -427,15 +471,79 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
               currentCreators.map(c => c.id === creatorId ? updatedCreator : c)
             );
             totalPostsCreated++;
+          } else {
+            supabaseFailed = true;
           }
         }
+      }
+
+      // If Supabase failed, fall back to localStorage
+      if (supabaseFailed && totalPostsCreated === 0) {
+        console.warn('Supabase failed, falling back to localStorage');
+        setCreators(creators.map(creator => {
+          if (contentForm.selectedCreatorIds.includes(creator.id)) {
+            // Create a post for each selected platform with its specific data
+            const newPosts = contentForm.platforms.map(platform => {
+              const platformData = contentForm.platformData[platform];
+              return {
+                id: Date.now() + Math.random(),
+                description: request.title,
+                platform: platform,
+                date: contentForm.date,
+                cost: contentForm.cost,
+                link: platformData.link,
+                impressions: platformData.impressions,
+                likes: platformData.likes || '',
+                comments: platformData.comments || '',
+                lastScanned: platform === 'X' && platformData.impressions ? new Date().toISOString() : null
+              };
+            });
+
+            return {
+              ...creator,
+              posts: [...(creator.posts || []), ...newPosts]
+            };
+          }
+          return creator;
+        }));
+        cancelAddContent();
+        alert(`Content added to ${contentForm.selectedCreatorIds.length} creator(s) across ${contentForm.platforms.length} platform(s) for "${request.title}"!`);
+        return;
       }
 
       cancelAddContent();
       alert(`Successfully added ${totalPostsCreated} posts to ${contentForm.selectedCreatorIds.length} creator(s) across ${contentForm.platforms.length} platform(s) for "${request.title}"!`);
     } catch (error) {
       console.error('Error adding content:', error);
-      alert('Failed to add content: ' + error.message);
+      // Fall back to localStorage on error
+      console.warn('Error occurred, falling back to localStorage');
+      setCreators(creators.map(creator => {
+        if (contentForm.selectedCreatorIds.includes(creator.id)) {
+          const newPosts = contentForm.platforms.map(platform => {
+            const platformData = contentForm.platformData[platform];
+            return {
+              id: Date.now() + Math.random(),
+              description: request.title,
+              platform: platform,
+              date: contentForm.date,
+              cost: contentForm.cost,
+              link: platformData.link,
+              impressions: platformData.impressions,
+              likes: platformData.likes || '',
+              comments: platformData.comments || '',
+              lastScanned: platform === 'X' && platformData.impressions ? new Date().toISOString() : null
+            };
+          });
+
+          return {
+            ...creator,
+            posts: [...(creator.posts || []), ...newPosts]
+          };
+        }
+        return creator;
+      }));
+      cancelAddContent();
+      alert(`Content added to ${contentForm.selectedCreatorIds.length} creator(s) across ${contentForm.platforms.length} platform(s) for "${request.title}"!`);
     }
   };
 
@@ -912,92 +1020,67 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
                           )}
                         </div>
                         {(() => {
-                          // For pending requests, show estimated metrics
-                          if (request.status === 'pending') {
-                            const estimated = getEstimatedMetrics(request);
+                          // First, check if there are actual posts with metrics
+                          const actualMetrics = getCampaignMetrics(request);
+                          const hasActualData = actualMetrics.totalImpressions > 0 || actualMetrics.totalCost > 0;
+
+                          if (hasActualData) {
+                            // Show actual metrics from posts
+                            const cpm = actualMetrics.totalImpressions > 0
+                              ? (actualMetrics.totalCost / actualMetrics.totalImpressions) * 1000
+                              : 0;
+
                             return (
                               <div className="flex items-center gap-4 text-sm font-medium">
-                                <div className="flex items-center text-[var(--color-accent-primary)]">
-                                  <Eye className="h-4 w-4 mr-1" />
-                                  <span className="text-mono">
-                                    {estimated.estimatedImpressions > 0
-                                      ? `~${estimated.estimatedImpressions.toLocaleString()} est. impressions`
-                                      : 'N/A est. impressions'}
-                                  </span>
-                                </div>
-                                {estimated.estimatedCost > 0 && (
+                                {actualMetrics.totalImpressions > 0 && (
+                                  <div className="flex items-center text-[var(--color-accent-primary)]">
+                                    <Eye className="h-4 w-4 mr-1" />
+                                    <span className="text-mono">
+                                      {actualMetrics.totalImpressions.toLocaleString()} impressions
+                                    </span>
+                                  </div>
+                                )}
+                                {actualMetrics.totalCost > 0 && (
                                   <div className="flex items-center text-green-500">
                                     <DollarSign className="h-4 w-4 mr-1" />
                                     <span className="text-mono">
-                                      ~${estimated.estimatedCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} est. cost
+                                      ${actualMetrics.totalCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                    </span>
+                                  </div>
+                                )}
+                                {cpm > 0 && (
+                                  <div className="flex items-center text-blue-400">
+                                    <span className="text-mono text-xs">
+                                      ${cpm.toFixed(2)} CPM
                                     </span>
                                   </div>
                                 )}
                               </div>
                             );
                           } else {
-                            // For other statuses, use actual metrics from Supabase (if available), otherwise estimate
-                            const hasActualMetrics = (request.actualImpressions && request.actualImpressions > 0) ||
-                                                   (request.actualCost && request.actualCost > 0);
-
-                            if (hasActualMetrics) {
-                              // Calculate CPM (Cost Per Mille/1000 impressions)
-                              const cpm = request.actualImpressions > 0
-                                ? (request.actualCost / request.actualImpressions) * 1000
-                                : 0;
-
+                            // Fallback to estimated metrics if no posts yet
+                            const estimated = getEstimatedMetrics(request);
+                            if (estimated.estimatedImpressions > 0 || estimated.estimatedCost > 0) {
                               return (
                                 <div className="flex items-center gap-4 text-sm font-medium">
-                                  {request.actualImpressions > 0 && (
+                                  {estimated.estimatedImpressions > 0 && (
                                     <div className="flex items-center text-[var(--color-accent-primary)]">
                                       <Eye className="h-4 w-4 mr-1" />
                                       <span className="text-mono">
-                                        {request.actualImpressions.toLocaleString()} impressions
+                                        ~{estimated.estimatedImpressions.toLocaleString()} est. impressions
                                       </span>
                                     </div>
                                   )}
-                                  {request.actualCost > 0 && (
+                                  {estimated.estimatedCost > 0 && (
                                     <div className="flex items-center text-green-500">
                                       <DollarSign className="h-4 w-4 mr-1" />
                                       <span className="text-mono">
-                                        ${request.actualCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                      </span>
-                                    </div>
-                                  )}
-                                  {cpm > 0 && (
-                                    <div className="flex items-center text-blue-400">
-                                      <span className="text-mono text-xs">
-                                        ${cpm.toFixed(2)} CPM
+                                        ~${estimated.estimatedCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} est. cost
                                       </span>
                                     </div>
                                   )}
                                 </div>
                               );
-                            } else {
-                              // Fallback to estimated metrics if no actual metrics
-                              const estimated = getEstimatedMetrics(request);
-                              if (estimated.estimatedImpressions > 0 || estimated.estimatedCost > 0) {
-                                return (
-                                  <div className="flex items-center gap-4 text-sm font-medium">
-                                    {estimated.estimatedImpressions > 0 && (
-                                      <div className="flex items-center text-[var(--color-accent-primary)]">
-                                        <Eye className="h-4 w-4 mr-1" />
-                                        <span className="text-mono">
-                                          ~{estimated.estimatedImpressions.toLocaleString()} est. impressions
-                                        </span>
-                                      </div>
-                                    )}
-                                    {estimated.estimatedCost > 0 && (
-                                      <div className="flex items-center text-green-500">
-                                        <DollarSign className="h-4 w-4 mr-1" />
-                                        <span className="text-mono">
-                                          ~${estimated.estimatedCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} est. cost
-                                        </span>
-                                      </div>
-                                    )}
-                                  </div>
-                                );
-                              }
                             }
                           }
                           return null;
@@ -1194,11 +1277,13 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
                         checked={contentForm.platforms.includes(platform)}
                         onChange={(e) => {
                           const isChecked = e.target.checked;
+                          const newPlatforms = isChecked
+                            ? [...contentForm.platforms, platform]
+                            : contentForm.platforms.filter(p => p !== platform);
+
                           setContentForm({
                             ...contentForm,
-                            platforms: isChecked
-                              ? [...contentForm.platforms, platform]
-                              : contentForm.platforms.filter(p => p !== platform)
+                            platforms: newPlatforms
                           });
                         }}
                         className="h-4 w-4 text-[var(--color-accent-primary)] focus:ring-[var(--color-accent-primary)] border-[var(--color-border)] rounded"
@@ -1209,32 +1294,6 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
                     </label>
                   ))}
                 </div>
-              </div>
-
-              {/* Link */}
-              <div>
-                <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">
-                  Link (Post URL)
-                  {fetchingTweetData && (
-                    <span className="ml-2 text-xs text-blue-500 inline-flex items-center">
-                      <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-                      Fetching metrics...
-                    </span>
-                  )}
-                </label>
-                <input
-                  type="url"
-                  placeholder="https://..."
-                  value={contentForm.link}
-                  onChange={(e) => handleLinkChange(e.target.value)}
-                  disabled={fetchingTweetData}
-                  className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent-primary)] disabled:opacity-50 disabled:cursor-not-allowed"
-                />
-                {contentForm.platforms.includes('X') && (
-                  <p className="text-xs text-[var(--color-text-tertiary)] mt-1">
-                    Paste a Twitter/X URL to automatically fetch impressions, likes, and replies
-                  </p>
-                )}
               </div>
 
               {/* Date and Cost in a grid */}
@@ -1265,61 +1324,98 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
                 </div>
               </div>
 
-              {/* Metrics Section */}
-              <div className="border-t border-[var(--color-border)] pt-4">
-                <h4 className="text-sm font-medium text-[var(--color-text-primary)] mb-3">
-                  Performance Metrics
-                  {contentForm.platforms.includes('X') && (
-                    <span className="ml-2 text-xs text-green-500">
-                      (Auto-filled from Twitter API when X URL is provided)
-                    </span>
-                  )}
-                </h4>
-                <div className="grid grid-cols-3 gap-3">
-                  <div>
-                    <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">
-                      Impressions {contentForm.platforms.length > 0 && !contentForm.platforms.includes('X') && '*'}
-                      {contentForm.platforms.includes('X') && contentForm.platforms.length === 1 && <span className="text-xs text-[var(--color-text-tertiary)]">(optional)</span>}
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="e.g., 10000"
-                      value={contentForm.impressions}
-                      onChange={(e) => setContentForm({ ...contentForm, impressions: e.target.value })}
-                      disabled={fetchingTweetData}
-                      className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent-primary)] disabled:opacity-50 disabled:cursor-not-allowed"
-                    />
-                  </div>
+              {/* Per-Platform Content Entry */}
+              {contentForm.platforms.length > 0 && (
+                <div className="border-t border-[var(--color-border)] pt-4">
+                  <h4 className="text-sm font-medium text-[var(--color-text-primary)] mb-3">
+                    Platform Content & Metrics ({contentForm.platforms.length} platform{contentForm.platforms.length !== 1 ? 's' : ''})
+                  </h4>
+                  <div className="space-y-4">
+                    {contentForm.platforms.map((platform) => (
+                    <div key={platform} className="border border-[var(--color-border)] rounded-lg p-4 bg-[var(--color-bg-tertiary)]">
+                      <h5 className="text-sm font-semibold text-[var(--color-text-primary)] mb-3 flex items-center">
+                        {platform === 'X' ? '🐦 X (Twitter)' :
+                         platform === 'Facebook' ? '👍 Facebook' :
+                         platform === 'Instagram' ? '📸 Instagram' :
+                         platform === 'YouTube' ? '▶️ YouTube' :
+                         '🎵 TikTok'}
+                        {platform === 'X' && (
+                          <span className="ml-2 text-xs text-green-500 font-normal">
+                            (Auto-fills from Twitter API)
+                          </span>
+                        )}
+                      </h5>
 
-                  <div>
-                    <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">
-                      Likes <span className="text-xs text-[var(--color-text-tertiary)]">(optional)</span>
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="e.g., 500"
-                      value={contentForm.likes}
-                      onChange={(e) => setContentForm({ ...contentForm, likes: e.target.value })}
-                      disabled={fetchingTweetData}
-                      className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent-primary)] disabled:opacity-50 disabled:cursor-not-allowed"
-                    />
-                  </div>
+                      {/* Link */}
+                      <div className="mb-3">
+                        <label className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1">
+                          Post URL
+                          {platform === 'X' && fetchingTweetData && (
+                            <span className="ml-2 text-xs text-blue-500 inline-flex items-center">
+                              <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                              Fetching...
+                            </span>
+                          )}
+                        </label>
+                        <input
+                          type="url"
+                          placeholder={`https://${platform.toLowerCase()}.com/...`}
+                          value={contentForm.platformData[platform].link}
+                          onChange={(e) => handlePlatformLinkChange(platform, e.target.value)}
+                          disabled={platform === 'X' && fetchingTweetData}
+                          className="w-full px-3 py-2 text-sm border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent-primary)] disabled:opacity-50"
+                        />
+                      </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">
-                      Replies <span className="text-xs text-[var(--color-text-tertiary)]">(optional)</span>
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="e.g., 50"
-                      value={contentForm.comments}
-                      onChange={(e) => setContentForm({ ...contentForm, comments: e.target.value })}
-                      disabled={fetchingTweetData}
-                      className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent-primary)] disabled:opacity-50 disabled:cursor-not-allowed"
-                    />
-                  </div>
+                      {/* Metrics Grid */}
+                      <div className="grid grid-cols-3 gap-2">
+                        <div>
+                          <label className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1">
+                            Impressions {platform !== 'X' && <span className="text-red-500">*</span>}
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="10000"
+                            value={contentForm.platformData[platform].impressions}
+                            onChange={(e) => updatePlatformData(platform, 'impressions', e.target.value)}
+                            disabled={platform === 'X' && fetchingTweetData}
+                            className="w-full px-2 py-2 text-sm border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent-primary)] disabled:opacity-50"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-medium text-[var(--color-text-tertiary)] mb-1">
+                            Likes
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="500"
+                            value={contentForm.platformData[platform].likes}
+                            onChange={(e) => updatePlatformData(platform, 'likes', e.target.value)}
+                            disabled={platform === 'X' && fetchingTweetData}
+                            className="w-full px-2 py-2 text-sm border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent-primary)] disabled:opacity-50"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-medium text-[var(--color-text-tertiary)] mb-1">
+                            {platform === 'X' ? 'Replies' : 'Comments'}
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="50"
+                            value={contentForm.platformData[platform].comments}
+                            onChange={(e) => updatePlatformData(platform, 'comments', e.target.value)}
+                            disabled={platform === 'X' && fetchingTweetData}
+                            className="w-full px-2 py-2 text-sm border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent-primary)] disabled:opacity-50"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
+              )}
 
               {/* Action buttons */}
               <div className="flex gap-3 pt-4">

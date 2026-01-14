@@ -253,16 +253,24 @@ export const addPost = async (creatorId, postData, requestId = null) => {
   };
 
   try {
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('posts')
-      .insert([newPost]);
+      .insert([newPost])
+      .select();
 
-    if (error) throw error;
+    if (error) {
+      console.error('Supabase insert error:', error);
+      console.error('Post data that failed:', newPost);
+      throw error;
+    }
+
+    console.log('Successfully inserted post:', data);
 
     // Return updated creator
     return getCreatorById(creatorId);
   } catch (error) {
     console.error('Error adding post:', error);
+    console.error('Failed post data:', newPost);
     return null;
   }
 };
