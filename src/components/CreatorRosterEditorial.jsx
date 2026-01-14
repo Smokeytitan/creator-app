@@ -805,7 +805,16 @@ export default function CreatorRosterEditorial({ creators, setCreators }) {
                 {(c.posts || []).length > 0 && (() => {
                   const posts = c.posts || [];
                   let totalImpressions = 0;
+
+                  // Calculate total cost from creator's costPerPost, not from summing individual posts
+                  // (to avoid double-counting when multiple posts exist for same creator)
                   let totalCost = 0;
+                  if (c.costPerPost) {
+                    const cost = parseFloat(c.costPerPost.replace(/[^0-9.-]+/g, ''));
+                    if (!isNaN(cost)) {
+                      totalCost = cost;
+                    }
+                  }
 
                   posts.forEach(post => {
                     if (post.impressions) {
@@ -814,17 +823,11 @@ export default function CreatorRosterEditorial({ creators, setCreators }) {
                         totalImpressions += impressions;
                       }
                     }
-                    if (post.cost) {
-                      const cost = parseFloat(post.cost.replace(/[^0-9.-]+/g, ''));
-                      if (!isNaN(cost)) {
-                        totalCost += cost;
-                      }
-                    }
                   });
 
                   const avgImpressions = posts.length > 0 ? Math.round(totalImpressions / posts.length) : 0;
                   const cpm = totalImpressions > 0 ? (totalCost / totalImpressions) * 1000 : 0;
-                  const avgCostPerPost = posts.length > 0 && totalCost > 0 ? totalCost / posts.length : 0;
+                  const avgCostPerPost = totalCost;
 
                   return (
                     <div className="space-y-3 mb-4">
