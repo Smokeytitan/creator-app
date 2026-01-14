@@ -459,35 +459,7 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
       alert(`Successfully added ${totalPostsCreated} posts to ${contentForm.selectedCreatorIds.length} creator(s) across ${contentForm.platforms.length} platform(s) for "${request.title}"!`);
     } catch (error) {
       console.error('Error adding content:', error);
-      // Fall back to localStorage on error
-      console.warn('Error occurred, falling back to localStorage');
-      setCreators(creators.map(creator => {
-        if (contentForm.selectedCreatorIds.includes(creator.id)) {
-          const newPosts = contentForm.platforms.map(platform => {
-            const platformData = contentForm.platformData[platform];
-            return {
-              id: Date.now() + Math.random(),
-              description: request.title,
-              platform: platform,
-              date: contentForm.date,
-              cost: contentForm.cost,
-              link: platformData.link,
-              impressions: platformData.impressions,
-              likes: platformData.likes || '',
-              comments: platformData.comments || '',
-              lastScanned: platform === 'X' && platformData.impressions ? new Date().toISOString() : null
-            };
-          });
-
-          return {
-            ...creator,
-            posts: [...(creator.posts || []), ...newPosts]
-          };
-        }
-        return creator;
-      }));
-      cancelAddContent();
-      alert(`Content added to ${contentForm.selectedCreatorIds.length} creator(s) across ${contentForm.platforms.length} platform(s) for "${request.title}"!`);
+      alert('Failed to add content. Error: ' + error.message);
     }
   };
 
