@@ -261,6 +261,10 @@ export const addPost = async (creatorId, postData, requestId = null) => {
 
     if (error) {
       console.error('Supabase insert error:', error);
+      console.error('Error message:', error.message);
+      console.error('Error details:', error.details);
+      console.error('Error hint:', error.hint);
+      console.error('Error code:', error.code);
       console.error('Post data that failed:', newPost);
       throw error;
     }
