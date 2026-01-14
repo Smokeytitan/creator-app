@@ -7,6 +7,7 @@ export default function ContentRequestModal({ creators, onClose, onSubmit }) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [selectedCreatorIds, setSelectedCreatorIds] = useState([creators?.[0]?.id].filter(Boolean));
+  const [startDate, setStartDate] = useState(new Date());
   const [dueDate, setDueDate] = useState(new Date());
 
   const toggleCreator = (creatorId) => {
@@ -208,18 +209,36 @@ export default function ContentRequestModal({ creators, onClose, onSubmit }) {
             )}
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Due date</label>
-            <div className="relative">
-              <DatePicker
-                selected={dueDate}
-                onChange={(date) => setDueDate(date)}
-                dateFormat="MMMM d, yyyy"
-                className="w-full rounded-md border border-white/[0.12] p-2 pr-10 bg-white dark:bg-gray-900 text-polygon-text-primary focus:ring-2 focus:ring-polygon-primary focus:border-indigo-500 cursor-pointer"
-                showPopperArrow={false}
-                wrapperClassName="w-full"
-              />
-              <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Start Date</label>
+              <div className="relative">
+                <DatePicker
+                  selected={startDate}
+                  onChange={(date) => setStartDate(date)}
+                  dateFormat="MMMM d, yyyy"
+                  className="w-full rounded-md border border-white/[0.12] p-2 pr-10 bg-white dark:bg-gray-900 text-polygon-text-primary focus:ring-2 focus:ring-polygon-primary focus:border-indigo-500 cursor-pointer"
+                  showPopperArrow={false}
+                  wrapperClassName="w-full"
+                />
+                <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">End Date</label>
+              <div className="relative">
+                <DatePicker
+                  selected={dueDate}
+                  onChange={(date) => setDueDate(date)}
+                  dateFormat="MMMM d, yyyy"
+                  minDate={startDate}
+                  className="w-full rounded-md border border-white/[0.12] p-2 pr-10 bg-white dark:bg-gray-900 text-polygon-text-primary focus:ring-2 focus:ring-polygon-primary focus:border-indigo-500 cursor-pointer"
+                  showPopperArrow={false}
+                  wrapperClassName="w-full"
+                />
+                <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
+              </div>
             </div>
           </div>
         </div>
@@ -231,6 +250,12 @@ export default function ContentRequestModal({ creators, onClose, onSubmit }) {
           <button
             className="px-4 py-2 rounded-md btn-polygon-primary  disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={() => {
+              // Validate date range
+              if (dueDate < startDate) {
+                alert('End date must be after start date');
+                return;
+              }
+
               const selectedCreators = creators.filter(c => selectedCreatorIds.includes(c.id));
               console.log('ContentRequestModal - selectedCreatorIds:', selectedCreatorIds);
               console.log('ContentRequestModal - selectedCreators:', selectedCreators);
@@ -241,7 +266,7 @@ export default function ContentRequestModal({ creators, onClose, onSubmit }) {
                   id: c.id,
                   name: c.name
                 })),
-                startDate: new Date().toISOString(),
+                startDate: startDate.toISOString(),
                 dueDate: dueDate.toISOString(),
                 status: "pending",
                 estimatedCost: estimatedCost,

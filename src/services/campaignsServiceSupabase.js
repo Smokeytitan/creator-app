@@ -119,6 +119,8 @@ const transformFromDB = (row) => {
     actualCost: actualCost || 0,
     actualImpressions: actualImpressions || 0,
     createdAt: row.created_at,
+    startDate: row.start_date,
+    dueDate: row.end_date,
     posts: posts.map(post => ({
       id: post.id,
       link: post.link,
@@ -151,7 +153,9 @@ const transformToDB = (campaign) => ({
   description: campaign.description || '',
   status: campaign.status,
   estimated_cost: campaign.estimatedCost || 0,
-  estimated_impressions: campaign.estimatedImpressions || 0
+  estimated_impressions: campaign.estimatedImpressions || 0,
+  start_date: campaign.startDate || null,
+  end_date: campaign.dueDate || null
 });
 
 /**

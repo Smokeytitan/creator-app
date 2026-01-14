@@ -1006,13 +1006,19 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
                             <User className="h-4 w-4 mr-1" />
                             {(request.creators || []).map(c => c.name).join(', ')}
                           </div>
-                          {request.startDate && (
+                          {request.startDate && request.dueDate && (
+                            <div className="flex items-center text-mono">
+                              <Calendar className="h-4 w-4 mr-1" />
+                              {new Date(request.startDate).toLocaleDateString()} - {new Date(request.dueDate).toLocaleDateString()}
+                            </div>
+                          )}
+                          {request.startDate && !request.dueDate && (
                             <div className="flex items-center text-mono">
                               <Calendar className="h-4 w-4 mr-1" />
                               Started: {new Date(request.startDate).toLocaleDateString()}
                             </div>
                           )}
-                          {request.dueDate && (
+                          {!request.startDate && request.dueDate && (
                             <div className="flex items-center text-mono">
                               <Calendar className="h-4 w-4 mr-1" />
                               Due: {new Date(request.dueDate).toLocaleDateString()}
