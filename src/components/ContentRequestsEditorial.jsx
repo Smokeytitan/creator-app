@@ -626,6 +626,9 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
     // Normalize campaign title for matching
     const campaignTitle = request.title.toLowerCase().trim();
 
+    // Track which creators we've counted for cost (to avoid double-counting)
+    const countedCreators = new Set();
+
     // For each creator in the campaign
     campaignCreators.forEach(campaignCreator => {
       // Find the creator in the full creators list
@@ -640,21 +643,30 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
         return postDesc === campaignTitle || postDesc.includes(campaignTitle) || campaignTitle.includes(postDesc);
       });
 
-      // Sum up impressions and costs from matching posts
-      matchingPosts.forEach(post => {
-        if (post.impressions) {
-          const impressions = parseFloat(post.impressions.replace(/[^0-9.-]+/g, ''));
-          if (!isNaN(impressions)) {
-            totalImpressions += impressions;
+      // If this creator has matching posts, sum impressions and count cost once
+      if (matchingPosts.length > 0) {
+        // Sum up impressions from all matching posts
+        matchingPosts.forEach(post => {
+          if (post.impressions) {
+            const impressions = parseFloat(post.impressions.replace(/[^0-9.-]+/g, ''));
+            if (!isNaN(impressions)) {
+              totalImpressions += impressions;
+            }
+          }
+        });
+
+        // Count the creator's cost only once, regardless of number of posts
+        if (!countedCreators.has(creator.id)) {
+          countedCreators.add(creator.id);
+          // Use the creator's costPerPost if available
+          if (creator.costPerPost) {
+            const cost = parseFloat(creator.costPerPost.replace(/[^0-9.-]+/g, ''));
+            if (!isNaN(cost)) {
+              totalCost += cost;
+            }
           }
         }
-        if (post.cost) {
-          const cost = parseFloat(post.cost.replace(/[^0-9.-]+/g, ''));
-          if (!isNaN(cost)) {
-            totalCost += cost;
-          }
-        }
-      });
+      }
     });
 
     return {
