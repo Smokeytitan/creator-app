@@ -1178,7 +1178,9 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
                 creators: creatorIds,
                 status: newRequest.status || 'pending',
                 estimatedCost: newRequest.estimatedCost || 0,
-                estimatedImpressions: newRequest.estimatedImpressions || 0
+                estimatedImpressions: newRequest.estimatedImpressions || 0,
+                startDate: newRequest.startDate || null,
+                dueDate: newRequest.dueDate || null
               });
 
               if (created) {
