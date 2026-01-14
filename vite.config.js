@@ -7,10 +7,12 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        // Add timestamp to filenames to bust cache
-        entryFileNames: `assets/[name]-[hash]-${Date.now()}.js`,
-        chunkFileNames: `assets/[name]-[hash]-${Date.now()}.js`,
-        assetFileNames: `assets/[name]-[hash]-${Date.now()}.[ext]`
+        // Force unique filenames on each build using content hash
+        entryFileNames: `assets/[name].[hash].js`,
+        chunkFileNames: `assets/[name].[hash].js`,
+        assetFileNames: `assets/[name].[hash].[ext]`,
+        // Force cache busting
+        manualChunks: undefined
       }
     }
   },
