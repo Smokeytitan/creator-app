@@ -410,35 +410,7 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
     const request = addingContentForRequest;
 
     if (!supabase) {
-      // Fallback to local state if Supabase not configured
-      setCreators(creators.map(creator => {
-        if (contentForm.selectedCreatorIds.includes(creator.id)) {
-          // Create a post for each selected platform with its specific data
-          const newPosts = contentForm.platforms.map(platform => {
-            const platformData = contentForm.platformData[platform];
-            return {
-              id: Date.now() + Math.random(),
-              description: request.title,
-              platform: platform,
-              date: contentForm.date,
-              cost: contentForm.cost,
-              link: platformData.link,
-              impressions: platformData.impressions,
-              likes: platformData.likes || '',
-              comments: platformData.comments || '',
-              lastScanned: platform === 'X' && platformData.impressions ? new Date().toISOString() : null
-            };
-          });
-
-          return {
-            ...creator,
-            posts: [...(creator.posts || []), ...newPosts]
-          };
-        }
-        return creator;
-      }));
-      cancelAddContent();
-      alert(`Content added to ${contentForm.selectedCreatorIds.length} creator(s) across ${contentForm.platforms.length} platform(s) for "${request.title}"!`);
+      alert('Supabase is not configured. Cannot add content.');
       return;
     }
 
@@ -477,37 +449,9 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
         }
       }
 
-      // If Supabase failed, fall back to localStorage
+      // If Supabase failed, show error instead of falling back to localStorage
       if (supabaseFailed && totalPostsCreated === 0) {
-        console.warn('Supabase failed, falling back to localStorage');
-        setCreators(creators.map(creator => {
-          if (contentForm.selectedCreatorIds.includes(creator.id)) {
-            // Create a post for each selected platform with its specific data
-            const newPosts = contentForm.platforms.map(platform => {
-              const platformData = contentForm.platformData[platform];
-              return {
-                id: Date.now() + Math.random(),
-                description: request.title,
-                platform: platform,
-                date: contentForm.date,
-                cost: contentForm.cost,
-                link: platformData.link,
-                impressions: platformData.impressions,
-                likes: platformData.likes || '',
-                comments: platformData.comments || '',
-                lastScanned: platform === 'X' && platformData.impressions ? new Date().toISOString() : null
-              };
-            });
-
-            return {
-              ...creator,
-              posts: [...(creator.posts || []), ...newPosts]
-            };
-          }
-          return creator;
-        }));
-        cancelAddContent();
-        alert(`Content added to ${contentForm.selectedCreatorIds.length} creator(s) across ${contentForm.platforms.length} platform(s) for "${request.title}"!`);
+        alert('Failed to add content to Supabase. Please check the console for error details and try again.');
         return;
       }
 
