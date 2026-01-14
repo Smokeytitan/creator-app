@@ -216,7 +216,6 @@ export default function ContentRequestModal({ creators, onClose, onSubmit }) {
                 onChange={(date) => setDueDate(date)}
                 dateFormat="MMMM d, yyyy"
                 className="w-full rounded-md border border-white/[0.12] p-2 pr-10 bg-white dark:bg-gray-900 text-polygon-text-primary focus:ring-2 focus:ring-polygon-primary focus:border-indigo-500 cursor-pointer"
-                minDate={new Date()}
                 showPopperArrow={false}
                 wrapperClassName="w-full"
               />
