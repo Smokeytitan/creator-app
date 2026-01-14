@@ -234,7 +234,7 @@ export const addPost = async (creatorId, postData, requestId = null) => {
   if (!supabase) return null;
 
   const newPost = {
-    id: Date.now() + Math.random(),
+    id: Date.now() + Math.floor(Math.random() * 1000000),
     creator_id: creatorId,
     campaign_id: requestId,
     description: postData.description || '',
