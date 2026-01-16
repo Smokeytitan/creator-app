@@ -207,71 +207,73 @@ const FlashCampaignDashboard = () => {
     return (
       <div
         key={campaign.id}
-        className="card-editorial hover:shadow-lg transition-all"
+        className="card-editorial hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] cursor-pointer group relative overflow-hidden"
         style={{
           animation: 'fadeInUp 0.4s ease-out forwards',
           animationDelay: `${index * 0.05}s`,
           opacity: 0
         }}
       >
+        {/* Hover gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-br from-amber-500/0 to-amber-600/0 group-hover:from-amber-500/5 group-hover:to-amber-600/10 transition-all duration-300 pointer-events-none" />
         {/* Header */}
-        <div className="flex items-start justify-between mb-4">
+        <div className="flex items-start justify-between mb-4 relative z-10">
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-2">
-              <h3 className="text-lg font-bold">{campaign.name}</h3>
-              <span className={`px-2 py-0.5 text-xs rounded-full border ${statusDisplay.colorClass}`}>
+              <h3 className="text-lg font-bold group-hover:text-amber-400 transition-colors duration-300">{campaign.name}</h3>
+              <span className={`px-2.5 py-1 text-xs rounded-full border font-semibold ${statusDisplay.colorClass} transition-all duration-300 group-hover:scale-110`}>
                 {statusDisplay.label}
               </span>
             </div>
             {campaign.description && (
-              <p className="text-sm text-[var(--color-text-secondary)]">
+              <p className="text-sm text-[var(--color-text-secondary)] group-hover:text-[var(--color-text-primary)] transition-colors duration-300">
                 {campaign.description}
               </p>
             )}
           </div>
           {isActive && (
-            <Zap className="w-5 h-5 text-yellow-500 animate-pulse" />
+            <Zap className="w-5 h-5 text-yellow-500 animate-pulse group-hover:scale-125 transition-transform duration-300" />
           )}
         </div>
 
         {/* Info Grid */}
-        <div className="grid grid-cols-2 gap-3 mb-4">
-          <div className="flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-[var(--color-text-tertiary)]" />
+        <div className="grid grid-cols-2 gap-3 mb-4 relative z-10">
+          <div className="flex items-center gap-2 p-2 rounded-lg bg-white/5 group-hover:bg-amber-500/10 transition-all duration-300">
+            <Calendar className="w-4 h-4 text-[var(--color-text-tertiary)] group-hover:text-amber-500 transition-colors duration-300" />
             <div>
-              <p className="text-xs text-[var(--color-text-tertiary)]">
+              <p className="text-xs text-[var(--color-text-tertiary)] group-hover:text-amber-400 transition-colors duration-300">
                 {isScheduled ? 'Starts' : isActive ? 'Ends' : 'Ended'}
               </p>
-              <p className="text-sm text-mono">
+              <p className="text-sm text-mono font-semibold">
                 {new Date(isScheduled ? campaign.startDateTime : campaign.endDateTime).toLocaleDateString('en-US', { timeZone: 'America/New_York' })} EST
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <Tag className="w-4 h-4 text-[var(--color-text-tertiary)]" />
+          <div className="flex items-center gap-2 p-2 rounded-lg bg-white/5 group-hover:bg-amber-500/10 transition-all duration-300">
+            <Tag className="w-4 h-4 text-[var(--color-text-tertiary)] group-hover:text-amber-500 transition-colors duration-300" />
             <div>
-              <p className="text-xs text-[var(--color-text-tertiary)]">Key Phrases</p>
-              <p className="text-sm">{campaign.keyPhrases.length}</p>
+              <p className="text-xs text-[var(--color-text-tertiary)] group-hover:text-amber-400 transition-colors duration-300">Key Phrases</p>
+              <p className="text-sm font-semibold">{campaign.keyPhrases.length}</p>
             </div>
           </div>
 
           {campaign.rewardPool && (
-            <div className="flex items-center gap-2">
-              <Trophy className="w-4 h-4 text-[var(--color-text-tertiary)]" />
+            <div className="flex items-center gap-2 p-2 rounded-lg bg-white/5 group-hover:bg-amber-500/10 transition-all duration-300">
+              <Trophy className="w-4 h-4 text-[var(--color-text-tertiary)] group-hover:text-amber-500 transition-colors duration-300" />
               <div>
-                <p className="text-xs text-[var(--color-text-tertiary)]">Reward Pool</p>
-                <p className="text-sm">{campaign.rewardPool}</p>
+                <p className="text-xs text-[var(--color-text-tertiary)] group-hover:text-amber-400 transition-colors duration-300">Reward Pool</p>
+                <p className="text-sm font-semibold">{campaign.rewardPool}</p>
               </div>
             </div>
           )}
 
           {isCompleted && campaign.results && (
-            <div className="flex items-center gap-2">
-              <Eye className="w-4 h-4 text-[var(--color-text-tertiary)]" />
+            <div className="flex items-center gap-2 p-2 rounded-lg bg-white/5 group-hover:bg-amber-500/10 transition-all duration-300">
+              <Eye className="w-4 h-4 text-[var(--color-text-tertiary)] group-hover:text-amber-500 transition-colors duration-300" />
               <div>
-                <p className="text-xs text-[var(--color-text-tertiary)]">Eligible Tweets</p>
-                <p className="text-sm font-bold text-[var(--color-accent-primary)]">
+                <p className="text-xs text-[var(--color-text-tertiary)] group-hover:text-amber-400 transition-colors duration-300">Eligible Tweets</p>
+                <p className="text-sm font-bold text-[var(--color-accent-primary)] group-hover:scale-110 inline-block transition-transform duration-300">
                   {campaign.results.eligibleTweets.length}
                 </p>
               </div>
@@ -281,22 +283,22 @@ const FlashCampaignDashboard = () => {
 
         {/* Time Progress */}
         {(isActive || isScheduled) && (
-          <div className="mb-4 p-2 bg-white/5 rounded-lg">
-            <p className="text-xs text-[var(--color-text-secondary)] flex items-center gap-2">
-              <Clock className="w-3 h-3" />
+          <div className="mb-4 p-3 bg-white/5 rounded-lg border border-amber-500/20 group-hover:border-amber-500/40 group-hover:bg-amber-500/5 transition-all duration-300 relative z-10">
+            <p className="text-xs text-[var(--color-text-secondary)] group-hover:text-amber-400 flex items-center gap-2 font-semibold transition-colors duration-300">
+              <Clock className="w-4 h-4 group-hover:animate-pulse" />
               {isActive ? getTimeRemaining(campaign.endDateTime) : getTimeUntilStart(campaign.startDateTime)} (EST)
             </p>
           </div>
         )}
 
         {/* Actions */}
-        <div className="flex gap-2">
+        <div className="flex gap-2 relative z-10">
           {isCompleted && (
             <button
               onClick={() => handleViewResults(campaign)}
-              className="btn-editorial-primary flex-1 flex items-center justify-center gap-2"
+              className="btn-editorial-primary flex-1 flex items-center justify-center gap-2 hover:shadow-amber-500/20 hover:shadow-lg"
             >
-              <Eye className="w-4 h-4" />
+              <Eye className="w-4 h-4 group-hover:scale-110 transition-transform duration-300" />
               View Results
             </button>
           )}
@@ -304,7 +306,7 @@ const FlashCampaignDashboard = () => {
           {(isActive || isScheduled) && (
             <button
               onClick={() => handleCancelCampaign(campaign.id)}
-              className="btn-editorial-secondary flex-1 flex items-center justify-center gap-2 text-red-500 border-red-500/30 hover:bg-red-500/10"
+              className="btn-editorial-secondary flex-1 flex items-center justify-center gap-2 text-red-500 border-red-500/30 hover:bg-red-500/10 hover:border-red-500/50 hover:scale-105 transition-all duration-300"
             >
               <XCircle className="w-4 h-4" />
               Cancel
@@ -314,7 +316,7 @@ const FlashCampaignDashboard = () => {
           {/* Delete button - show for all statuses */}
           <button
             onClick={() => handleDeleteCampaign(campaign.id, campaign.name)}
-            className="btn-editorial-secondary flex items-center justify-center gap-2 text-red-500 border-red-500/30 hover:bg-red-500/10"
+            className="btn-editorial-secondary flex items-center justify-center gap-2 text-red-500 border-red-500/30 hover:bg-red-500/10 hover:border-red-500/50 hover:scale-110 transition-all duration-300"
             title="Delete campaign permanently"
           >
             <Trash2 className="w-4 h-4" />
