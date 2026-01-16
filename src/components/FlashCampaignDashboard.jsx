@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Plus, Zap, Clock, CheckCircle, XCircle, Eye, Calendar, Tag, Trophy, Trash2, RefreshCw } from 'lucide-react';
+import { Plus, Zap, Clock, CheckCircle, XCircle, Eye, Calendar, Tag, Trophy, Trash2, RefreshCw, ChevronDown } from 'lucide-react';
 import CampaignCreationModal from './CampaignCreationModal';
 import CampaignResultsView from './CampaignResultsView';
 import ExclusionListManager from './ExclusionListManager';
@@ -25,6 +25,7 @@ const FlashCampaignDashboard = () => {
   const [viewMode, setViewMode] = useState('list'); // 'list' | 'results' | 'exclusions'
   const [processingNotifications, setProcessingNotifications] = useState([]);
   const [isManualProcessing, setIsManualProcessing] = useState(false);
+  const [expandedCampaignId, setExpandedCampaignId] = useState(null);
 
   // Load campaigns
   const loadCampaigns = useCallback(async () => {
@@ -203,6 +204,13 @@ const FlashCampaignDashboard = () => {
     const isActive = campaign.status === 'active';
     const isScheduled = campaign.status === 'scheduled';
     const isCompleted = campaign.status === 'completed';
+    const isExpanded = expandedCampaignId === campaign.id;
+
+    const toggleExpanded = (e) => {
+      // Don't toggle if clicking on buttons
+      if (e.target.closest('button')) return;
+      setExpandedCampaignId(isExpanded ? null : campaign.id);
+    };
 
     return (
       <div
@@ -213,6 +221,7 @@ const FlashCampaignDashboard = () => {
           animationDelay: `${index * 0.05}s`,
           opacity: 0
         }}
+        onClick={toggleExpanded}
       >
         {/* Hover gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-br from-amber-500/0 to-amber-600/0 group-hover:from-amber-500/5 group-hover:to-amber-600/10 transition-all duration-300 pointer-events-none" />
@@ -224,6 +233,7 @@ const FlashCampaignDashboard = () => {
               <span className={`px-2.5 py-1 text-xs rounded-full border font-semibold ${statusDisplay.colorClass} transition-all duration-300 group-hover:scale-110`}>
                 {statusDisplay.label}
               </span>
+              <ChevronDown className={`w-4 h-4 text-amber-500 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
             </div>
             {campaign.description && (
               <p className="text-sm text-[var(--color-text-secondary)] group-hover:text-[var(--color-text-primary)] transition-colors duration-300">
@@ -290,6 +300,69 @@ const FlashCampaignDashboard = () => {
             </p>
           </div>
         )}
+
+        {/* Expandable Content */}
+        <div
+          className={`relative z-10 overflow-hidden transition-all duration-500 ease-in-out ${
+            isExpanded ? 'max-h-96 opacity-100 mb-4' : 'max-h-0 opacity-0'
+          }`}
+        >
+          <div className="border-t border-amber-500/20 pt-4 space-y-4">
+            {/* Key Phrases */}
+            <div>
+              <h4 className="text-sm font-semibold text-amber-400 mb-2 flex items-center gap-2">
+                <Tag className="w-4 h-4" />
+                Key Phrases ({campaign.keyPhrases.length})
+              </h4>
+              <div className="flex flex-wrap gap-2">
+                {campaign.keyPhrases.map((phrase, idx) => (
+                  <span
+                    key={idx}
+                    className="px-3 py-1 bg-amber-500/10 border border-amber-500/30 rounded-full text-xs text-amber-300 hover:bg-amber-500/20 transition-colors duration-200"
+                  >
+                    {phrase}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            {/* Date Range */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="p-3 bg-white/5 rounded-lg">
+                <p className="text-xs text-[var(--color-text-tertiary)] mb-1">Start Date</p>
+                <p className="text-sm font-semibold text-mono">
+                  {new Date(campaign.startDateTime).toLocaleString('en-US', {
+                    timeZone: 'America/New_York',
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric',
+                    hour: 'numeric',
+                    minute: '2-digit'
+                  })} EST
+                </p>
+              </div>
+              <div className="p-3 bg-white/5 rounded-lg">
+                <p className="text-xs text-[var(--color-text-tertiary)] mb-1">End Date</p>
+                <p className="text-sm font-semibold text-mono">
+                  {new Date(campaign.endDateTime).toLocaleString('en-US', {
+                    timeZone: 'America/New_York',
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric',
+                    hour: 'numeric',
+                    minute: '2-digit'
+                  })} EST
+                </p>
+              </div>
+            </div>
+
+            {/* Campaign ID */}
+            <div className="p-3 bg-white/5 rounded-lg">
+              <p className="text-xs text-[var(--color-text-tertiary)] mb-1">Campaign ID</p>
+              <p className="text-xs font-mono text-[var(--color-text-secondary)]">{campaign.id}</p>
+            </div>
+          </div>
+        </div>
 
         {/* Actions */}
         <div className="flex gap-2 relative z-10">
