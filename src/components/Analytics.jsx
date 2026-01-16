@@ -342,7 +342,7 @@ export default function Analytics({ creators, requests = [] }) {
     ? (creatorsWithActivity / analytics.totalCreators) * 100
     : 0;
 
-  const COLORS = ['#8B5CF6', '#3B82F6', '#10B981', '#F59E0B', '#EF4444'];
+  const COLORS = ['#D97706', '#F59E0B', '#FBBF24', '#92400E', '#78350F'];
 
   return (
     <div className="space-y-6">
@@ -354,7 +354,7 @@ export default function Analytics({ creators, requests = [] }) {
         </div>
         <button
           onClick={exportToCSV}
-          className="inline-flex items-center px-4 py-2 bg-indigo-600 dark:bg-indigo-500 text-white rounded-polygon hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-colors text-sm font-medium shadow-sm"
+          className="inline-flex items-center px-4 py-2 bg-amber-600 dark:bg-amber-600 text-white rounded-polygon hover:bg-amber-700 dark:hover:bg-amber-700 transition-colors text-sm font-medium shadow-sm"
         >
           <Download className="w-4 h-4 mr-2" />
           Export
@@ -363,43 +363,43 @@ export default function Analytics({ creators, requests = [] }) {
 
       {/* Top Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-        <div className="bg-gradient-to-br from-polygon-primary to-polygon-primary-hover rounded-polygon p-4 sm:p-6 text-white shadow-lg">
+        <div className="card-polygon rounded-polygon p-4 sm:p-6 shadow-lg border-l-4 border-amber-600/50">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-purple-100 text-xs sm:text-sm font-medium mb-1">Total Influencers</p>
-              <p className="text-2xl sm:text-3xl font-bold">{analytics.totalCreators}</p>
+              <p className="text-gray-400 text-xs sm:text-sm font-medium mb-1">Total Influencers</p>
+              <p className="text-2xl sm:text-3xl font-bold text-amber-500">{analytics.totalCreators}</p>
             </div>
-            <Users className="h-10 w-10 sm:h-12 sm:w-12 text-purple-200 opacity-80" />
+            <Users className="h-10 w-10 sm:h-12 sm:w-12 text-amber-600/30" />
           </div>
         </div>
 
-        <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-polygon p-4 sm:p-6 text-white shadow-lg">
+        <div className="card-polygon rounded-polygon p-4 sm:p-6 shadow-lg border-l-4 border-amber-700/50">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-blue-100 text-xs sm:text-sm font-medium mb-1">Total Spend</p>
-              <p className="text-2xl sm:text-3xl font-bold">{formatCurrency(analytics.totalSpend)}</p>
+              <p className="text-gray-400 text-xs sm:text-sm font-medium mb-1">Total Spend</p>
+              <p className="text-2xl sm:text-3xl font-bold text-amber-400">{formatCurrency(analytics.totalSpend)}</p>
             </div>
-            <DollarSign className="h-10 w-10 sm:h-12 sm:w-12 text-blue-200 opacity-80" />
+            <DollarSign className="h-10 w-10 sm:h-12 sm:w-12 text-amber-700/30" />
           </div>
         </div>
 
-        <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-polygon p-4 sm:p-6 text-white shadow-lg">
+        <div className="card-polygon rounded-polygon p-4 sm:p-6 shadow-lg border-l-4 border-yellow-600/50">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-green-100 text-xs sm:text-sm font-medium mb-1">Total Impressions</p>
-              <p className="text-2xl sm:text-3xl font-bold">{formatNumber(analytics.totalImpressions)}</p>
+              <p className="text-gray-400 text-xs sm:text-sm font-medium mb-1">Total Impressions</p>
+              <p className="text-2xl sm:text-3xl font-bold text-yellow-500">{formatNumber(analytics.totalImpressions)}</p>
             </div>
-            <Eye className="h-10 w-10 sm:h-12 sm:w-12 text-green-200 opacity-80" />
+            <Eye className="h-10 w-10 sm:h-12 sm:w-12 text-yellow-600/30" />
           </div>
         </div>
 
-        <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-polygon p-4 sm:p-6 text-white shadow-lg">
+        <div className="card-polygon rounded-polygon p-4 sm:p-6 shadow-lg border-l-4 border-orange-700/50">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-orange-100 text-xs sm:text-sm font-medium mb-1">Total Posts</p>
-              <p className="text-2xl sm:text-3xl font-bold">{analytics.totalPosts}</p>
+              <p className="text-gray-400 text-xs sm:text-sm font-medium mb-1">Total Posts</p>
+              <p className="text-2xl sm:text-3xl font-bold text-orange-400">{analytics.totalPosts}</p>
             </div>
-            <FileText className="h-10 w-10 sm:h-12 sm:w-12 text-orange-200 opacity-80" />
+            <FileText className="h-10 w-10 sm:h-12 sm:w-12 text-orange-700/30" />
           </div>
         </div>
       </div>
@@ -436,7 +436,7 @@ export default function Analytics({ creators, requests = [] }) {
                 }}
                 formatter={(value) => [`$${(value * 1000).toFixed(2)}`, 'CPM']}
               />
-              <Bar dataKey="cpi" fill="#8B5CF6" radius={[8, 8, 0, 0]} />
+              <Bar dataKey="cpi" fill="#F59E0B" radius={[8, 8, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -648,7 +648,7 @@ export default function Analytics({ creators, requests = [] }) {
                 }}
                 formatter={(value) => [formatCurrency(value), 'Spend']}
               />
-              <Bar dataKey="spend" fill="#3B82F6" radius={[8, 8, 0, 0]} />
+              <Bar dataKey="spend" fill="#D97706" radius={[8, 8, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -680,7 +680,7 @@ export default function Analytics({ creators, requests = [] }) {
                 }}
                 formatter={(value) => [formatNumber(value), 'Impressions']}
               />
-              <Bar dataKey="impressions" fill="#10B981" radius={[8, 8, 0, 0]} />
+              <Bar dataKey="impressions" fill="#FBBF24" radius={[8, 8, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>

@@ -3,17 +3,17 @@
 @variant dark (.dark &);
 
 :root {
-  /* Editorial Color Palette */
-  --color-bg-primary: #0B0E14;
-  --color-bg-secondary: #151922;
-  --color-bg-tertiary: #1D2331;
-  --color-accent-primary: #FF6B35;
-  --color-accent-secondary: #FFB347;
-  --color-text-primary: #F8F9FA;
-  --color-text-secondary: #B8BCC8;
-  --color-text-tertiary: #6B7280;
-  --color-border: rgba(255, 255, 255, 0.08);
-  --color-border-hover: rgba(255, 255, 255, 0.16);
+  /* Dark Gold Color Palette */
+  --color-bg-primary: #0A0A0A;
+  --color-bg-secondary: #141414;
+  --color-bg-tertiary: #1A1A1A;
+  --color-accent-primary: #D97706;
+  --color-accent-secondary: #F59E0B;
+  --color-text-primary: #F5F5F5;
+  --color-text-secondary: #A3A3A3;
+  --color-text-tertiary: #737373;
+  --color-border: rgba(217, 119, 6, 0.1);
+  --color-border-hover: rgba(217, 119, 6, 0.2);
 
   /* Typography Scale */
   --font-display: 'Playfair Display', Georgia, serif;
@@ -76,14 +76,14 @@ body {
 }
 
 .react-datepicker__day:hover {
-  background-color: rgba(106, 35, 231, 0.15);
+  background-color: rgba(217, 119, 6, 0.15);
   color: #F3F5FF;
 }
 
 .react-datepicker__day--selected,
 .react-datepicker__day--keyboard-selected {
-  background: radial-gradient(70.64% 70.64% at 50% 25.87%, #9A60FF 0%, #6A23E7 100%) !important;
-  color: #F3F5FF !important;
+  background: linear-gradient(135deg, #D97706 0%, #F59E0B 100%) !important;
+  color: #FFFFFF !important;
   font-weight: 600;
 }
 
@@ -147,15 +147,15 @@ body {
 
 /* Polygon Brand Button Styles */
 .btn-polygon-primary {
-  background: radial-gradient(70.64% 70.64% at 50% 25.87%, #9A60FF 0%, #6A23E7 100%);
-  color: #F3F5FF;
+  background: linear-gradient(135deg, #D97706 0%, #F59E0B 100%);
+  color: #FFFFFF;
   font-weight: 600;
   transition: all 0.2s ease;
 }
 
 .btn-polygon-primary:hover {
-  background: #5E31EB;
-  box-shadow: 0 8px 24px rgba(106, 35, 231, 0.4);
+  background: linear-gradient(135deg, #B45309 0%, #D97706 100%);
+  box-shadow: 0 8px 24px rgba(217, 119, 6, 0.4);
   transform: translateY(-1px);
 }
 
