@@ -1,31 +1,38 @@
 import { useState, useEffect } from "react";
 import { Rocket, CheckCircle, DollarSign, Eye, Plus, Search, X } from "lucide-react";
 import { getCampaigns, updateCampaign } from '../services/campaignsServiceSupabase';
+import { getCreators } from '../services/creatorsServiceSupabase';
 
 export function Campaigns() {
   console.log('[CAMPAIGNS] ===== NEW CAMPAIGNS COMPONENT LOADED - BUILD ' + Date.now() + ' =====');
   const [filter, setFilter] = useState("all");
   const [campaigns, setCampaigns] = useState([]);
+  const [creators, setCreators] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingCampaign, setEditingCampaign] = useState(null);
   const [editForm, setEditForm] = useState({
     title: '',
     description: '',
-    status: 'pending'
+    status: 'pending',
+    creators: []
   });
 
   useEffect(() => {
-    const loadCampaigns = async () => {
+    const loadData = async () => {
       try {
-        const data = await getCampaigns();
-        setCampaigns(data);
+        const [campaignsData, creatorsData] = await Promise.all([
+          getCampaigns(),
+          getCreators()
+        ]);
+        setCampaigns(campaignsData);
+        setCreators(creatorsData);
       } catch (error) {
-        console.error('Error loading campaigns:', error);
+        console.error('Error loading data:', error);
       } finally {
         setLoading(false);
       }
     };
-    loadCampaigns();
+    loadData();
   }, []);
 
   const handleEditClick = (campaign) => {
@@ -33,7 +40,8 @@ export function Campaigns() {
     setEditForm({
       title: campaign.title,
       description: campaign.description,
-      status: campaign.status
+      status: campaign.status,
+      creators: (campaign.creators || []).map(c => c.id)
     });
   };
 
@@ -54,7 +62,16 @@ export function Campaigns() {
 
   const handleCancelEdit = () => {
     setEditingCampaign(null);
-    setEditForm({ title: '', description: '', status: 'pending' });
+    setEditForm({ title: '', description: '', status: 'pending', creators: [] });
+  };
+
+  const toggleCreator = (creatorId) => {
+    setEditForm(prev => ({
+      ...prev,
+      creators: prev.creators.includes(creatorId)
+        ? prev.creators.filter(id => id !== creatorId)
+        : [...prev.creators, creatorId]
+    }));
   };
 
   const stats = [
@@ -340,6 +357,29 @@ export function Campaigns() {
                   <option value="completed">Completed</option>
                   <option value="cancelled">Cancelled</option>
                 </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-neutral-400 mb-2">
+                  Creators ({editForm.creators.length} selected)
+                </label>
+                <div className="max-h-48 overflow-y-auto border border-white/10 rounded-lg bg-neutral-800 p-3 space-y-2">
+                  {creators.map((creator) => (
+                    <label
+                      key={creator.id}
+                      className="flex items-center gap-3 p-2 hover:bg-white/5 rounded cursor-pointer"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={editForm.creators.includes(creator.id)}
+                        onChange={() => toggleCreator(creator.id)}
+                        className="w-4 h-4 rounded border-white/20 bg-neutral-700 text-[#E5C473] focus:ring-2 focus:ring-[#E5C473]"
+                      />
+                      <span className="text-white text-sm">{creator.name}</span>
+                      <span className="text-neutral-500 text-xs">@{creator.handle}</span>
+                    </label>
+                  ))}
+                </div>
               </div>
 
               <div className="flex gap-3 justify-end pt-4">
