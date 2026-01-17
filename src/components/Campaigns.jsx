@@ -3,7 +3,7 @@ import { Rocket, CheckCircle, DollarSign, Eye, Plus, Search } from "lucide-react
 import { getCampaigns } from '../services/campaignsServiceSupabase';
 
 export function Campaigns() {
-  console.log('[CAMPAIGNS] New simple Campaigns component rendering');
+  console.log('[CAMPAIGNS] ===== NEW CAMPAIGNS COMPONENT LOADED - BUILD ' + Date.now() + ' =====');
   const [filter, setFilter] = useState("all");
   const [campaigns, setCampaigns] = useState([]);
   const [loading, setLoading] = useState(true);
