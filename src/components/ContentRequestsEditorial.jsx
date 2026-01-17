@@ -1167,8 +1167,7 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
                   </div>
 
                   {/* Campaign Results Section */}
-                  {hasContent && (
-                    <div className="mt-4">
+                  <div className="mt-4">
                       {/* Toggle Button */}
                       <button
                         onClick={(e) => {
@@ -1198,7 +1197,13 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
 
                           {/* Posts List */}
                           <div className="space-y-2 max-h-96 overflow-y-auto">
-                            {campaignPosts.map((post, idx) => (
+                            {campaignPosts.length === 0 ? (
+                              <div className="text-center py-8 text-[var(--color-text-secondary)]">
+                                <p className="text-sm">No posts added to this campaign yet.</p>
+                                <p className="text-xs mt-1 text-[var(--color-text-tertiary)]">Use the "Add Content" button above to add posts.</p>
+                              </div>
+                            ) : (
+                              campaignPosts.map((post, idx) => (
                               <div
                                 key={`${post.id}-${idx}`}
                                 className="p-3 bg-[var(--color-bg-tertiary)] rounded-lg border border-[var(--color-border)] hover:border-[var(--color-border-hover)] transition-all duration-200"
@@ -1260,12 +1265,12 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
                                   )}
                                 </div>
                               </div>
-                            ))}
+                              ))
+                            )}
                           </div>
                         </div>
                       </div>
-                    </div>
-                  )}
+                  </div>
                 </div>
               )}
           </div>
