@@ -36,7 +36,7 @@ export function Campaigns() {
   ];
 
   return (
-    <section className="py-20 px-6 bg-[#0a0a0a] text-white">
+    <section className="py-20 px-6 bg-[#0a0a0a] text-white min-h-screen">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex items-end justify-between mb-16">
