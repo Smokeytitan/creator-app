@@ -368,62 +368,70 @@ export function Campaigns() {
 
                             {/* Posts List */}
                             <div className="space-y-2 max-h-96 overflow-y-auto">
-                              {campaignPosts.map((post, idx) => (
-                                <div
-                                  key={`${post.id}-${idx}`}
-                                  className="p-3 bg-neutral-800 rounded-lg border border-white/10 hover:border-white/20 transition-all duration-200"
-                                >
-                                  <div className="flex items-start justify-between gap-3">
-                                    <div className="flex-1 min-w-0">
-                                      {/* Creator Info */}
-                                      <div className="flex items-center gap-2 mb-2">
-                                        <span className="text-sm font-semibold text-white truncate">
-                                          {campaign.creators.find(c => c.id === post.creatorId)?.name || 'Unknown'}
-                                        </span>
-                                        <span className="px-2 py-0.5 text-xs bg-[#E5C473]/10 text-[#E5C473] rounded-full border border-[#E5C473]/30">
-                                          {post.platform}
-                                        </span>
+                              {campaignPosts.map((post, idx) => {
+                                // Look up creator from the full creators list, not just campaign creators
+                                const postCreator = creators.find(c => c.id === post.creatorId);
+
+                                return (
+                                  <div
+                                    key={`${post.id}-${idx}`}
+                                    className="p-3 bg-neutral-800 rounded-lg border border-white/10 hover:border-white/20 transition-all duration-200"
+                                  >
+                                    <div className="flex items-start justify-between gap-3">
+                                      <div className="flex-1 min-w-0">
+                                        {/* Creator Info */}
+                                        <div className="flex items-center gap-2 mb-2">
+                                          <span className="text-sm font-semibold text-white truncate">
+                                            {postCreator?.name || 'Unknown Creator'}
+                                          </span>
+                                          {postCreator?.handle && (
+                                            <span className="text-neutral-500 text-xs truncate">@{postCreator.handle}</span>
+                                          )}
+                                          <span className="px-2 py-0.5 text-xs bg-[#E5C473]/10 text-[#E5C473] rounded-full border border-[#E5C473]/30">
+                                            {post.platform}
+                                          </span>
+                                        </div>
+
+                                        {/* Post Metrics */}
+                                        <div className="flex items-center gap-4 text-xs text-neutral-400">
+                                          {post.date && (
+                                            <div className="flex items-center gap-1">
+                                              <Calendar className="w-3 h-3" />
+                                              {new Date(post.date).toLocaleDateString()}
+                                            </div>
+                                          )}
+                                          {post.impressions && (
+                                            <div className="flex items-center gap-1 text-purple-400">
+                                              <Eye className="w-3 h-3" />
+                                              {parseInt(post.impressions).toLocaleString()} impressions
+                                            </div>
+                                          )}
+                                          {post.cost && (
+                                            <div className="flex items-center gap-1 text-green-400">
+                                              <DollarSign className="w-3 h-3" />
+                                              {post.cost}
+                                            </div>
+                                          )}
+                                        </div>
                                       </div>
 
-                                      {/* Post Metrics */}
-                                      <div className="flex items-center gap-4 text-xs text-neutral-400">
-                                        {post.date && (
-                                          <div className="flex items-center gap-1">
-                                            <Calendar className="w-3 h-3" />
-                                            {new Date(post.date).toLocaleDateString()}
-                                          </div>
-                                        )}
-                                        {post.impressions && (
-                                          <div className="flex items-center gap-1 text-purple-400">
-                                            <Eye className="w-3 h-3" />
-                                            {parseInt(post.impressions).toLocaleString()} impressions
-                                          </div>
-                                        )}
-                                        {post.cost && (
-                                          <div className="flex items-center gap-1 text-green-400">
-                                            <DollarSign className="w-3 h-3" />
-                                            {post.cost}
-                                          </div>
-                                        )}
-                                      </div>
+                                      {/* Link */}
+                                      {post.link && (
+                                        <a
+                                          href={post.link}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          onClick={(e) => e.stopPropagation()}
+                                          className="flex items-center gap-1 text-xs text-[#E5C473] hover:text-[#d4b563] transition-colors whitespace-nowrap"
+                                        >
+                                          View
+                                          <ExternalLink className="w-3 h-3" />
+                                        </a>
+                                      )}
                                     </div>
-
-                                    {/* Link */}
-                                    {post.link && (
-                                      <a
-                                        href={post.link}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        onClick={(e) => e.stopPropagation()}
-                                        className="flex items-center gap-1 text-xs text-[#E5C473] hover:text-[#d4b563] transition-colors whitespace-nowrap"
-                                      >
-                                        View
-                                        <ExternalLink className="w-3 h-3" />
-                                      </a>
-                                    )}
                                   </div>
-                                </div>
-                              ))}
+                                );
+                              })}
                             </div>
                           </div>
                         </div>
