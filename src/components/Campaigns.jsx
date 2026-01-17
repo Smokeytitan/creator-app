@@ -219,9 +219,6 @@ export function Campaigns() {
                               <span>{campaign.creators.length} creators</span>
                             </div>
                           )}
-                          <div className="flex items-center gap-2 text-neutral-500">
-                            <span>Due: {new Date(campaign.dueDate).toLocaleDateString()}</span>
-                          </div>
                         </div>
                       </div>
 
