@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Plus, Calendar, User, CheckCircle, Clock, XCircle, Trash2, Edit2, Save, X, Search, RefreshCw, Eye, DollarSign, Download, FileText, Loader2 } from 'lucide-react';
+import { Plus, Calendar, User, CheckCircle, Clock, XCircle, Trash2, Edit2, Save, X, Search, RefreshCw, Eye, DollarSign, Download, FileText, Loader2, ChevronDown, ExternalLink, TrendingUp } from 'lucide-react';
 import ContentRequestModal from './ContentRequestModal';
 import { extractTweetId, fetchTweets } from '../services/twitterService';
 import { createCampaign, updateCampaign, deleteCampaign as deleteCampaignSupabase, getCampaigns } from '../services/campaignsServiceSupabase';
@@ -12,6 +12,7 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
   const [filterCreatorId, setFilterCreatorId] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [editingRequestId, setEditingRequestId] = useState(null);
+  const [expandedCampaignId, setExpandedCampaignId] = useState(null);
   const [editRequestForm, setEditRequestForm] = useState({
     title: '',
     description: '',
@@ -781,6 +782,33 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
     };
   };
 
+  // Get all posts for a campaign
+  const getCampaignPosts = (request) => {
+    const posts = [];
+    const campaignCreators = request.creators || [];
+
+    campaignCreators.forEach(campaignCreator => {
+      const creator = creators.find(c => c.id === campaignCreator.id);
+      if (!creator) return;
+
+      const creatorPosts = (creator.posts || []).filter(post =>
+        post.campaign_id === request.id
+      );
+
+      creatorPosts.forEach(post => {
+        posts.push({
+          ...post,
+          creatorName: creator.name,
+          creatorHandle: creator.handle,
+          creatorId: creator.id
+        });
+      });
+    });
+
+    // Sort by date descending (newest first)
+    return posts.sort((a, b) => new Date(b.date) - new Date(a.date));
+  };
+
   return (
     <div className="space-y-8 pb-12">
       {/* Hero Header */}
@@ -897,11 +925,23 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
 
       {/* Requests Grid */}
       <div className={`grid gap-4 ${filterStatus === 'completed' ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1'}`} style={{ animation: 'fadeInUp 0.6s ease-out 0.3s both' }}>
-        {filteredRequests.map((request, index) => (
+        {filteredRequests.map((request, index) => {
+          const isExpanded = expandedCampaignId === request.id;
+          const campaignPosts = getCampaignPosts(request);
+          const hasContent = campaignPosts.length > 0;
+
+          return (
           <div
             key={request.id}
-            className="card-editorial p-4 sm:p-6 hover:shadow-lg transition-all duration-200"
+            className="card-editorial p-4 sm:p-6 hover:shadow-lg transition-all duration-200 cursor-pointer"
             style={{ animation: `fadeInUp 0.3s ease-out ${index * 0.03}s both` }}
+            onClick={(e) => {
+              // Don't toggle if clicking on buttons or inputs
+              if (e.target.closest('button') || e.target.closest('input') || e.target.closest('select') || e.target.closest('textarea') || e.target.closest('a')) return;
+              if (hasContent) {
+                setExpandedCampaignId(isExpanded ? null : request.id);
+              }
+            }}
           >
               {editingRequestId === request.id ? (
                 <div className="space-y-4">
@@ -1124,10 +1164,112 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
                       Add Content
                     </button>
                   </div>
+
+                  {/* Campaign Results Section */}
+                  {hasContent && (
+                    <div className="mt-4">
+                      {/* Toggle Button */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setExpandedCampaignId(isExpanded ? null : request.id);
+                        }}
+                        className="w-full flex items-center justify-between px-4 py-2 bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg transition-all duration-200"
+                      >
+                        <span className="flex items-center gap-2 text-sm font-semibold text-[var(--color-text-primary)]">
+                          <TrendingUp className="w-4 h-4 text-[var(--color-accent-primary)]" />
+                          View Campaign Results ({campaignPosts.length} post{campaignPosts.length !== 1 ? 's' : ''})
+                        </span>
+                        <ChevronDown className={`w-4 h-4 text-[var(--color-accent-primary)] transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
+                      </button>
+
+                      {/* Expandable Content */}
+                      <div
+                        className={`overflow-hidden transition-all duration-500 ease-in-out ${
+                          isExpanded ? 'max-h-[2000px] opacity-100 mt-4' : 'max-h-0 opacity-0'
+                        }`}
+                      >
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between pb-2 border-b border-[var(--color-border)]">
+                            <h4 className="text-sm font-semibold text-[var(--color-text-primary)]">All Campaign Posts</h4>
+                            <span className="text-xs text-[var(--color-text-tertiary)] font-mono">{campaignPosts.length} total</span>
+                          </div>
+
+                          {/* Posts List */}
+                          <div className="space-y-2 max-h-96 overflow-y-auto">
+                            {campaignPosts.map((post, idx) => (
+                              <div
+                                key={`${post.id}-${idx}`}
+                                className="p-3 bg-[var(--color-bg-tertiary)] rounded-lg border border-[var(--color-border)] hover:border-[var(--color-border-hover)] transition-all duration-200"
+                              >
+                                <div className="flex items-start justify-between gap-3">
+                                  <div className="flex-1 min-w-0">
+                                    {/* Creator Info */}
+                                    <div className="flex items-center gap-2 mb-2">
+                                      <span className="text-sm font-semibold text-[var(--color-text-primary)] truncate">{post.creatorName}</span>
+                                      <span className="text-xs text-[var(--color-text-tertiary)]">{post.creatorHandle}</span>
+                                      <span className="px-2 py-0.5 text-xs bg-[var(--color-accent-primary)]/10 text-[var(--color-accent-primary)] rounded-full border border-[var(--color-accent-primary)]/30">
+                                        {post.platform}
+                                      </span>
+                                    </div>
+
+                                    {/* Post Metrics */}
+                                    <div className="flex items-center gap-4 text-xs text-[var(--color-text-secondary)]">
+                                      {post.date && (
+                                        <div className="flex items-center gap-1">
+                                          <Calendar className="w-3 h-3" />
+                                          {new Date(post.date).toLocaleDateString()}
+                                        </div>
+                                      )}
+                                      {post.impressions && (
+                                        <div className="flex items-center gap-1 text-[var(--color-accent-primary)]">
+                                          <Eye className="w-3 h-3" />
+                                          {parseFloat(post.impressions).toLocaleString()} impressions
+                                        </div>
+                                      )}
+                                      {post.cost && (
+                                        <div className="flex items-center gap-1 text-green-500">
+                                          <DollarSign className="w-3 h-3" />
+                                          {post.cost}
+                                        </div>
+                                      )}
+                                    </div>
+
+                                    {/* Additional Metrics */}
+                                    {(post.likes || post.comments) && (
+                                      <div className="flex items-center gap-3 mt-1 text-xs text-[var(--color-text-tertiary)]">
+                                        {post.likes && <span>♥ {post.likes} likes</span>}
+                                        {post.comments && <span>💬 {post.comments} comments</span>}
+                                      </div>
+                                    )}
+                                  </div>
+
+                                  {/* Link */}
+                                  {post.link && (
+                                    <a
+                                      href={post.link}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      onClick={(e) => e.stopPropagation()}
+                                      className="flex items-center gap-1 text-xs text-[var(--color-accent-primary)] hover:text-[var(--color-accent-secondary)] transition-colors whitespace-nowrap"
+                                    >
+                                      View
+                                      <ExternalLink className="w-3 h-3" />
+                                    </a>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
           </div>
-        ))}
+          );
+        })}
         {filteredRequests.length === 0 && (
           <div className="col-span-full text-center py-12">
             <p className="text-[var(--color-text-secondary)]">No campaigns found.</p>
