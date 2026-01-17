@@ -189,40 +189,63 @@ export function Campaigns() {
                 if (filter === "archived") return campaign.status === "cancelled";
                 return true;
               })
-              .map((campaign) => (
-                <div
-                  key={campaign.id}
-                  className="bg-neutral-900/50 border border-white/10 rounded-2xl p-6 hover:border-white/20 transition-colors"
-                >
-                  <div className="flex items-start justify-between mb-4">
-                    <div>
-                      <h3 className="text-xl font-bold mb-2">{campaign.title}</h3>
-                      <p className="text-neutral-400 text-sm">{campaign.description}</p>
-                    </div>
-                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                      campaign.status === 'completed' ? 'bg-green-500/10 text-green-400' :
-                      campaign.status === 'in-progress' ? 'bg-blue-500/10 text-blue-400' :
-                      campaign.status === 'pending' ? 'bg-yellow-500/10 text-yellow-400' :
-                      'bg-neutral-500/10 text-neutral-400'
-                    }`}>
-                      {campaign.status}
-                    </span>
-                  </div>
+              .map((campaign) => {
+                // Calculate total impressions and cost from posts
+                const posts = campaign.posts || [];
+                const totalImpressions = posts.reduce((sum, post) => {
+                  const postImpressions = post.platforms?.reduce((pSum, platform) => {
+                    return pSum + (parseInt(platform.impressions) || 0);
+                  }, 0) || 0;
+                  return sum + postImpressions;
+                }, 0);
 
-                  <div className="flex items-center gap-6 text-sm text-neutral-400">
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium">Due:</span>
-                      <span>{new Date(campaign.dueDate).toLocaleDateString()}</span>
-                    </div>
-                    {campaign.creators && campaign.creators.length > 0 && (
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium">Creators:</span>
-                        <span>{campaign.creators.length}</span>
+                const totalCost = posts.reduce((sum, post) => {
+                  return sum + (parseFloat(post.cost) || 0);
+                }, 0);
+
+                return (
+                  <div
+                    key={campaign.id}
+                    className="bg-neutral-900/50 border border-white/10 rounded-2xl p-6 hover:border-white/20 transition-colors"
+                  >
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex-1">
+                        <h3 className="text-xl font-bold mb-2">{campaign.title}</h3>
+                        <p className="text-neutral-400 text-sm mb-4">{campaign.description}</p>
+
+                        {/* Metrics Row */}
+                        <div className="flex items-center gap-6 text-sm">
+                          <div className="flex items-center gap-2">
+                            <Eye className="w-4 h-4 text-purple-400" />
+                            <span className="text-neutral-400">{totalImpressions.toLocaleString()} impressions</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <DollarSign className="w-4 h-4 text-yellow-400" />
+                            <span className="text-neutral-400">${totalCost.toLocaleString()} cost</span>
+                          </div>
+                          {campaign.creators && campaign.creators.length > 0 && (
+                            <div className="flex items-center gap-2 text-neutral-500">
+                              <span>{campaign.creators.length} creators</span>
+                            </div>
+                          )}
+                          <div className="flex items-center gap-2 text-neutral-500">
+                            <span>Due: {new Date(campaign.dueDate).toLocaleDateString()}</span>
+                          </div>
+                        </div>
                       </div>
-                    )}
+
+                      <span className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${
+                        campaign.status === 'completed' ? 'bg-green-500/10 text-green-400' :
+                        campaign.status === 'in-progress' ? 'bg-blue-500/10 text-blue-400' :
+                        campaign.status === 'pending' ? 'bg-yellow-500/10 text-yellow-400' :
+                        'bg-neutral-500/10 text-neutral-400'
+                      }`}>
+                        {campaign.status}
+                      </span>
+                    </div>
                   </div>
-                </div>
-              ))
+                );
+              })
             }
 
             {campaigns.filter(campaign => {
