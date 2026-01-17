@@ -1,9 +1,26 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Rocket, CheckCircle, DollarSign, Eye, Plus, Search } from "lucide-react";
+import { getCampaigns } from '../services/campaignsServiceSupabase';
 
 export function Campaigns() {
   console.log('[CAMPAIGNS] New simple Campaigns component rendering');
   const [filter, setFilter] = useState("all");
+  const [campaigns, setCampaigns] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadCampaigns = async () => {
+      try {
+        const data = await getCampaigns();
+        setCampaigns(data);
+      } catch (error) {
+        console.error('Error loading campaigns:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadCampaigns();
+  }, []);
 
   const stats = [
     {
@@ -153,6 +170,74 @@ export function Campaigns() {
             </button>
           </div>
         </div>
+
+        {/* Campaign Cards */}
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="text-center">
+              <div className="inline-block h-10 w-10 animate-spin rounded-full border-4 border-solid border-white border-r-transparent"></div>
+              <p className="mt-4 text-neutral-400 font-medium">Loading campaigns...</p>
+            </div>
+          </div>
+        ) : (
+          <div className="grid gap-6 mt-8">
+            {campaigns
+              .filter(campaign => {
+                if (filter === "all") return true;
+                if (filter === "active") return campaign.status === "in-progress";
+                if (filter === "done") return campaign.status === "completed";
+                if (filter === "archived") return campaign.status === "cancelled";
+                return true;
+              })
+              .map((campaign) => (
+                <div
+                  key={campaign.id}
+                  className="bg-neutral-900/50 border border-white/10 rounded-2xl p-6 hover:border-white/20 transition-colors"
+                >
+                  <div className="flex items-start justify-between mb-4">
+                    <div>
+                      <h3 className="text-xl font-bold mb-2">{campaign.title}</h3>
+                      <p className="text-neutral-400 text-sm">{campaign.description}</p>
+                    </div>
+                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                      campaign.status === 'completed' ? 'bg-green-500/10 text-green-400' :
+                      campaign.status === 'in-progress' ? 'bg-blue-500/10 text-blue-400' :
+                      campaign.status === 'pending' ? 'bg-yellow-500/10 text-yellow-400' :
+                      'bg-neutral-500/10 text-neutral-400'
+                    }`}>
+                      {campaign.status}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-6 text-sm text-neutral-400">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">Due:</span>
+                      <span>{new Date(campaign.dueDate).toLocaleDateString()}</span>
+                    </div>
+                    {campaign.creators && campaign.creators.length > 0 && (
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">Creators:</span>
+                        <span>{campaign.creators.length}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))
+            }
+
+            {campaigns.filter(campaign => {
+              if (filter === "all") return true;
+              if (filter === "active") return campaign.status === "in-progress";
+              if (filter === "done") return campaign.status === "completed";
+              if (filter === "archived") return campaign.status === "cancelled";
+              return true;
+            }).length === 0 && (
+              <div className="text-center py-12">
+                <p className="text-neutral-400">No campaigns found</p>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </section>
   );
