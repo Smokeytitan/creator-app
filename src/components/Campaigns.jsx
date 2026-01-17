@@ -37,15 +37,44 @@ export function Campaigns() {
     loadData();
   }, []);
 
+  const calculateEstimates = (selectedCreatorIds) => {
+    const selectedCreators = creators.filter(c => selectedCreatorIds.includes(c.id));
+
+    // Calculate total estimated cost based on cost per post
+    const totalCost = selectedCreators.reduce((sum, creator) => {
+      const cost = parseFloat(creator.costPerPost) || 0;
+      return sum + cost;
+    }, 0);
+
+    // Calculate average impressions per creator based on their post history
+    const totalImpressions = selectedCreators.reduce((sum, creator) => {
+      if (!creator.posts || creator.posts.length === 0) return sum;
+
+      // Calculate average impressions from their posts
+      const postImpressions = creator.posts.map(p => parseInt(p.impressions) || 0);
+      const avgImpressions = postImpressions.reduce((a, b) => a + b, 0) / postImpressions.length;
+
+      return sum + avgImpressions;
+    }, 0);
+
+    return {
+      estimatedCost: Math.round(totalCost * 100) / 100, // Round to 2 decimals
+      estimatedImpressions: Math.round(totalImpressions)
+    };
+  };
+
   const handleEditClick = (campaign) => {
     setEditingCampaign(campaign);
+    const creatorIds = (campaign.creators || []).map(c => c.id);
+    const estimates = calculateEstimates(creatorIds);
+
     setEditForm({
       title: campaign.title,
       description: campaign.description,
       status: campaign.status,
-      estimatedCost: campaign.estimatedCost || 0,
-      estimatedImpressions: campaign.estimatedImpressions || 0,
-      creators: (campaign.creators || []).map(c => c.id)
+      estimatedCost: estimates.estimatedCost,
+      estimatedImpressions: estimates.estimatedImpressions,
+      creators: creatorIds
     });
   };
 
@@ -70,12 +99,20 @@ export function Campaigns() {
   };
 
   const toggleCreator = (creatorId) => {
-    setEditForm(prev => ({
-      ...prev,
-      creators: prev.creators.includes(creatorId)
+    setEditForm(prev => {
+      const newCreators = prev.creators.includes(creatorId)
         ? prev.creators.filter(id => id !== creatorId)
-        : [...prev.creators, creatorId]
-    }));
+        : [...prev.creators, creatorId];
+
+      // Recalculate estimates based on new creator selection
+      const estimates = calculateEstimates(newCreators);
+
+      return {
+        ...prev,
+        creators: newCreators,
+        ...estimates
+      };
+    });
   };
 
   const stats = [
@@ -369,13 +406,12 @@ export function Campaigns() {
                     Estimated Cost ($)
                   </label>
                   <input
-                    type="number"
-                    value={editForm.estimatedCost}
-                    onChange={(e) => setEditForm({ ...editForm, estimatedCost: parseFloat(e.target.value) || 0 })}
-                    className="w-full bg-neutral-800 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-white/20"
-                    min="0"
-                    step="0.01"
+                    type="text"
+                    value={`$${editForm.estimatedCost.toFixed(2)}`}
+                    readOnly
+                    className="w-full bg-neutral-800/50 border border-white/10 rounded-lg px-4 py-3 text-neutral-300 cursor-not-allowed"
                   />
+                  <p className="text-xs text-neutral-500 mt-1">Auto-calculated from creator costs</p>
                 </div>
 
                 <div>
@@ -383,13 +419,12 @@ export function Campaigns() {
                     Estimated Impressions
                   </label>
                   <input
-                    type="number"
-                    value={editForm.estimatedImpressions}
-                    onChange={(e) => setEditForm({ ...editForm, estimatedImpressions: parseInt(e.target.value) || 0 })}
-                    className="w-full bg-neutral-800 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-white/20"
-                    min="0"
-                    step="1"
+                    type="text"
+                    value={editForm.estimatedImpressions.toLocaleString()}
+                    readOnly
+                    className="w-full bg-neutral-800/50 border border-white/10 rounded-lg px-4 py-3 text-neutral-300 cursor-not-allowed"
                   />
+                  <p className="text-xs text-neutral-500 mt-1">Based on creator averages</p>
                 </div>
               </div>
 
