@@ -789,13 +789,30 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
     const posts = [];
     const campaignCreators = request.creators || [];
 
+    console.log(`[getCampaignPosts] Campaign "${request.title}" (ID: ${request.id})`);
+    console.log(`[getCampaignPosts] Campaign has ${campaignCreators.length} creators:`, campaignCreators.map(c => c.name || c.id));
+
     campaignCreators.forEach(campaignCreator => {
       const creator = creators.find(c => c.id === campaignCreator.id);
-      if (!creator) return;
+      if (!creator) {
+        console.log(`[getCampaignPosts] Creator ${campaignCreator.id} not found in creators array`);
+        return;
+      }
 
-      const creatorPosts = (creator.posts || []).filter(post =>
-        post.campaign_id === request.id
-      );
+      console.log(`[getCampaignPosts] Checking creator "${creator.name}" - has ${creator.posts?.length || 0} posts`);
+      if (creator.posts && creator.posts.length > 0) {
+        console.log(`[getCampaignPosts] Sample post from ${creator.name}:`, creator.posts[0]);
+      }
+
+      const creatorPosts = (creator.posts || []).filter(post => {
+        const matches = post.campaign_id === request.id;
+        if (!matches && post.campaign_id) {
+          console.log(`[getCampaignPosts] Post ${post.id} has campaign_id ${post.campaign_id}, doesn't match ${request.id}`);
+        }
+        return matches;
+      });
+
+      console.log(`[getCampaignPosts] Found ${creatorPosts.length} matching posts for creator "${creator.name}"`);
 
       creatorPosts.forEach(post => {
         posts.push({
@@ -807,7 +824,7 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
       });
     });
 
-    // Sort by date descending (newest first)
+    console.log(`[getCampaignPosts] Total posts found: ${posts.length}`);
     return posts.sort((a, b) => new Date(b.date) - new Date(a.date));
   };
 
