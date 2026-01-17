@@ -370,7 +370,18 @@ export function Campaigns() {
                             <div className="space-y-2 max-h-96 overflow-y-auto">
                               {campaignPosts.map((post, idx) => {
                                 // Look up creator from the full creators list, not just campaign creators
-                                const postCreator = creators.find(c => c.id === post.creatorId);
+                                // Try both direct match and string/number conversion for compatibility
+                                const postCreator = creators.find(c =>
+                                  c.id === post.creatorId ||
+                                  String(c.id) === String(post.creatorId) ||
+                                  Number(c.id) === Number(post.creatorId)
+                                );
+
+                                // Debug log for first post to diagnose ID mismatch
+                                if (idx === 0 && !postCreator) {
+                                  console.log('Debug - Post creator ID:', post.creatorId, typeof post.creatorId);
+                                  console.log('Debug - Available creator IDs:', creators.slice(0, 3).map(c => ({ id: c.id, type: typeof c.id, name: c.name })));
+                                }
 
                                 return (
                                   <div
