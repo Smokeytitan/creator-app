@@ -80,6 +80,7 @@ const transformFromDB = (row) => ({
   active: row.active !== false,
   posts: (row.posts || []).map(post => ({
     id: post.id,
+    campaign_id: post.campaign_id || null,
     description: post.description || '',
     platform: post.platform || 'X',
     date: post.date || '',
