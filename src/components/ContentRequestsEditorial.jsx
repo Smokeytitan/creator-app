@@ -930,18 +930,17 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
           const campaignPosts = getCampaignPosts(request);
           const hasContent = campaignPosts.length > 0;
 
+          // Debug logging
+          console.log('Campaign:', request.title, 'Posts found:', campaignPosts.length, 'HasContent:', hasContent, 'Campaign ID:', request.id);
+          if (campaignPosts.length > 0) {
+            console.log('Sample post:', campaignPosts[0]);
+          }
+
           return (
           <div
             key={request.id}
-            className="card-editorial p-4 sm:p-6 hover:shadow-lg transition-all duration-200 cursor-pointer"
+            className="card-editorial p-4 sm:p-6 hover:shadow-lg transition-all duration-200"
             style={{ animation: `fadeInUp 0.3s ease-out ${index * 0.03}s both` }}
-            onClick={(e) => {
-              // Don't toggle if clicking on buttons or inputs
-              if (e.target.closest('button') || e.target.closest('input') || e.target.closest('select') || e.target.closest('textarea') || e.target.closest('a')) return;
-              if (hasContent) {
-                setExpandedCampaignId(isExpanded ? null : request.id);
-              }
-            }}
           >
               {editingRequestId === request.id ? (
                 <div className="space-y-4">
