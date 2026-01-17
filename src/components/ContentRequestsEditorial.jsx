@@ -427,7 +427,8 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
               impressions: platformData.impressions,
               likes: platformData.likes || '',
               comments: platformData.comments || '',
-              lastScanned: platform === 'X' && platformData.impressions ? new Date().toISOString() : null
+              lastScanned: platform === 'X' && platformData.impressions ? new Date().toISOString() : null,
+              campaign_id: request.id
             };
           });
 
@@ -496,7 +497,8 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
                 impressions: platformData.impressions,
                 likes: platformData.likes || '',
                 comments: platformData.comments || '',
-                lastScanned: platform === 'X' && platformData.impressions ? new Date().toISOString() : null
+                lastScanned: platform === 'X' && platformData.impressions ? new Date().toISOString() : null,
+                campaign_id: request.id
               };
             });
 
