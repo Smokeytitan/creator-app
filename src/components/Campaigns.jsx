@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Rocket, CheckCircle, DollarSign, Eye, Plus, Search } from "lucide-react";
 
 export function Campaigns() {
+  console.log('[CAMPAIGNS] New simple Campaigns component rendering');
   const [filter, setFilter] = useState("all");
 
   const stats = [
