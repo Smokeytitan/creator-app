@@ -209,6 +209,7 @@ const FlashCampaignDashboard = () => {
     const toggleExpanded = (e) => {
       // Don't toggle if clicking on buttons
       if (e.target.closest('button')) return;
+      console.log('Toggle clicked:', campaign.name, 'Currently expanded:', isExpanded);
       setExpandedCampaignId(isExpanded ? null : campaign.id);
     };
 
