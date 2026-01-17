@@ -1,12 +1,18 @@
 import { useState, useEffect } from "react";
-import { Rocket, CheckCircle, DollarSign, Eye, Plus, Search } from "lucide-react";
-import { getCampaigns } from '../services/campaignsServiceSupabase';
+import { Rocket, CheckCircle, DollarSign, Eye, Plus, Search, X } from "lucide-react";
+import { getCampaigns, updateCampaign } from '../services/campaignsServiceSupabase';
 
 export function Campaigns() {
   console.log('[CAMPAIGNS] ===== NEW CAMPAIGNS COMPONENT LOADED - BUILD ' + Date.now() + ' =====');
   const [filter, setFilter] = useState("all");
   const [campaigns, setCampaigns] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [editingCampaign, setEditingCampaign] = useState(null);
+  const [editForm, setEditForm] = useState({
+    title: '',
+    description: '',
+    status: 'pending'
+  });
 
   useEffect(() => {
     const loadCampaigns = async () => {
@@ -21,6 +27,35 @@ export function Campaigns() {
     };
     loadCampaigns();
   }, []);
+
+  const handleEditClick = (campaign) => {
+    setEditingCampaign(campaign);
+    setEditForm({
+      title: campaign.title,
+      description: campaign.description,
+      status: campaign.status
+    });
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingCampaign) return;
+
+    try {
+      const updated = await updateCampaign(editingCampaign.id, editForm);
+      if (updated) {
+        setCampaigns(campaigns.map(c => c.id === editingCampaign.id ? updated : c));
+        setEditingCampaign(null);
+      }
+    } catch (error) {
+      console.error('Error updating campaign:', error);
+      alert('Failed to update campaign');
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingCampaign(null);
+    setEditForm({ title: '', description: '', status: 'pending' });
+  };
 
   const stats = [
     {
@@ -197,7 +232,8 @@ export function Campaigns() {
                 return (
                   <div
                     key={campaign.id}
-                    className="bg-neutral-900/50 border border-white/10 rounded-2xl p-6 hover:border-white/20 transition-colors"
+                    onClick={() => handleEditClick(campaign)}
+                    className="bg-neutral-900/50 border border-white/10 rounded-2xl p-6 hover:border-white/20 transition-colors cursor-pointer"
                   >
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex-1">
@@ -250,6 +286,80 @@ export function Campaigns() {
           </div>
         )}
       </div>
+
+      {/* Edit Modal */}
+      {editingCampaign && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-neutral-900 border border-white/10 rounded-2xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-white">Edit Campaign</h2>
+              <button
+                onClick={handleCancelEdit}
+                className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5 text-neutral-400" />
+              </button>
+            </div>
+
+            <div className="space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-neutral-400 mb-2">
+                  Title
+                </label>
+                <input
+                  type="text"
+                  value={editForm.title}
+                  onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
+                  className="w-full bg-neutral-800 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-white/20"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-neutral-400 mb-2">
+                  Description
+                </label>
+                <textarea
+                  value={editForm.description}
+                  onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                  rows={4}
+                  className="w-full bg-neutral-800 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-white/20"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-neutral-400 mb-2">
+                  Status
+                </label>
+                <select
+                  value={editForm.status}
+                  onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}
+                  className="w-full bg-neutral-800 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-white/20"
+                >
+                  <option value="pending">Pending</option>
+                  <option value="in-progress">In Progress</option>
+                  <option value="completed">Completed</option>
+                  <option value="cancelled">Cancelled</option>
+                </select>
+              </div>
+
+              <div className="flex gap-3 justify-end pt-4">
+                <button
+                  onClick={handleCancelEdit}
+                  className="px-6 py-3 bg-neutral-800 hover:bg-neutral-700 text-white rounded-lg font-medium transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSaveEdit}
+                  className="px-6 py-3 bg-[#E5C473] hover:bg-[#d4b563] text-black rounded-lg font-medium transition-colors"
+                >
+                  Save Changes
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
