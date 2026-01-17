@@ -215,7 +215,7 @@ const FlashCampaignDashboard = () => {
     return (
       <div
         key={campaign.id}
-        className="card-editorial hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] cursor-pointer group relative overflow-hidden"
+        className="card-editorial hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] cursor-pointer group relative overflow-visible"
         style={{
           animation: 'fadeInUp 0.4s ease-out forwards',
           animationDelay: `${index * 0.05}s`,
@@ -224,7 +224,7 @@ const FlashCampaignDashboard = () => {
         onClick={toggleExpanded}
       >
         {/* Hover gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-br from-amber-500/0 to-amber-600/0 group-hover:from-amber-500/5 group-hover:to-amber-600/10 transition-all duration-300 pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-br from-amber-500/0 to-amber-600/0 group-hover:from-amber-500/5 group-hover:to-amber-600/10 transition-all duration-300 pointer-events-none rounded-lg" />
         {/* Header */}
         <div className="flex items-start justify-between mb-4 relative z-10">
           <div className="flex-1">
@@ -304,7 +304,7 @@ const FlashCampaignDashboard = () => {
         {/* Expandable Content */}
         <div
           className={`relative z-10 overflow-hidden transition-all duration-500 ease-in-out ${
-            isExpanded ? 'max-h-96 opacity-100 mb-4' : 'max-h-0 opacity-0'
+            isExpanded ? 'max-h-[1000px] opacity-100 mb-4' : 'max-h-0 opacity-0'
           }`}
         >
           <div className="border-t border-amber-500/20 pt-4 space-y-4">
