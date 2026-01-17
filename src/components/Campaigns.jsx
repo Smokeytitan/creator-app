@@ -551,21 +551,48 @@ export function Campaigns() {
                   Creators ({editForm.creators.length} selected)
                 </label>
                 <div className="max-h-48 overflow-y-auto border border-white/10 rounded-lg bg-neutral-800 p-3 space-y-2">
-                  {creators.map((creator) => (
-                    <label
-                      key={creator.id}
-                      className="flex items-center gap-3 p-2 hover:bg-white/5 rounded cursor-pointer"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={editForm.creators.includes(creator.id)}
-                        onChange={() => toggleCreator(creator.id)}
-                        className="w-4 h-4 rounded border-white/20 bg-neutral-700 text-[#E5C473] focus:ring-2 focus:ring-[#E5C473]"
-                      />
-                      <span className="text-white text-sm">{creator.name}</span>
-                      <span className="text-neutral-500 text-xs">@{creator.handle}</span>
-                    </label>
-                  ))}
+                  {creators.map((creator) => {
+                    const costPerPost = parseFloat(creator.costPerPost) || 0;
+                    const avgImpressions = creator.posts && creator.posts.length > 0
+                      ? Math.round(creator.posts.reduce((sum, p) => sum + (parseInt(p.impressions) || 0), 0) / creator.posts.length)
+                      : 0;
+
+                    return (
+                      <label
+                        key={creator.id}
+                        className="flex items-center justify-between gap-3 p-2 hover:bg-white/5 rounded cursor-pointer"
+                      >
+                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                          <input
+                            type="checkbox"
+                            checked={editForm.creators.includes(creator.id)}
+                            onChange={() => toggleCreator(creator.id)}
+                            className="w-4 h-4 rounded border-white/20 bg-neutral-700 text-[#E5C473] focus:ring-2 focus:ring-[#E5C473] flex-shrink-0"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="text-white text-sm font-medium truncate">{creator.name}</span>
+                              <span className="text-neutral-500 text-xs truncate">@{creator.handle}</span>
+                            </div>
+                            <div className="flex items-center gap-3 mt-0.5 text-xs">
+                              {costPerPost > 0 && (
+                                <span className="text-green-400 flex items-center gap-1">
+                                  <DollarSign className="w-3 h-3" />
+                                  ${costPerPost.toFixed(2)}/post
+                                </span>
+                              )}
+                              {avgImpressions > 0 && (
+                                <span className="text-purple-400 flex items-center gap-1">
+                                  <Eye className="w-3 h-3" />
+                                  {avgImpressions.toLocaleString()} avg
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </label>
+                    );
+                  })}
                 </div>
               </div>
 
