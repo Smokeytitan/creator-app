@@ -190,18 +190,9 @@ export function Campaigns() {
                 return true;
               })
               .map((campaign) => {
-                // Calculate total impressions and cost from posts
-                const posts = campaign.posts || [];
-                const totalImpressions = posts.reduce((sum, post) => {
-                  const postImpressions = post.platforms?.reduce((pSum, platform) => {
-                    return pSum + (parseInt(platform.impressions) || 0);
-                  }, 0) || 0;
-                  return sum + postImpressions;
-                }, 0);
-
-                const totalCost = posts.reduce((sum, post) => {
-                  return sum + (parseFloat(post.cost) || 0);
-                }, 0);
+                // Use the pre-calculated actual impressions and cost from the service
+                const totalImpressions = campaign.actualImpressions || 0;
+                const totalCost = campaign.actualCost || 0;
 
                 return (
                   <div
