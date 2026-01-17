@@ -14,6 +14,8 @@ export function Campaigns() {
     title: '',
     description: '',
     status: 'pending',
+    estimatedCost: 0,
+    estimatedImpressions: 0,
     creators: []
   });
 
@@ -41,6 +43,8 @@ export function Campaigns() {
       title: campaign.title,
       description: campaign.description,
       status: campaign.status,
+      estimatedCost: campaign.estimatedCost || 0,
+      estimatedImpressions: campaign.estimatedImpressions || 0,
       creators: (campaign.creators || []).map(c => c.id)
     });
   };
@@ -62,7 +66,7 @@ export function Campaigns() {
 
   const handleCancelEdit = () => {
     setEditingCampaign(null);
-    setEditForm({ title: '', description: '', status: 'pending', creators: [] });
+    setEditForm({ title: '', description: '', status: 'pending', estimatedCost: 0, estimatedImpressions: 0, creators: [] });
   };
 
   const toggleCreator = (creatorId) => {
@@ -357,6 +361,36 @@ export function Campaigns() {
                   <option value="completed">Completed</option>
                   <option value="cancelled">Cancelled</option>
                 </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-neutral-400 mb-2">
+                    Estimated Cost ($)
+                  </label>
+                  <input
+                    type="number"
+                    value={editForm.estimatedCost}
+                    onChange={(e) => setEditForm({ ...editForm, estimatedCost: parseFloat(e.target.value) || 0 })}
+                    className="w-full bg-neutral-800 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-white/20"
+                    min="0"
+                    step="0.01"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-neutral-400 mb-2">
+                    Estimated Impressions
+                  </label>
+                  <input
+                    type="number"
+                    value={editForm.estimatedImpressions}
+                    onChange={(e) => setEditForm({ ...editForm, estimatedImpressions: parseInt(e.target.value) || 0 })}
+                    className="w-full bg-neutral-800 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-white/20"
+                    min="0"
+                    step="1"
+                  />
+                </div>
               </div>
 
               <div>
