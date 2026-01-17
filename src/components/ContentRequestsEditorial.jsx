@@ -1167,7 +1167,7 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
                   </div>
 
                   {/* Campaign Results Section */}
-                  <div className="mt-4">
+                  <div className="mt-4" style={{ display: 'block', visibility: 'visible' }}>
                       {/* Toggle Button */}
                       <button
                         onClick={(e) => {
@@ -1175,6 +1175,7 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
                           setExpandedCampaignId(isExpanded ? null : request.id);
                         }}
                         className="w-full flex items-center justify-between px-4 py-2 bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg transition-all duration-200"
+                        style={{ display: 'flex', visibility: 'visible' }}
                       >
                         <span className="flex items-center gap-2 text-sm font-semibold text-[var(--color-text-primary)]">
                           <TrendingUp className="w-4 h-4 text-[var(--color-accent-primary)]" />
