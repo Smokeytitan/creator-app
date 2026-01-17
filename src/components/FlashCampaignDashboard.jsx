@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Plus, Zap, Clock, CheckCircle, XCircle, Eye, Calendar, Tag, Trophy, Trash2, RefreshCw, ChevronDown } from 'lucide-react';
+import { Plus, Zap, Clock, CheckCircle, XCircle, Eye, Calendar, Tag, Trophy, Trash2, RefreshCw, ChevronDown, TrendingUp, Users, ExternalLink } from 'lucide-react';
 import CampaignCreationModal from './CampaignCreationModal';
 import CampaignResultsView from './CampaignResultsView';
 import ExclusionListManager from './ExclusionListManager';
@@ -30,6 +30,7 @@ const FlashCampaignDashboard = () => {
   // Load campaigns
   const loadCampaigns = useCallback(async () => {
     const loaded = await getCampaigns();
+    console.log('Loaded campaigns:', loaded.length, 'campaigns');
     setCampaigns(loaded);
     const grouped = {
       active: loaded.filter(c => c.status === 'active'),
@@ -362,6 +363,104 @@ const FlashCampaignDashboard = () => {
               <p className="text-xs text-[var(--color-text-tertiary)] mb-1">Campaign ID</p>
               <p className="text-xs font-mono text-[var(--color-text-secondary)]">{campaign.id}</p>
             </div>
+
+            {/* Results Preview (Completed Campaigns Only) */}
+            {isCompleted && campaign.results && (
+              <div className="border-t border-amber-500/20 pt-4 space-y-3">
+                <h4 className="text-sm font-semibold text-amber-400 mb-3 flex items-center gap-2">
+                  <TrendingUp className="w-4 h-4" />
+                  Campaign Results Summary
+                </h4>
+
+                {/* Results Metrics Grid */}
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="p-3 bg-amber-500/5 rounded-lg border border-amber-500/20">
+                    <p className="text-xs text-amber-400 mb-1">Eligible Tweets</p>
+                    <p className="text-lg font-bold text-amber-500">{campaign.results.eligibleTweets.length}</p>
+                  </div>
+                  <div className="p-3 bg-blue-500/5 rounded-lg border border-blue-500/20">
+                    <p className="text-xs text-blue-400 mb-1">Unique Creators</p>
+                    <p className="text-lg font-bold text-blue-500">
+                      {new Set(campaign.results.eligibleTweets.map(t => t.creatorHandle)).size}
+                    </p>
+                  </div>
+                  <div className="p-3 bg-purple-500/5 rounded-lg border border-purple-500/20">
+                    <p className="text-xs text-purple-400 mb-1">Total Impressions</p>
+                    <p className="text-lg font-bold text-purple-500">
+                      {campaign.results.eligibleTweets.reduce((sum, t) => sum + t.totalImpressions, 0).toLocaleString()}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Top 3 Tweets Preview */}
+                {campaign.results.eligibleTweets.length > 0 && (
+                  <div>
+                    <p className="text-xs text-[var(--color-text-tertiary)] mb-2 flex items-center gap-1">
+                      <Trophy className="w-3 h-3" />
+                      Top 3 Performing Tweets
+                    </p>
+                    <div className="space-y-2">
+                      {campaign.results.eligibleTweets
+                        .slice(0, 3)
+                        .map((tweet, idx) => (
+                          <div
+                            key={idx}
+                            className="p-2 bg-white/5 rounded-lg hover:bg-white/10 transition-colors duration-200 group/tweet"
+                          >
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <span className={`flex items-center justify-center w-5 h-5 rounded-full text-xs font-bold ${
+                                    idx === 0 ? 'bg-yellow-500/20 text-yellow-500' :
+                                    idx === 1 ? 'bg-gray-400/20 text-gray-400' :
+                                    'bg-orange-600/20 text-orange-600'
+                                  }`}>
+                                    #{idx + 1}
+                                  </span>
+                                  <p className="text-xs font-semibold truncate">{tweet.creatorName}</p>
+                                  <p className="text-xs text-[var(--color-text-tertiary)] truncate">{tweet.creatorHandle}</p>
+                                </div>
+                                <p className="text-xs text-[var(--color-text-secondary)] flex items-center gap-2">
+                                  <Eye className="w-3 h-3" />
+                                  {tweet.totalImpressions.toLocaleString()} impressions
+                                  {tweet.matchedPhrase && (
+                                    <>
+                                      <span className="text-[var(--color-text-tertiary)]">•</span>
+                                      <span className="text-green-400">{tweet.matchedPhrase}</span>
+                                    </>
+                                  )}
+                                </p>
+                              </div>
+                              <a
+                                href={tweet.tweetUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                className="flex items-center gap-1 text-xs text-amber-500 hover:text-amber-400 transition-colors whitespace-nowrap opacity-0 group-hover/tweet:opacity-100"
+                              >
+                                View
+                                <ExternalLink className="w-3 h-3" />
+                              </a>
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* View Full Results Link */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleViewResults(campaign);
+                  }}
+                  className="w-full py-2 px-3 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 hover:border-amber-500/50 rounded-lg text-sm font-semibold text-amber-400 hover:text-amber-300 transition-all duration-200 flex items-center justify-center gap-2"
+                >
+                  <Eye className="w-4 h-4" />
+                  View Full Results ({campaign.results.eligibleTweets.length} tweets)
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
