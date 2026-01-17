@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import CreatorRosterEditorial from './components/CreatorRosterEditorial';
 import ContentRequestsEditorial from './components/ContentRequestsEditorial';
+import { Campaigns } from './components/Campaigns';
 import Analytics from './components/Analytics';
 import FlashCampaignManager from './components/FlashCampaignManager';
 import BotAnalyticsEditorial from './components/BotAnalyticsEditorial';
@@ -338,7 +339,7 @@ export default function App() {
           ) : (
             <>
               {activeTab === 'roster' && <CreatorRosterEditorial creators={creators} setCreators={setCreators} />}
-              {activeTab === 'requests' && <ContentRequestsEditorial creators={creators} setCreators={setCreators} requests={requests} setRequests={setRequests} />}
+              {activeTab === 'requests' && <Campaigns />}
               {activeTab === 'analytics' && <Analytics creators={creators} requests={requests} />}
               {activeTab === 'kaito' && <FlashCampaignManager />}
               {activeTab === 'botanalytics' && <BotAnalyticsEditorial />}
