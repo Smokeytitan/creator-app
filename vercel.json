@@ -1,0 +1,18 @@
+{
+  "buildCommand": "npm run build",
+  "rewrites": [
+    {
+      "source": "/api/bot-analytics/:path*",
+      "destination": "https://telegram-bot-seven-swart.vercel.app/api/bot-analytics/:path*"
+    },
+    {
+      "source": "/api/admin/:path*",
+      "destination": "https://telegram-bot-seven-swart.vercel.app/api/admin/:path*"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ],
+  "crons": []
+}

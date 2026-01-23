@@ -1,0 +1,375 @@
+@import "tailwindcss";
+
+@variant dark (.dark &);
+
+:root {
+  /* Dark Gold Color Palette */
+  --color-bg-primary: #0A0A0A;
+  --color-bg-secondary: #141414;
+  --color-bg-tertiary: #1A1A1A;
+  --color-accent-primary: #D97706;
+  --color-accent-secondary: #F59E0B;
+  --color-text-primary: #F5F5F5;
+  --color-text-secondary: #A3A3A3;
+  --color-text-tertiary: #737373;
+  --color-border: rgba(217, 119, 6, 0.1);
+  --color-border-hover: rgba(217, 119, 6, 0.2);
+
+  /* Typography Scale */
+  --font-display: 'Playfair Display', Georgia, serif;
+  --font-body: 'DM Sans', -apple-system, sans-serif;
+  --font-mono: 'IBM Plex Mono', 'Courier New', monospace;
+}
+
+html {
+  overflow-x: hidden;
+  width: 100%;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  overflow-x: hidden;
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  background-image:
+    radial-gradient(at 20% 10%, rgba(255, 107, 53, 0.03) 0px, transparent 50%),
+    radial-gradient(at 80% 90%, rgba(255, 179, 71, 0.02) 0px, transparent 50%);
+  background-attachment: fixed;
+}
+
+#root {
+  width: 100%;
+  overflow-x: hidden;
+}
+
+/* Date Picker Styles */
+.react-datepicker {
+  font-family: 'Montserrat', sans-serif;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  background-color: #141217;
+}
+
+.react-datepicker__header {
+  background-color: #0B1020;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px 12px 0 0;
+  padding: 0.75rem 0;
+}
+
+.react-datepicker__current-month,
+.react-datepicker__day-name {
+  color: #F3F5FF;
+  font-weight: 600;
+}
+
+.react-datepicker__day {
+  color: #9AA3B2;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.react-datepicker__day:hover {
+  background-color: rgba(217, 119, 6, 0.15);
+  color: #F3F5FF;
+}
+
+.react-datepicker__day--selected,
+.react-datepicker__day--keyboard-selected {
+  background: linear-gradient(135deg, #D97706 0%, #F59E0B 100%) !important;
+  color: #FFFFFF !important;
+  font-weight: 600;
+}
+
+.react-datepicker__day--disabled {
+  color: rgba(154, 163, 178, 0.3) !important;
+  cursor: not-allowed;
+}
+
+.react-datepicker__navigation {
+  top: 0.75rem;
+}
+
+.react-datepicker__navigation-icon::before {
+  border-color: #9AA3B2;
+}
+
+.react-datepicker__navigation:hover .react-datepicker__navigation-icon::before {
+  border-color: #F3F5FF;
+}
+
+.react-datepicker__triangle {
+  display: none;
+}
+
+.react-datepicker-popper {
+  z-index: 9999 !important;
+}
+
+.react-datepicker__time-container {
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.react-datepicker__time {
+  background-color: #141217;
+}
+
+.react-datepicker__time-box {
+  width: 100%;
+}
+
+.react-datepicker__time-list {
+  padding: 0;
+}
+
+.react-datepicker__time-list-item {
+  color: #9AA3B2;
+  padding: 8px 10px;
+  transition: all 0.2s ease;
+}
+
+.react-datepicker__time-list-item:hover {
+  background-color: rgba(255, 107, 53, 0.15);
+  color: #F3F5FF;
+}
+
+.react-datepicker__time-list-item--selected {
+  background-color: rgba(255, 107, 53, 0.2) !important;
+  color: #FF6B35 !important;
+  font-weight: 600;
+}
+
+/* Polygon Brand Button Styles */
+.btn-polygon-primary {
+  background: linear-gradient(135deg, #D97706 0%, #F59E0B 100%);
+  color: #FFFFFF;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.btn-polygon-primary:hover {
+  background: linear-gradient(135deg, #B45309 0%, #D97706 100%);
+  box-shadow: 0 8px 24px rgba(217, 119, 6, 0.4);
+  transform: translateY(-1px);
+}
+
+.btn-polygon-secondary {
+  background: transparent;
+  color: #F3F5FF;
+  font-weight: 600;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  transition: all 0.2s ease;
+}
+
+.btn-polygon-secondary:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+/* Polygon Card Styles */
+.card-polygon {
+  background: #141217;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  transition: all 0.3s ease;
+}
+
+.card-polygon:hover {
+  border-color: rgba(255, 255, 255, 0.16);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  transform: translateY(-2px);
+}
+
+/* Polygon Input Styles */
+.input-polygon {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  color: #F3F5FF;
+  transition: all 0.2s ease;
+}
+
+.input-polygon:focus {
+  outline: none;
+  border-color: #6A23E7;
+  box-shadow: 0 0 0 3px rgba(106, 35, 231, 0.15);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.input-polygon::placeholder {
+  color: #9AA3B2;
+}
+
+/* Editorial Dashboard Animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes numberTick {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(255, 107, 53, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(255, 107, 53, 0);
+  }
+}
+
+/* Editorial Typography Classes */
+.text-display {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.text-mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+/* Editorial Card Styles */
+.card-editorial {
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.card-editorial:hover {
+  border-color: var(--color-border-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+/* Data Metric Display */
+.metric-value {
+  font-family: var(--font-mono);
+  font-size: 2.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, var(--color-text-primary) 0%, var(--color-text-secondary) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.metric-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--color-text-tertiary);
+}
+
+/* Accent Border */
+.accent-border-left {
+  border-left: 3px solid var(--color-accent-primary);
+}
+
+/* Editorial Button Styles */
+.btn-editorial-primary {
+  padding: 0.625rem 1.25rem;
+  background: linear-gradient(135deg, var(--color-accent-primary) 0%, var(--color-accent-secondary) 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(255, 107, 53, 0.2);
+}
+
+.btn-editorial-primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+}
+
+.btn-editorial-primary:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.btn-editorial-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-editorial-secondary {
+  padding: 0.625rem 1.25rem;
+  background: transparent;
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-editorial-secondary:hover:not(:disabled) {
+  background: var(--color-bg-tertiary);
+  border-color: var(--color-border-hover);
+}
+
+.btn-editorial-secondary:active:not(:disabled) {
+  background: var(--color-bg-secondary);
+}
+
+.btn-editorial-secondary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-bg-primary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-bg-tertiary);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-accent-primary);
+}
