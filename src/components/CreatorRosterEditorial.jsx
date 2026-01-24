@@ -587,13 +587,11 @@ export default function CreatorRosterEditorial({ creators, setCreators }) {
               className="hidden"
             />
             <button
-              onClick={() => contractInputRef.current?.click()}
-              disabled={uploadingContract}
-              className="inline-flex items-center px-4 py-2 bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] text-[var(--color-text-primary)] rounded-lg hover:bg-[var(--color-bg-secondary)] hover:border-[var(--color-border-hover)] transition-all duration-200 text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+              onClick={() => alert('Button works!')}
+              className="inline-flex items-center px-4 py-2 bg-red-500 border border-red-700 text-white rounded-lg hover:bg-red-600 transition-all duration-200 text-sm font-semibold"
             >
               <FileUp className="w-4 h-4 mr-2" />
-              <span className="hidden sm:inline">{uploadingContract ? 'Uploading...' : 'Upload Contract'}</span>
-              <span className="sm:hidden">{uploadingContract ? '...' : 'Contract'}</span>
+              TEST CONTRACT BUTTON
             </button>
             <button
               onClick={exportToCSV}
