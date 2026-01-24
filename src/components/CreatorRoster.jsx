@@ -1,8 +1,9 @@
 import { useState, useRef, useMemo } from 'react';
-import { Upload, Plus, Trash2, FileText, X, DollarSign, Edit2, Search, Filter, SortAsc, Download, Eye, RefreshCw, Calendar } from 'lucide-react';
+import { Upload, Plus, Trash2, FileText, X, DollarSign, Edit2, Search, Filter, SortAsc, Download, Eye, RefreshCw, Calendar, FileUp } from 'lucide-react';
 import { IMPORTED_CREATORS } from '../data/importedCreators';
 import { createCreator, updateCreator, deleteCreator as deleteCreatorSupabase, addPost, updatePost as updatePostSupabase, deletePost as deletePostSupabase } from '../services/creatorsServiceSupabase';
 import { supabase } from '../lib/supabaseClient';
+import { uploadAndParseContract, applyContractDataToCreator, formatParsedDataForPreview } from '../services/contractService';
 
 export default function CreatorRoster({ creators, setCreators }) {
   const resetToImportedData = () => {
@@ -20,6 +21,15 @@ export default function CreatorRoster({ creators, setCreators }) {
   const [editingPostId, setEditingPostId] = useState(null);
   const [postForm, setPostForm] = useState({ description: '', date: '', cost: '', link: '', impressions: '' });
   const fileInputRef = useRef(null);
+  const contractInputRef = useRef(null);
+
+  // Contract upload state
+  const [uploadingContract, setUploadingContract] = useState(false);
+  const [contractProgress, setContractProgress] = useState({ stage: '', progress: 0 });
+  const [parsedContract, setParsedContract] = useState(null);
+  const [contractStoragePath, setContractStoragePath] = useState(null);
+  const [showContractPreview, setShowContractPreview] = useState(false);
+  const [contractCreatorId, setContractCreatorId] = useState(null);
 
   // Search and filter state
   const [searchTerm, setSearchTerm] = useState('');
@@ -545,6 +555,79 @@ export default function CreatorRoster({ creators, setCreators }) {
 
   const hasActiveFilters = searchTerm || filterActivity !== 'all' || sortBy !== 'name';
 
+  // Contract upload handlers
+  const handleContractUpload = async (event, creatorId = null) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setUploadingContract(true);
+    setContractProgress({ stage: 'uploading', progress: 0 });
+    setContractCreatorId(creatorId);
+
+    try {
+      const result = await uploadAndParseContract(file, creatorId, setContractProgress);
+
+      if (result.success) {
+        if (result.storagePath) {
+          console.log('✅ Contract stored at:', result.storagePath);
+        }
+
+        if (result.mode === 'manual') {
+          // Show manual entry form
+          alert(result.message + '\n\nContract uploaded successfully! You can now manually update the creator with pricing info.');
+          // Just confirm the upload, no preview needed
+        } else {
+          // Auto-parsed with Claude
+          setParsedContract(result.data);
+          setContractStoragePath(result.storagePath);
+          setShowContractPreview(true);
+        }
+      } else {
+        alert(`Failed to upload contract: ${result.error}`);
+      }
+    } catch (error) {
+      console.error('Error uploading contract:', error);
+      alert(`Error: ${error.message}`);
+    } finally {
+      setUploadingContract(false);
+      if (contractInputRef.current) {
+        contractInputRef.current.value = '';
+      }
+    }
+  };
+
+  const applyContractData = async () => {
+    if (!parsedContract || !contractCreatorId) return;
+
+    try {
+      const updatedCreator = await applyContractDataToCreator(
+        contractCreatorId,
+        parsedContract,
+        contractStoragePath
+      );
+
+      if (updatedCreator) {
+        setCreators(creators.map(c => c.id === contractCreatorId ? updatedCreator : c));
+        alert('Contract data applied successfully!');
+      }
+    } catch (error) {
+      console.error('Error applying contract data:', error);
+      alert(`Failed to apply contract data: ${error.message}`);
+    } finally {
+      setShowContractPreview(false);
+      setParsedContract(null);
+      setContractStoragePath(null);
+      setContractCreatorId(null);
+    }
+  };
+
+  const cancelContractPreview = () => {
+    setShowContractPreview(false);
+    setParsedContract(null);
+    setContractStoragePath(null);
+    setContractCreatorId(null);
+  };
+
   return (
     <div>
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
@@ -572,6 +655,23 @@ export default function CreatorRoster({ creators, setCreators }) {
             <Upload className="w-4 h-4 mr-1 sm:mr-2" />
             <span className="hidden sm:inline">Import CSV</span>
             <span className="sm:hidden">Import</span>
+          </button>
+          <input
+            ref={contractInputRef}
+            type="file"
+            accept=".pdf"
+            onChange={(e) => handleContractUpload(e, null)}
+            className="hidden"
+          />
+          <button
+            onClick={() => contractInputRef.current?.click()}
+            disabled={uploadingContract}
+            className="inline-flex items-center px-3 sm:px-4 py-2 btn-polygon-primary rounded-polygon-button text-sm shadow-polygon disabled:opacity-50 disabled:cursor-not-allowed"
+            title="Upload creator contract PDF"
+          >
+            <FileUp className="w-4 h-4 mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">{uploadingContract ? 'Parsing...' : 'Upload Contract'}</span>
+            <span className="sm:hidden">{uploadingContract ? '...' : 'Contract'}</span>
           </button>
           <button
             onClick={exportToCSV}
@@ -1145,6 +1245,122 @@ export default function CreatorRoster({ creators, setCreators }) {
           </div>
         ))}
       </div>
+
+      {/* Contract Preview Modal */}
+      {showContractPreview && parsedContract && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-6">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white">Contract Preview</h3>
+                <button
+                  onClick={cancelContractPreview}
+                  className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+                Review the extracted data and apply it to the creator
+              </p>
+            </div>
+
+            <div className="p-6 space-y-6">
+              {/* Pricing Section */}
+              {formatParsedDataForPreview(parsedContract).pricing.length > 0 && (
+                <div>
+                  <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-3 flex items-center">
+                    <DollarSign className="w-5 h-5 mr-2 text-green-600" />
+                    Pricing
+                  </h4>
+                  <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 space-y-2">
+                    {formatParsedDataForPreview(parsedContract).pricing.map((item, idx) => (
+                      <div key={idx} className="flex justify-between">
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{item.label}:</span>
+                        <div className="text-right">
+                          <span className="text-sm text-gray-900 dark:text-white">{item.value}</span>
+                          {item.platforms && (
+                            <div className="text-xs text-gray-500 mt-1">{item.platforms}</div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Deliverables Section */}
+              {formatParsedDataForPreview(parsedContract).deliverables.length > 0 && (
+                <div>
+                  <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-3 flex items-center">
+                    <FileText className="w-5 h-5 mr-2 text-blue-600" />
+                    Deliverables
+                  </h4>
+                  <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 space-y-2">
+                    {formatParsedDataForPreview(parsedContract).deliverables.map((item, idx) => (
+                      <div key={idx} className="flex justify-between">
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{item.label}:</span>
+                        <span className="text-sm text-gray-900 dark:text-white">{item.value}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Terms Section */}
+              {formatParsedDataForPreview(parsedContract).terms.length > 0 && (
+                <div>
+                  <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-3 flex items-center">
+                    <FileText className="w-5 h-5 mr-2 text-purple-600" />
+                    Terms
+                  </h4>
+                  <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 space-y-2">
+                    {formatParsedDataForPreview(parsedContract).terms.map((item, idx) => (
+                      <div key={idx} className="flex justify-between">
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{item.label}:</span>
+                        <span className="text-sm text-gray-900 dark:text-white">{item.value}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Payment Section */}
+              {formatParsedDataForPreview(parsedContract).payment.length > 0 && (
+                <div>
+                  <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-3 flex items-center">
+                    <Calendar className="w-5 h-5 mr-2 text-orange-600" />
+                    Payment
+                  </h4>
+                  <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 space-y-2">
+                    {formatParsedDataForPreview(parsedContract).payment.map((item, idx) => (
+                      <div key={idx} className="flex justify-between">
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{item.label}:</span>
+                        <span className="text-sm text-gray-900 dark:text-white">{item.value}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="sticky bottom-0 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 p-6 flex justify-end gap-3">
+              <button
+                onClick={cancelContractPreview}
+                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={applyContractData}
+                className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700"
+              >
+                Apply to Creator
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

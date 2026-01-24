@@ -76,8 +76,12 @@ const transformFromDB = (row) => ({
   handle: row.handle,
   notes: row.notes || '',
   costPerPost: row.cost_per_post || '',
+  pricingPackages: row.pricing_packages || [],
   platforms: row.platforms || [],
   active: row.active !== false,
+  contractFilePath: row.contract_file_path || null,
+  contractUploadedAt: row.contract_uploaded_at || null,
+  contractParsedData: row.contract_parsed_data || null,
   posts: (row.posts || []).map(post => ({
     id: post.id,
     campaign_id: post.campaign_id || null,
@@ -109,8 +113,12 @@ const transformToDB = (creator) => ({
   handle: creator.handle,
   notes: creator.notes || '',
   cost_per_post: creator.costPerPost || '',
+  pricing_packages: creator.pricingPackages || [],
   platforms: creator.platforms || [],
-  active: creator.active !== false
+  active: creator.active !== false,
+  contract_file_path: creator.contractFilePath || null,
+  contract_uploaded_at: creator.contractUploadedAt || null,
+  contract_parsed_data: creator.contractParsedData || null
 });
 
 /**
@@ -451,6 +459,85 @@ export const bulkImportCreators = async (creators) => {
 };
 
 // ============================================================================
+// PRICING PACKAGE HELPERS
+// ============================================================================
+
+/**
+ * Add pricing package to creator
+ * @param {number} creatorId - Creator ID
+ * @param {object} packageData - Package data
+ * @returns {Promise<object|null>} Updated creator
+ */
+export const addPricingPackage = async (creatorId, packageData) => {
+  const creator = await getCreatorById(creatorId);
+  if (!creator) return null;
+
+  const newPackage = {
+    id: Date.now(),
+    name: packageData.name || '',
+    description: packageData.description || '',
+    quantity: packageData.quantity || 1,
+    unitType: packageData.unitType || 'post', // 'post', 'video', 'story', etc.
+    totalCost: packageData.totalCost || 0,
+    costPerUnit: packageData.costPerUnit || 0,
+    platforms: packageData.platforms || [],
+    notes: packageData.notes || ''
+  };
+
+  const packages = [...(creator.pricingPackages || []), newPackage];
+  return updateCreator(creatorId, { pricingPackages: packages });
+};
+
+/**
+ * Update pricing package
+ * @param {number} creatorId - Creator ID
+ * @param {number} packageId - Package ID
+ * @param {object} updates - Package updates
+ * @returns {Promise<object|null>} Updated creator
+ */
+export const updatePricingPackage = async (creatorId, packageId, updates) => {
+  const creator = await getCreatorById(creatorId);
+  if (!creator) return null;
+
+  const packages = (creator.pricingPackages || []).map(pkg =>
+    pkg.id === packageId ? { ...pkg, ...updates } : pkg
+  );
+
+  return updateCreator(creatorId, { pricingPackages: packages });
+};
+
+/**
+ * Delete pricing package
+ * @param {number} creatorId - Creator ID
+ * @param {number} packageId - Package ID
+ * @returns {Promise<object|null>} Updated creator
+ */
+export const deletePricingPackage = async (creatorId, packageId) => {
+  const creator = await getCreatorById(creatorId);
+  if (!creator) return null;
+
+  const packages = (creator.pricingPackages || []).filter(pkg => pkg.id !== packageId);
+  return updateCreator(creatorId, { pricingPackages: packages });
+};
+
+/**
+ * Get creator's effective cost per post
+ * Returns the cost_per_post if set, otherwise calculates from first package
+ * @param {object} creator - Creator object
+ * @returns {string} Cost per post
+ */
+export const getEffectiveCostPerPost = (creator) => {
+  if (creator.costPerPost) return creator.costPerPost;
+
+  if (creator.pricingPackages && creator.pricingPackages.length > 0) {
+    const firstPackage = creator.pricingPackages[0];
+    return `$${firstPackage.costPerUnit.toFixed(2)}`;
+  }
+
+  return '';
+};
+
+// ============================================================================
 // EXPORT DEFAULT
 // ============================================================================
 
@@ -466,5 +553,9 @@ export default {
   deletePost,
   getPostsNeedingRescan,
   batchUpdatePostMetrics,
-  bulkImportCreators
+  bulkImportCreators,
+  addPricingPackage,
+  updatePricingPackage,
+  deletePricingPackage,
+  getEffectiveCostPerPost
 };
