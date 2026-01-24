@@ -472,9 +472,13 @@ export default function CreatorRosterEditorial({ creators, setCreators }) {
   const hasActiveFilters = searchTerm || filterActivity !== 'all' || sortBy !== 'name';
 
   // Contract upload handlers
-  const handleContractUpload = async (event) => {
+  const handleContractUpload = async (event, creatorId) => {
     const file = event.target.files?.[0];
     if (!file) return;
+
+    // Find creator name for better messaging
+    const creator = creators.find(c => c.id === creatorId);
+    const creatorName = creator ? creator.name : 'creator';
 
     // Reset
     event.target.value = '';
@@ -482,17 +486,30 @@ export default function CreatorRosterEditorial({ creators, setCreators }) {
     setContractStoragePath(null);
     setUploadingContract(true);
     setContractProgress({ stage: 'Uploading to Supabase Storage...', progress: 0 });
+    setContractCreatorId(creatorId);
 
     try {
       // Upload and parse contract
-      const result = await uploadAndParseContract(file, null, setContractProgress);
+      const result = await uploadAndParseContract(file, creatorId, setContractProgress);
 
       if (result.success) {
         setContractStoragePath(result.storagePath);
 
+        // Update creator record with contract file path
+        if (result.storagePath) {
+          const updatedCreator = await updateCreatorInDB(creatorId, {
+            contractFilePath: result.storagePath,
+            contractUploadedAt: new Date().toISOString()
+          });
+
+          if (updatedCreator) {
+            setCreators(creators.map(c => c.id === creatorId ? updatedCreator : c));
+          }
+        }
+
         if (result.mode === 'manual') {
           // No Claude API key - just manual entry
-          alert(result.message || 'Contract uploaded successfully! You can now manually update the creator with pricing info.');
+          alert(result.message || `Contract uploaded successfully for ${creatorName}! The contract is stored in Supabase. You can now edit the creator to add pricing info.`);
           setUploadingContract(false);
         } else {
           // Auto-parsed mode
@@ -501,12 +518,12 @@ export default function CreatorRosterEditorial({ creators, setCreators }) {
           setUploadingContract(false);
         }
       } else {
-        alert('Failed to upload contract: ' + (result.error || 'Unknown error'));
+        alert(`Failed to upload contract for ${creatorName}: ` + (result.error || 'Unknown error'));
         setUploadingContract(false);
       }
     } catch (error) {
       console.error('Contract upload error:', error);
-      alert('Failed to upload contract: ' + error.message);
+      alert(`Failed to upload contract for ${creatorName}: ` + error.message);
       setUploadingContract(false);
     }
   };
@@ -578,23 +595,6 @@ export default function CreatorRosterEditorial({ creators, setCreators }) {
               <FileSpreadsheet className="w-4 h-4 mr-2" />
               <span className="hidden sm:inline">{importing ? 'Importing...' : 'Import Excel'}</span>
               <span className="sm:hidden">{importing ? '...' : 'Excel'}</span>
-            </button>
-            <input
-              ref={contractInputRef}
-              type="file"
-              accept=".pdf"
-              onChange={handleContractUpload}
-              className="hidden"
-            />
-            <button
-              onClick={() => contractInputRef.current?.click()}
-              disabled={uploadingContract}
-              className="inline-flex items-center px-4 py-2 bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] text-[var(--color-text-primary)] rounded-lg hover:bg-[var(--color-bg-secondary)] hover:border-[var(--color-border-hover)] transition-all duration-200 text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
-              title="Upload creator contract PDF"
-            >
-              <FileUp className="w-4 h-4 mr-2" />
-              <span className="hidden sm:inline">{uploadingContract ? 'Uploading...' : 'Upload Contract'}</span>
-              <span className="sm:hidden">{uploadingContract ? '...' : 'Contract'}</span>
             </button>
             <button
               onClick={exportToCSV}
@@ -983,6 +983,25 @@ export default function CreatorRosterEditorial({ creators, setCreators }) {
                   >
                     <FileText className="h-4 w-4 mr-2" />
                     {viewingPostsId === c.id ? 'Hide' : 'View'} {(c.posts || []).length} Post{(c.posts || []).length !== 1 ? 's' : ''}
+                  </button>
+                  <input
+                    type="file"
+                    accept=".pdf"
+                    onChange={(e) => handleContractUpload(e, c.id)}
+                    className="hidden"
+                    id={`contract-upload-${c.id}`}
+                  />
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      document.getElementById(`contract-upload-${c.id}`).click();
+                    }}
+                    disabled={uploadingContract && contractCreatorId === c.id}
+                    className="inline-flex items-center px-3 py-2 text-sm bg-purple-500/10 text-purple-500 hover:bg-purple-500/20 rounded-lg font-medium transition-colors w-full justify-center border border-purple-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                    title="Upload contract PDF for this creator"
+                  >
+                    <FileUp className="h-4 w-4 mr-2" />
+                    {uploadingContract && contractCreatorId === c.id ? 'Uploading...' : 'Upload Contract'}
                   </button>
                 </div>
 
