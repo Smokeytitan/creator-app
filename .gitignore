@@ -30,3 +30,8 @@ dist-ssr
 dev-server.log
 dev-server-monitor.log
 error-monitor.log
+
+# Playwright
+test-results/
+playwright-report/
+tests/screenshots/
