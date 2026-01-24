@@ -1,8 +1,9 @@
 import { useState, useRef, useMemo } from 'react';
-import { Upload, Plus, Trash2, FileText, X, DollarSign, Edit2, Search, Filter, SortAsc, Download, Eye, RefreshCw, Calendar, FileSpreadsheet } from 'lucide-react';
+import { Upload, Plus, Trash2, FileText, X, DollarSign, Edit2, Search, Filter, SortAsc, Download, Eye, RefreshCw, Calendar, FileSpreadsheet, FileUp } from 'lucide-react';
 import { IMPORTED_CREATORS } from '../data/importedCreators';
 import { deleteCreator as deleteCreatorFromDB, createCreator, updateCreator as updateCreatorInDB, addPost as addPostToDB, updatePost as updatePostInDB, deletePost as deletePostFromDB, getCreators } from '../services/creatorsServiceSupabase';
 import { importExcelWorkbook } from '../services/excelImportService';
+import { uploadAndParseContract, applyContractDataToCreator, formatParsedDataForPreview } from '../services/contractService';
 
 export default function CreatorRosterEditorial({ creators, setCreators }) {
   const resetToImportedData = () => {
@@ -21,6 +22,15 @@ export default function CreatorRosterEditorial({ creators, setCreators }) {
   const [postForm, setPostForm] = useState({ description: '', date: '', cost: '', link: '', impressions: '' });
   const excelFileInputRef = useRef(null);
   const [importing, setImporting] = useState(false);
+
+  // Contract upload state
+  const contractInputRef = useRef(null);
+  const [uploadingContract, setUploadingContract] = useState(false);
+  const [contractProgress, setContractProgress] = useState({ stage: '', progress: 0 });
+  const [parsedContract, setParsedContract] = useState(null);
+  const [contractStoragePath, setContractStoragePath] = useState(null);
+  const [showContractPreview, setShowContractPreview] = useState(false);
+  const [contractCreatorId, setContractCreatorId] = useState(null);
 
   // Search and filter state
   const [searchTerm, setSearchTerm] = useState('');
@@ -461,6 +471,76 @@ export default function CreatorRosterEditorial({ creators, setCreators }) {
 
   const hasActiveFilters = searchTerm || filterActivity !== 'all' || sortBy !== 'name';
 
+  // Contract upload handlers
+  const handleContractUpload = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Reset
+    event.target.value = '';
+    setParsedContract(null);
+    setContractStoragePath(null);
+    setUploadingContract(true);
+    setContractProgress({ stage: 'Uploading to Supabase Storage...', progress: 0 });
+
+    try {
+      // Upload and parse contract
+      const result = await uploadAndParseContract(file, null, setContractProgress);
+
+      if (result.success) {
+        setContractStoragePath(result.storagePath);
+
+        if (result.mode === 'manual') {
+          // No Claude API key - just manual entry
+          alert(result.message || 'Contract uploaded successfully! You can now manually update the creator with pricing info.');
+          setUploadingContract(false);
+        } else {
+          // Auto-parsed mode
+          setParsedContract(result.data);
+          setShowContractPreview(true);
+          setUploadingContract(false);
+        }
+      } else {
+        alert('Failed to upload contract: ' + (result.error || 'Unknown error'));
+        setUploadingContract(false);
+      }
+    } catch (error) {
+      console.error('Contract upload error:', error);
+      alert('Failed to upload contract: ' + error.message);
+      setUploadingContract(false);
+    }
+  };
+
+  const applyContractData = async () => {
+    if (!parsedContract || !contractCreatorId) return;
+
+    try {
+      const updatedCreator = await applyContractDataToCreator(
+        contractCreatorId,
+        parsedContract,
+        contractStoragePath
+      );
+
+      // Update local state
+      setCreators(prev => prev.map(c => c.id === contractCreatorId ? updatedCreator : c));
+
+      alert('Contract data applied successfully!');
+      setShowContractPreview(false);
+      setParsedContract(null);
+      setContractStoragePath(null);
+      setContractCreatorId(null);
+    } catch (error) {
+      console.error('Error applying contract data:', error);
+      alert('Failed to apply contract data: ' + error.message);
+    }
+  };
+
+  const cancelContractPreview = () => {
+    setShowContractPreview(false);
+    setParsedContract(null);
+    setContractCreatorId(null);
+  };
+
   return (
     <div className="space-y-8 pb-12">
       {/* Hero Header */}
@@ -498,6 +578,22 @@ export default function CreatorRosterEditorial({ creators, setCreators }) {
               <FileSpreadsheet className="w-4 h-4 mr-2" />
               <span className="hidden sm:inline">{importing ? 'Importing...' : 'Import Excel'}</span>
               <span className="sm:hidden">{importing ? '...' : 'Excel'}</span>
+            </button>
+            <input
+              ref={contractInputRef}
+              type="file"
+              accept=".pdf,application/pdf"
+              onChange={handleContractUpload}
+              className="hidden"
+            />
+            <button
+              onClick={() => contractInputRef.current?.click()}
+              disabled={uploadingContract}
+              className="inline-flex items-center px-4 py-2 bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] text-[var(--color-text-primary)] rounded-lg hover:bg-[var(--color-bg-secondary)] hover:border-[var(--color-border-hover)] transition-all duration-200 text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <FileUp className="w-4 h-4 mr-2" />
+              <span className="hidden sm:inline">{uploadingContract ? 'Uploading...' : 'Upload Contract'}</span>
+              <span className="sm:hidden">{uploadingContract ? '...' : 'Contract'}</span>
             </button>
             <button
               onClick={exportToCSV}
