@@ -178,6 +178,18 @@ export const processTweetsForCampaign = async (campaignId, tweetsData, existingR
     console.log(`[processTweetsForCampaign] Attempting to translate non-English tweets...`);
     translatedTweets = await batchTranslateTweets(fetchedTweets);
     console.log(`[processTweetsForCampaign] Translation complete`);
+
+    // Log language distribution
+    const langCounts = {};
+    translatedTweets.forEach(t => {
+      const lang = t.lang || 'unknown';
+      langCounts[lang] = (langCounts[lang] || 0) + 1;
+    });
+    console.log(`[processTweetsForCampaign] Language distribution:`, langCounts);
+
+    // Log translation status
+    const translatedCount = translatedTweets.filter(t => t.translatedText).length;
+    console.log(`[processTweetsForCampaign] ${translatedCount} tweets have translations`);
   } catch (error) {
     console.warn('[processTweetsForCampaign] Translation unavailable (API key not configured), using original text:', error.message);
     translatedTweets = fetchedTweets.map(t => ({ ...t, translatedText: null }));
@@ -186,6 +198,8 @@ export const processTweetsForCampaign = async (campaignId, tweetsData, existingR
   // Match tweets against key phrases
   const newTweets = [];
   let matchedCount = 0;
+
+  console.log(`[processTweetsForCampaign] Matching against key phrases:`, keyPhrases);
 
   for (const tweet of translatedTweets) {
     const metadata = tweetMetadata[tweet.id];
@@ -197,6 +211,18 @@ export const processTweetsForCampaign = async (campaignId, tweetsData, existingR
       tweet.translatedText,
       keyPhrases
     );
+
+    // Log first few tweets for debugging
+    if (newTweets.length < 3 || matchResult.matchedPhrase) {
+      console.log(`[processTweetsForCampaign] Tweet ${tweet.id}:`, {
+        lang: tweet.lang,
+        hasTranslation: !!tweet.translatedText,
+        originalText: tweet.text?.substring(0, 50) + '...',
+        translatedText: tweet.translatedText?.substring(0, 50) + '...',
+        matchedPhrase: matchResult.matchedPhrase,
+        matchedIn: matchResult.matchedIn
+      });
+    }
 
     if (matchResult.matchedPhrase) {
       matchedCount++;
@@ -240,13 +266,20 @@ export const processTweetsForCampaign = async (campaignId, tweetsData, existingR
     }
   }
 
+  const unmatchedCount = fetchedTweets.length - matchedCount;
   console.log(`[processTweetsForCampaign] Matched ${matchedCount} out of ${fetchedTweets.length} tweets`);
+  console.log(`[processTweetsForCampaign] ${unmatchedCount} tweets did not match any key phrases`);
+
+  if (unmatchedCount > 0) {
+    console.log(`[processTweetsForCampaign] To debug: Check if key phrases exist in tweet text or translations`);
+    console.log(`[processTweetsForCampaign] Key phrases are: ${keyPhrases.join(', ')}`);
+  }
 
   return {
     newTweets,
     duplicateCount,
-    skippedCount: fetchedTweets.length - matchedCount,
+    skippedCount: unmatchedCount,
     error: null,
-    message: `Successfully processed ${newTweets.length} tweets (${duplicateCount} duplicates skipped, ${fetchedTweets.length - matchedCount} didn't match key phrases)`
+    message: `Successfully processed ${newTweets.length} tweets (${duplicateCount} duplicates skipped, ${unmatchedCount} didn't match key phrases)`
   };
 };

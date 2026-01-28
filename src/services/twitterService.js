@@ -168,6 +168,19 @@ export const translateText = async (text, targetLang = 'en', sourceLang = null) 
 };
 
 /**
+ * Detect if text contains Korean characters (Hangul)
+ * @param {string} text - Text to check
+ * @returns {boolean} True if Korean characters are detected
+ */
+export const containsKorean = (text) => {
+  if (!text) return false;
+  // Hangul Unicode range: AC00-D7AF (Korean syllables)
+  // Additional Korean ranges: 1100-11FF (Hangul Jamo), 3130-318F (Hangul Compatibility Jamo)
+  const koreanRegex = /[\uAC00-\uD7AF\u1100-\u11FF\u3130-\u318F]/;
+  return koreanRegex.test(text);
+};
+
+/**
  * Batch translate tweets (only non-English tweets)
  * @param {Array} tweets - Array of tweet objects from Twitter API
  * @returns {Promise<Array>} Tweets with added translatedText field
@@ -178,17 +191,35 @@ export const batchTranslateTweets = async (tweets) => {
   console.log(`[batchTranslateTweets] Processing ${tweets.length} tweets for translation`);
 
   // Filter to only non-English tweets that need translation
-  const tweetsToTranslate = tweets.filter(tweet =>
-    tweet.lang && tweet.lang !== 'en' && tweet.text
-  );
+  // Use Korean character detection to override Twitter's language detection
+  const tweetsToTranslate = tweets.filter(tweet => {
+    if (!tweet.text) return false;
 
-  console.log(`[batchTranslateTweets] Found ${tweetsToTranslate.length} non-English tweets`);
+    // Check if tweet contains Korean characters
+    const hasKorean = containsKorean(tweet.text);
+    if (hasKorean) return true;
+
+    // Otherwise, check Twitter's language field
+    return tweet.lang && tweet.lang !== 'en';
+  });
+
+  console.log(`[batchTranslateTweets] Found ${tweetsToTranslate.length} non-English tweets (Korean detection enabled)`);
 
   // Translate each tweet (with retry logic)
   const translatedTweets = await Promise.all(
     tweets.map(async (tweet) => {
+      // Check if tweet needs translation
+      const hasKorean = containsKorean(tweet.text);
+      const needsTranslation = hasKorean || (tweet.lang && tweet.lang !== 'en');
+
+      // Override language field if Korean characters detected
+      if (hasKorean && (!tweet.lang || tweet.lang === 'en' || tweet.lang === 'und')) {
+        console.log(`[batchTranslateTweets] Overriding language for tweet ${tweet.id}: detected Korean characters`);
+        tweet.lang = 'ko';
+      }
+
       // Skip English tweets
-      if (!tweet.lang || tweet.lang === 'en') {
+      if (!needsTranslation) {
         return { ...tweet, translatedText: null };
       }
 
