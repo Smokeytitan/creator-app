@@ -7,7 +7,24 @@ const CampaignResultsView = ({ campaign, onResultsUpdated }) => {
   const [isRefetching, setIsRefetching] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [sortConfig, setSortConfig] = useState({ key: 'creatorRank', direction: 'asc' });
+  const [languageFilter, setLanguageFilter] = useState('all'); // 'all', 'en', 'ko'
   const fileInputRef = useRef(null);
+
+  // Separate tweets by language
+  const tweetsByLanguage = useMemo(() => {
+    if (!campaign.results) return { english: [], korean: [], all: [] };
+
+    const { eligibleTweets } = campaign.results;
+
+    const english = eligibleTweets.filter(t => !t.language || t.language === 'en' || t.language === 'und');
+    const korean = eligibleTweets.filter(t => t.language === 'ko');
+
+    return {
+      english,
+      korean,
+      all: eligibleTweets
+    };
+  }, [campaign.results]);
 
   // Calculate summary metrics
   const summaryMetrics = useMemo(() => {
@@ -19,16 +36,26 @@ const CampaignResultsView = ({ campaign, onResultsUpdated }) => {
 
     return {
       totalTweets: eligibleTweets.length,
+      englishTweets: tweetsByLanguage.english.length,
+      koreanTweets: tweetsByLanguage.korean.length,
       uniqueCreators,
       totalImpressions
     };
-  }, [campaign.results]);
+  }, [campaign.results, tweetsByLanguage]);
 
-  // Sort tweets
+  // Sort tweets based on language filter
   const sortedTweets = useMemo(() => {
     if (!campaign.results) return [];
 
-    const tweets = [...campaign.results.eligibleTweets];
+    // Get tweets based on language filter
+    let tweets;
+    if (languageFilter === 'en') {
+      tweets = [...tweetsByLanguage.english];
+    } else if (languageFilter === 'ko') {
+      tweets = [...tweetsByLanguage.korean];
+    } else {
+      tweets = [...tweetsByLanguage.all];
+    }
 
     tweets.sort((a, b) => {
       let aVal = a[sortConfig.key];
@@ -49,7 +76,7 @@ const CampaignResultsView = ({ campaign, onResultsUpdated }) => {
     });
 
     return tweets;
-  }, [campaign.results, sortConfig]);
+  }, [campaign.results, sortConfig, languageFilter, tweetsByLanguage]);
 
   const handleSort = (key) => {
     setSortConfig(prev => ({
@@ -168,12 +195,14 @@ const CampaignResultsView = ({ campaign, onResultsUpdated }) => {
     csv += `Excluded Accounts: ${excludedHandles || 'None'}\n\n`;
 
     // Column headers
-    csv += 'Creator Name,Handle,Rank,Tweet URL,Impressions,Likes,Retweets,Quotes,Bookmarks,Engagement Rate,Matched Phrase,Tweet Preview\n';
+    csv += 'Creator Name,Handle,Rank,Tweet URL,Impressions,Likes,Retweets,Quotes,Bookmarks,Engagement Rate,Matched Phrase,Language,Tweet Preview,Translation (if Korean)\n';
 
     // Data rows
     campaign.results.eligibleTweets.forEach(tweet => {
       const tweetPreview = tweet.tweetText ? tweet.tweetText.replace(/"/g, '""') : 'N/A';
-      csv += `"${tweet.creatorName}","${tweet.creatorHandle}",${tweet.creatorRank},"${tweet.tweetUrl}",${tweet.totalImpressions},${tweet.totalLikes},${tweet.totalRetweets},${tweet.totalQuotes},${tweet.totalBookmarks},"${tweet.engagementRate}","${tweet.matchedPhrase}","${tweetPreview}"\n`;
+      const translation = tweet.translatedText ? tweet.translatedText.replace(/"/g, '""') : '';
+      const language = tweet.language || 'en';
+      csv += `"${tweet.creatorName}","${tweet.creatorHandle}",${tweet.creatorRank},"${tweet.tweetUrl}",${tweet.totalImpressions},${tweet.totalLikes},${tweet.totalRetweets},${tweet.totalQuotes},${tweet.totalBookmarks},"${tweet.engagementRate}","${tweet.matchedPhrase}","${language}","${tweetPreview}","${translation}"\n`;
     });
 
     // Download file
@@ -407,14 +436,50 @@ const CampaignResultsView = ({ campaign, onResultsUpdated }) => {
 
       {/* Results Table */}
       <div className="card-editorial overflow-hidden">
-        <h4 className="text-lg font-bold mb-4">
-          Eligible Tweets (Top 115 Creators Only)
-          {campaign.results.twitterApiUsed && (
-            <span className="ml-2 text-xs text-green-500 font-normal">
-              • Phrase-matched
-            </span>
-          )}
-        </h4>
+        <div className="flex items-center justify-between mb-4">
+          <h4 className="text-lg font-bold">
+            Eligible Tweets (Top 115 Creators Only)
+            {campaign.results.twitterApiUsed && (
+              <span className="ml-2 text-xs text-green-500 font-normal">
+                • Phrase-matched
+              </span>
+            )}
+          </h4>
+
+          {/* Language Filter */}
+          <div className="flex gap-2">
+            <button
+              onClick={() => setLanguageFilter('all')}
+              className={`px-3 py-1 text-sm rounded-lg transition-colors ${
+                languageFilter === 'all'
+                  ? 'bg-[var(--color-accent-primary)] text-white'
+                  : 'bg-white/5 text-[var(--color-text-secondary)] hover:bg-white/10'
+              }`}
+            >
+              All ({summaryMetrics.totalTweets})
+            </button>
+            <button
+              onClick={() => setLanguageFilter('en')}
+              className={`px-3 py-1 text-sm rounded-lg transition-colors ${
+                languageFilter === 'en'
+                  ? 'bg-[var(--color-accent-primary)] text-white'
+                  : 'bg-white/5 text-[var(--color-text-secondary)] hover:bg-white/10'
+              }`}
+            >
+              English ({summaryMetrics.englishTweets})
+            </button>
+            <button
+              onClick={() => setLanguageFilter('ko')}
+              className={`px-3 py-1 text-sm rounded-lg transition-colors ${
+                languageFilter === 'ko'
+                  ? 'bg-[var(--color-accent-primary)] text-white'
+                  : 'bg-white/5 text-[var(--color-text-secondary)] hover:bg-white/10'
+              }`}
+            >
+              Korean ({summaryMetrics.koreanTweets})
+            </button>
+          </div>
+        </div>
 
         {sortedTweets.length === 0 ? (
           <div className="text-center py-12">
@@ -500,9 +565,16 @@ const CampaignResultsView = ({ campaign, onResultsUpdated }) => {
                           <ExternalLink className="w-3 h-3" />
                         </a>
                         {tweet.tweetText && (
-                          <p className="text-xs text-[var(--color-text-tertiary)] italic max-w-xs truncate" title={tweet.tweetText}>
-                            "{tweet.tweetText}"
-                          </p>
+                          <div className="text-xs text-[var(--color-text-tertiary)] max-w-xs">
+                            <p className="italic truncate" title={tweet.tweetText}>
+                              "{tweet.tweetText}"
+                            </p>
+                            {tweet.translatedText && tweet.language === 'ko' && (
+                              <p className="italic truncate text-blue-400 mt-1" title={tweet.translatedText}>
+                                🌐 {tweet.translatedText}
+                              </p>
+                            )}
+                          </div>
                         )}
                       </div>
                     </td>
