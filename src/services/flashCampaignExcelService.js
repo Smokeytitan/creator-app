@@ -172,13 +172,14 @@ export const processTweetsForCampaign = async (campaignId, tweetsData, existingR
   }
 
   // Translate tweets if needed (Korean tweets)
+  // Translation is optional - if API key not configured, tweets won't be translated
   let translatedTweets = [];
   try {
-    console.log(`[processTweetsForCampaign] Translating non-English tweets...`);
+    console.log(`[processTweetsForCampaign] Attempting to translate non-English tweets...`);
     translatedTweets = await batchTranslateTweets(fetchedTweets);
     console.log(`[processTweetsForCampaign] Translation complete`);
   } catch (error) {
-    console.warn('[processTweetsForCampaign] Translation failed, using original text:', error);
+    console.warn('[processTweetsForCampaign] Translation unavailable (API key not configured), using original text:', error.message);
     translatedTweets = fetchedTweets.map(t => ({ ...t, translatedText: null }));
   }
 
