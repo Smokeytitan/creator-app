@@ -79,6 +79,7 @@ const transformFromDB = (row) => ({
   pricingPackages: row.pricing_packages || [],
   platforms: row.platforms || [],
   active: row.active !== false,
+  status: row.status || 'active',
   contractFilePath: row.contract_file_path || null,
   contractUploadedAt: row.contract_uploaded_at || null,
   contractParsedData: row.contract_parsed_data || null,
@@ -116,6 +117,7 @@ const transformToDB = (creator) => ({
   pricing_packages: creator.pricingPackages || [],
   platforms: creator.platforms || [],
   active: creator.active !== false,
+  status: creator.status || 'active',
   contract_file_path: creator.contractFilePath || null,
   contract_uploaded_at: creator.contractUploadedAt || null,
   contract_parsed_data: creator.contractParsedData || null
@@ -139,6 +141,7 @@ export const createCreator = async (creatorData) => {
     costPerPost: creatorData.costPerPost || '',
     platforms: creatorData.platforms || [],
     active: creatorData.active !== false,
+    status: creatorData.status || 'active',
     posts: []
   };
 
@@ -538,6 +541,96 @@ export const getEffectiveCostPerPost = (creator) => {
 };
 
 // ============================================================================
+// STATUS/PROSPECT HELPERS
+// ============================================================================
+
+/**
+ * Get all prospects (creators with status='prospect')
+ * @returns {Promise<Array>} Array of prospect creator objects
+ */
+export const getProspects = async () => {
+  if (!supabase) {
+    console.error('Supabase not configured');
+    return [];
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('creators')
+      .select(`
+        *,
+        posts (*)
+      `)
+      .eq('status', 'prospect')
+      .order('name', { ascending: true });
+
+    if (error) throw error;
+
+    return (data || []).map(transformFromDB);
+  } catch (error) {
+    console.error('Error loading prospects:', error);
+    return [];
+  }
+};
+
+/**
+ * Get all active creators (creators with status='active')
+ * @returns {Promise<Array>} Array of active creator objects
+ */
+export const getActiveCreators = async () => {
+  if (!supabase) {
+    console.error('Supabase not configured');
+    return [];
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('creators')
+      .select(`
+        *,
+        posts (*)
+      `)
+      .eq('status', 'active')
+      .order('name', { ascending: true });
+
+    if (error) throw error;
+
+    return (data || []).map(transformFromDB);
+  } catch (error) {
+    console.error('Error loading active creators:', error);
+    return [];
+  }
+};
+
+/**
+ * Promote a prospect to active creator status
+ * @param {number} prospectId - Prospect ID
+ * @returns {Promise<object|null>} Updated creator with 'active' status
+ */
+export const promoteProspect = async (prospectId) => {
+  if (!supabase) return null;
+
+  try {
+    const prospect = await getCreatorById(prospectId);
+    if (!prospect) {
+      console.error('Prospect not found:', prospectId);
+      return null;
+    }
+
+    if (prospect.status !== 'prospect') {
+      console.warn('Creator is not a prospect:', prospectId);
+      return null;
+    }
+
+    // Update status to 'active'
+    return updateCreator(prospectId, { status: 'active' });
+  } catch (error) {
+    console.error('Error promoting prospect:', error);
+    return null;
+  }
+};
+
+// ============================================================================
 // EXPORT DEFAULT
 // ============================================================================
 
@@ -557,5 +650,8 @@ export default {
   addPricingPackage,
   updatePricingPackage,
   deletePricingPackage,
-  getEffectiveCostPerPost
+  getEffectiveCostPerPost,
+  getProspects,
+  getActiveCreators,
+  promoteProspect
 };

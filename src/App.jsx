@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import CreatorRosterEditorial from './components/CreatorRosterEditorial';
+import CreatorProspectsEditorial from './components/CreatorProspectsEditorial';
 import ContentRequestsEditorial from './components/ContentRequestsEditorial';
 import { Campaigns } from './components/Campaigns';
 import Analytics from './components/Analytics';
@@ -26,6 +27,7 @@ export default function App() {
   });
   const [loading, setLoading] = useState(true);
   const [creators, setCreators] = useState([]);
+  const [prospects, setProspects] = useState([]);
   const [requests, setRequests] = useState([]);
   const [useSupabase, setUseSupabase] = useState(!!supabase);
 
@@ -38,17 +40,22 @@ export default function App() {
         // Load from Supabase
         console.log('[App] Loading data from Supabase...');
         try {
-          const [loadedCreators, loadedRequests] = await Promise.all([
+          const [allCreators, loadedRequests] = await Promise.all([
             getCreators(),
             getCampaigns()
           ]);
 
-          setCreators(loadedCreators);
+          // Split creators by status
+          const activeCreators = allCreators.filter(c => c.status === 'active' || !c.status);
+          const prospectCreators = allCreators.filter(c => c.status === 'prospect');
+
+          setCreators(activeCreators);
+          setProspects(prospectCreators);
           setRequests(loadedRequests);
-          console.log(`[App] ✓ Loaded ${loadedCreators.length} creators and ${loadedRequests.length} requests from Supabase`);
+          console.log(`[App] ✓ Loaded ${activeCreators.length} active creators, ${prospectCreators.length} prospects, and ${loadedRequests.length} requests from Supabase`);
 
           // If Supabase is empty but localStorage has data, prompt for migration
-          if (loadedCreators.length === 0) {
+          if (allCreators.length === 0) {
             const localCreators = localStorage.getItem('creators');
             if (localCreators && JSON.parse(localCreators).length > 0) {
               console.warn('[App] Supabase is empty but localStorage has data. Consider running migration.');
@@ -139,6 +146,12 @@ export default function App() {
   }, [creators, loading]);
 
   useEffect(() => {
+    if (!loading && prospects.length > 0) {
+      localStorage.setItem('prospects', JSON.stringify(prospects));
+    }
+  }, [prospects, loading]);
+
+  useEffect(() => {
     if (!loading && requests.length > 0) {
       localStorage.setItem('requests', JSON.stringify(requests));
     }
@@ -201,6 +214,16 @@ export default function App() {
             }`}
           >
             Roster
+          </button>
+          <button
+            onClick={() => setActiveTab('prospects')}
+            className={`flex-1 px-4 py-3 text-sm font-semibold whitespace-nowrap transition-all duration-200 ${
+              activeTab === 'prospects'
+                ? 'bg-gradient-to-r from-[var(--color-accent-primary)] to-[var(--color-accent-secondary)] text-white rounded-t-lg'
+                : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)] rounded-t-lg'
+            }`}
+          >
+            Prospects
           </button>
           <button
             onClick={() => setActiveTab('requests')}
@@ -268,6 +291,17 @@ export default function App() {
               }`}
             >
               Creator Roster
+            </button>
+
+            <button
+              onClick={() => setActiveTab('prospects')}
+              className={`px-4 py-3 text-sm font-semibold transition-all duration-200 text-left rounded-lg ${
+                activeTab === 'prospects'
+                  ? 'bg-gradient-to-r from-[var(--color-accent-primary)] to-[var(--color-accent-secondary)] text-white'
+                  : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)]'
+              }`}
+            >
+              Creator Prospects
             </button>
 
             <button
@@ -339,6 +373,7 @@ export default function App() {
           ) : (
             <>
               {activeTab === 'roster' && <CreatorRosterEditorial creators={creators} setCreators={setCreators} />}
+              {activeTab === 'prospects' && <CreatorProspectsEditorial prospects={prospects} setProspects={setProspects} setCreators={setCreators} />}
               {activeTab === 'requests' && <Campaigns />}
               {activeTab === 'analytics' && <Analytics creators={creators} requests={requests} />}
               {activeTab === 'kaito' && <FlashCampaignManager />}
