@@ -1,10 +1,13 @@
-import { useState, useMemo } from 'react';
-import { Download, ExternalLink, RefreshCw, Eye, TrendingUp, Users, Calendar, Award, CheckCircle, AlertCircle } from 'lucide-react';
-import { fetchCampaignResults, getExcludedAccounts } from '../services/flashCampaignServiceSupabase';
+import { useState, useMemo, useRef } from 'react';
+import { Download, ExternalLink, RefreshCw, Eye, TrendingUp, Users, Calendar, Award, CheckCircle, AlertCircle, Upload } from 'lucide-react';
+import { fetchCampaignResults, getExcludedAccounts, mergeTweetsWithResults } from '../services/flashCampaignServiceSupabase';
+import { parseFlashCampaignExcel, processTweetsForCampaign } from '../services/flashCampaignExcelService';
 
 const CampaignResultsView = ({ campaign, onResultsUpdated }) => {
   const [isRefetching, setIsRefetching] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [sortConfig, setSortConfig] = useState({ key: 'creatorRank', direction: 'asc' });
+  const fileInputRef = useRef(null);
 
   // Calculate summary metrics
   const summaryMetrics = useMemo(() => {
@@ -67,6 +70,73 @@ const CampaignResultsView = ({ campaign, onResultsUpdated }) => {
       alert('Failed to refetch results. Please try again.');
     } finally {
       setIsRefetching(false);
+    }
+  };
+
+  const handleUploadExcel = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.name.match(/\.(xlsx|xls)$/i)) {
+      alert('Please select an Excel file (.xlsx or .xls)');
+      return;
+    }
+
+    setIsUploading(true);
+
+    try {
+      console.log('Parsing Excel file...');
+      // Parse Excel file
+      const tweetsData = await parseFlashCampaignExcel(file);
+      console.log(`Parsed ${tweetsData.length} tweets from Excel`);
+
+      // Process tweets (fetch from Twitter, translate, match against key phrases)
+      console.log('Processing tweets...');
+      const processResult = await processTweetsForCampaign(
+        campaign.id,
+        tweetsData,
+        campaign.results,
+        campaign.keyPhrases
+      );
+
+      if (processResult.error) {
+        alert(`Upload failed: ${processResult.message}`);
+        return;
+      }
+
+      if (processResult.newTweets.length === 0) {
+        alert(processResult.message || 'No new tweets to add');
+        return;
+      }
+
+      // Merge with existing results
+      console.log(`Merging ${processResult.newTweets.length} new tweets with existing results...`);
+      await mergeTweetsWithResults(campaign.id, processResult.newTweets, campaign.results);
+
+      // Show success message
+      let message = `Successfully uploaded ${processResult.newTweets.length} tweet(s)`;
+      if (processResult.duplicateCount > 0) {
+        message += `\n${processResult.duplicateCount} duplicate(s) skipped`;
+      }
+      if (processResult.skippedCount > 0) {
+        message += `\n${processResult.skippedCount} tweet(s) didn't match key phrases`;
+      }
+      alert(message);
+
+      // Refresh UI
+      if (onResultsUpdated) {
+        onResultsUpdated();
+      }
+    } catch (error) {
+      console.error('Error uploading tweets:', error);
+      alert(`Failed to upload tweets: ${error.message}`);
+    } finally {
+      setIsUploading(false);
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     }
   };
 
@@ -275,14 +345,7 @@ const CampaignResultsView = ({ campaign, onResultsUpdated }) => {
       </div>
 
       {/* Action Buttons */}
-      <div className="flex gap-3">
-        <button
-          onClick={handleExportCSV}
-          className="btn-editorial-primary flex items-center gap-2"
-        >
-          <Download className="w-4 h-4" />
-          Export to CSV
-        </button>
+      <div className="flex gap-3 flex-wrap">
         <button
           onClick={handleRefetch}
           className="btn-editorial-secondary flex items-center gap-2"
@@ -291,6 +354,28 @@ const CampaignResultsView = ({ campaign, onResultsUpdated }) => {
           <RefreshCw className={`w-4 h-4 ${isRefetching ? 'animate-spin' : ''}`} />
           {isRefetching ? 'Refetching...' : 'Refetch Results'}
         </button>
+        <button
+          onClick={() => fileInputRef.current?.click()}
+          className="btn-editorial-secondary flex items-center gap-2"
+          disabled={isUploading}
+        >
+          <Upload className={`w-4 h-4 ${isUploading ? 'animate-pulse' : ''}`} />
+          {isUploading ? 'Uploading...' : 'Upload Tweets'}
+        </button>
+        <button
+          onClick={handleExportCSV}
+          className="btn-editorial-primary flex items-center gap-2"
+        >
+          <Download className="w-4 h-4" />
+          Export CSV
+        </button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".xlsx,.xls"
+          onChange={handleUploadExcel}
+          style={{ display: 'none' }}
+        />
       </div>
 
       {/* Twitter API Status Banner */}

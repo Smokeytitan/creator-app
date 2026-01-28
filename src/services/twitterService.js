@@ -132,3 +132,115 @@ export const findMatchingPhrase = (tweetText, keyPhrases) => {
 
   return null;
 };
+
+/**
+ * Translate text using Google Cloud Translation API via serverless proxy
+ * @param {string} text - Text to translate
+ * @param {string} targetLang - Target language code (default: 'en')
+ * @param {string} sourceLang - Source language code (optional, auto-detect if not provided)
+ * @returns {Promise<string>} Translated text
+ */
+export const translateText = async (text, targetLang = 'en', sourceLang = null) => {
+  try {
+    const response = await fetch('/api/translate', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        text,
+        targetLang,
+        sourceLang
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to translate text');
+    }
+
+    const data = await response.json();
+    return data.translatedText;
+  } catch (error) {
+    console.error('Error translating text:', error);
+    throw error;
+  }
+};
+
+/**
+ * Batch translate tweets (only non-English tweets)
+ * @param {Array} tweets - Array of tweet objects from Twitter API
+ * @returns {Promise<Array>} Tweets with added translatedText field
+ */
+export const batchTranslateTweets = async (tweets) => {
+  if (!tweets || tweets.length === 0) return tweets;
+
+  console.log(`[batchTranslateTweets] Processing ${tweets.length} tweets for translation`);
+
+  // Filter to only non-English tweets that need translation
+  const tweetsToTranslate = tweets.filter(tweet =>
+    tweet.lang && tweet.lang !== 'en' && tweet.text
+  );
+
+  console.log(`[batchTranslateTweets] Found ${tweetsToTranslate.length} non-English tweets`);
+
+  // Translate each tweet (with retry logic)
+  const translatedTweets = await Promise.all(
+    tweets.map(async (tweet) => {
+      // Skip English tweets
+      if (!tweet.lang || tweet.lang === 'en') {
+        return { ...tweet, translatedText: null };
+      }
+
+      try {
+        const translatedText = await translateText(tweet.text, 'en', tweet.lang);
+        console.log(`[batchTranslateTweets] Translated tweet ${tweet.id} from ${tweet.lang} to en`);
+        return { ...tweet, translatedText };
+      } catch (error) {
+        console.warn(`[batchTranslateTweets] Failed to translate tweet ${tweet.id}:`, error);
+        return { ...tweet, translatedText: null };
+      }
+    })
+  );
+
+  const successCount = translatedTweets.filter(t => t.translatedText).length;
+  console.log(`[batchTranslateTweets] Successfully translated ${successCount} out of ${tweetsToTranslate.length} non-English tweets`);
+
+  return translatedTweets;
+};
+
+/**
+ * Find matching phrase with translation support
+ * Checks both original text and translated text for key phrases
+ * @param {string} tweetText - Original tweet text
+ * @param {string|null} translatedText - Translated text (if available)
+ * @param {string[]} keyPhrases - Array of key phrases to match
+ * @returns {Object} { matchedPhrase, matchedIn: 'original'|'translated' }
+ */
+export const findMatchingPhraseWithTranslation = (tweetText, translatedText, keyPhrases) => {
+  // First, try matching against original text
+  const originalMatch = findMatchingPhrase(tweetText, keyPhrases);
+  if (originalMatch) {
+    return {
+      matchedPhrase: originalMatch,
+      matchedIn: 'original'
+    };
+  }
+
+  // If no match and we have translated text, try matching against translation
+  if (translatedText) {
+    const translatedMatch = findMatchingPhrase(translatedText, keyPhrases);
+    if (translatedMatch) {
+      return {
+        matchedPhrase: translatedMatch,
+        matchedIn: 'translated'
+      };
+    }
+  }
+
+  // No match found
+  return {
+    matchedPhrase: null,
+    matchedIn: null
+  };
+};

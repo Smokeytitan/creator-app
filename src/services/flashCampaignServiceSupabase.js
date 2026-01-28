@@ -635,6 +635,72 @@ export const fetchCampaignResults = async (campaignId) => {
   console.log(`[Campaign ${campaign.name}] ✓ Processing complete: ${eligibleTweets.length} tweets saved (${tweetIds.length} cached in Supabase)`);
 };
 
+/**
+ * Merge uploaded tweets with existing campaign results
+ * @param {number} campaignId - Campaign ID
+ * @param {Array} newTweets - Array of new tweet objects from upload
+ * @param {Object} existingResults - Existing campaign results object
+ * @returns {Promise<Object>} Updated results object
+ */
+export const mergeTweetsWithResults = async (campaignId, newTweets, existingResults) => {
+  if (!newTweets || newTweets.length === 0) {
+    console.log('[mergeTweetsWithResults] No new tweets to merge');
+    return existingResults;
+  }
+
+  console.log(`[mergeTweetsWithResults] Merging ${newTweets.length} new tweets with existing results`);
+
+  // Get existing tweets or initialize empty array
+  const existingTweets = existingResults?.eligibleTweets || [];
+
+  // Create set of existing tweet IDs for duplicate detection
+  const existingTweetIds = new Set(existingTweets.map(t => t.tweetId));
+
+  // Filter out any duplicates (just in case)
+  const uniqueNewTweets = newTweets.filter(tweet => {
+    if (existingTweetIds.has(tweet.tweetId)) {
+      console.warn(`[mergeTweetsWithResults] Skipping duplicate tweet: ${tweet.tweetId}`);
+      return false;
+    }
+    return true;
+  });
+
+  console.log(`[mergeTweetsWithResults] Adding ${uniqueNewTweets.length} unique new tweets`);
+
+  // Merge tweets
+  const mergedTweets = [...existingTweets, ...uniqueNewTweets];
+
+  // Sort by creator rank (if available) and then by impressions
+  mergedTweets.sort((a, b) => {
+    // First sort by rank (0 means no rank, should go to bottom)
+    if (a.creatorRank > 0 && b.creatorRank === 0) return -1;
+    if (a.creatorRank === 0 && b.creatorRank > 0) return 1;
+    if (a.creatorRank > 0 && b.creatorRank > 0) {
+      if (a.creatorRank !== b.creatorRank) {
+        return a.creatorRank - b.creatorRank;
+      }
+    }
+    // Then sort by impressions
+    return b.totalImpressions - a.totalImpressions;
+  });
+
+  // Create updated results object
+  const updatedResults = {
+    ...existingResults,
+    eligibleTweets: mergedTweets,
+    totalTweetsCached: (existingResults?.totalTweetsCached || 0) + uniqueNewTweets.length,
+    lastUpdated: new Date().toISOString(),
+    uploadedTweetsCount: (existingResults?.uploadedTweetsCount || 0) + uniqueNewTweets.length
+  };
+
+  // Save to database
+  await updateCampaignResults(campaignId, updatedResults);
+
+  console.log(`[mergeTweetsWithResults] Merge complete: ${mergedTweets.length} total tweets`);
+
+  return updatedResults;
+};
+
 export default {
   getCampaigns,
   getCampaignById,
@@ -651,5 +717,6 @@ export default {
   getStatusDisplay,
   checkAndProcessEndedCampaigns,
   fetchCampaignResults,
+  mergeTweetsWithResults,
   normalizeHandle
 };
