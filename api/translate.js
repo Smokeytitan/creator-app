@@ -6,9 +6,10 @@
  * 2. Keep API keys secure
  * 3. Translate tweet content for key phrase matching
  *
- * Supports:
- * - DeepL API (preferred - simpler setup, free tier: 500k chars/month)
- * - Google Cloud Translation API v2 (fallback)
+ * Supports (in order of preference):
+ * - MyMemory Translation API (free, no signup required - automatic fallback)
+ * - DeepL API (if configured - 500k chars/month free tier)
+ * - Google Cloud Translation API v2 (if configured)
  */
 
 export default async function handler(req, res) {
@@ -17,17 +18,9 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  // Check for translation API keys (DeepL first, then Google Cloud)
+  // Check for translation API keys (optional - will use MyMemory as fallback)
   const deeplApiKey = process.env.DEEPL_API_KEY;
   const googleApiKey = process.env.GOOGLE_TRANSLATE_API_KEY;
-
-  if (!deeplApiKey && !googleApiKey) {
-    console.warn('No translation API key configured - translation unavailable');
-    return res.status(503).json({
-      error: 'Translation API not configured',
-      message: 'Neither DEEPL_API_KEY nor GOOGLE_TRANSLATE_API_KEY is set. Translation is optional - tweets will be matched against key phrases using original text only.'
-    });
-  }
 
   try {
     const { text, targetLang = 'en', sourceLang = null } = req.body;
@@ -115,43 +108,61 @@ export default async function handler(req, res) {
         }
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error('Google Translation API error:', response.status, errorData);
+      if (response.ok) {
+        const data = await response.json();
+        const translatedText = data.data?.translations?.[0]?.translatedText;
+        const detectedSourceLanguage = data.data?.translations?.[0]?.detectedSourceLanguage;
 
-        if (response.status === 429) {
-          return res.status(429).json({
-            error: 'Translation API rate limit exceeded',
-            details: errorData
+        if (translatedText) {
+          console.log(`Google translation successful (detected language: ${detectedSourceLanguage})`);
+
+          return res.status(200).json({
+            translatedText,
+            detectedSourceLanguage,
+            targetLanguage: targetLang,
+            provider: 'google'
           });
         }
-
-        return res.status(response.status).json({
-          error: 'Translation API error',
-          details: errorData
-        });
+      } else {
+        console.warn('Google Cloud API error:', response.status, await response.text());
+        // Fall through to MyMemory
       }
-
-      const data = await response.json();
-      const translatedText = data.data?.translations?.[0]?.translatedText;
-      const detectedSourceLanguage = data.data?.translations?.[0]?.detectedSourceLanguage;
-
-      if (!translatedText) {
-        throw new Error('No translation returned from API');
-      }
-
-      console.log(`Google translation successful (detected language: ${detectedSourceLanguage})`);
-
-      return res.status(200).json({
-        translatedText,
-        detectedSourceLanguage,
-        targetLanguage: targetLang,
-        provider: 'google'
-      });
     }
 
-    // Should never reach here due to earlier check
-    throw new Error('No translation provider available');
+    // Final fallback: MyMemory Translation API (free, no signup required)
+    console.log('Using MyMemory Translation API (free fallback)');
+
+    // MyMemory uses language pair format (e.g., 'ko|en' for Korean to English)
+    const langPair = sourceLang ? `${sourceLang}|${targetLang}` : `|${targetLang}`;
+    const myMemoryUrl = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${langPair}`;
+
+    const myMemoryResponse = await fetch(myMemoryUrl);
+
+    if (!myMemoryResponse.ok) {
+      throw new Error(`MyMemory API error: ${myMemoryResponse.status}`);
+    }
+
+    const myMemoryData = await myMemoryResponse.json();
+    const translatedText = myMemoryData.responseData?.translatedText;
+
+    if (!translatedText) {
+      throw new Error('No translation returned from MyMemory API');
+    }
+
+    // MyMemory sometimes returns the original text if it can't translate
+    // Check if translation is different from original
+    if (translatedText.toLowerCase() === text.toLowerCase()) {
+      console.warn('MyMemory returned same text - no translation available');
+    }
+
+    console.log('MyMemory translation successful');
+
+    return res.status(200).json({
+      translatedText,
+      detectedSourceLanguage: sourceLang || 'unknown',
+      targetLanguage: targetLang,
+      provider: 'mymemory'
+    });
 
   } catch (error) {
     console.error('Error in Translation API proxy:', error);
