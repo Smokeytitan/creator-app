@@ -44,11 +44,24 @@ export default async function handler(req, res) {
     }
 
     // Exchange authorization code for access token
+    const authString = `${clientId}:${clientSecret}`;
+    const authHeader = `Basic ${Buffer.from(authString).toString('base64')}`;
+
+    console.log('Token exchange request:', {
+      clientIdLength: clientId.length,
+      clientSecretLength: clientSecret.length,
+      authHeaderLength: authHeader.length,
+      authHeaderPreview: authHeader.substring(0, 20) + '...',
+      redirectUri,
+      hasCode: !!code,
+      hasCodeVerifier: !!codeVerifier
+    });
+
     const tokenResponse = await fetch('https://api.twitter.com/2/oauth2/token', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
-        'Authorization': `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString('base64')}`
+        'Authorization': authHeader
       },
       body: new URLSearchParams({
         code,
