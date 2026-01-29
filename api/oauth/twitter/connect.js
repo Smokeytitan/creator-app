@@ -15,6 +15,12 @@ export default async function handler(req, res) {
   }
 
   try {
+    const userId = req.query.userId;
+
+    if (!userId) {
+      return res.status(400).json({ error: 'User ID is required' });
+    }
+
     const clientId = process.env.TWITTER_CLIENT_ID;
     const redirectUri = `${process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:5173'}/api/oauth/twitter/callback`;
 
@@ -30,26 +36,18 @@ export default async function handler(req, res) {
       .update(codeVerifier)
       .digest('base64url');
 
-    // Generate state parameter for CSRF protection
-    const state = crypto.randomBytes(16).toString('base64url');
-
-    // Store code verifier and state in session or database
-    // For now, we'll pass it through the state parameter (not ideal for production)
-    const stateData = Buffer.from(JSON.stringify({
-      state,
-      codeVerifier,
-      userId: req.query.userId // Pass user ID through the flow
-    })).toString('base64url');
-
     // Twitter OAuth 2.0 authorization URL
     const authUrl = new URL('https://twitter.com/i/oauth2/authorize');
     authUrl.searchParams.append('response_type', 'code');
     authUrl.searchParams.append('client_id', clientId);
     authUrl.searchParams.append('redirect_uri', redirectUri);
     authUrl.searchParams.append('scope', 'tweet.read users.read offline.access');
-    authUrl.searchParams.append('state', stateData);
+    authUrl.searchParams.append('state', userId); // Pass user ID as state
     authUrl.searchParams.append('code_challenge', codeChallenge);
     authUrl.searchParams.append('code_challenge_method', 'S256');
+
+    // Store code verifier in cookie for callback
+    res.setHeader('Set-Cookie', `twitter_code_verifier=${codeVerifier}; HttpOnly; Secure; SameSite=Lax; Max-Age=600; Path=/`);
 
     return res.status(200).json({ authUrl: authUrl.toString() });
   } catch (error) {

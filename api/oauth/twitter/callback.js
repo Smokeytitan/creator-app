@@ -6,16 +6,32 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { code, state: stateData } = req.query;
+    const { code, state: userId, error: oauthError, error_description } = req.query;
 
-    if (!code || !stateData) {
+    if (oauthError) {
+      console.error('Twitter OAuth error:', { oauthError, error_description });
+      const appUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:5173';
+      return res.redirect(`${appUrl}/?twitter_error=${encodeURIComponent(error_description || oauthError)}`);
+    }
+
+    if (!code || !userId) {
       return res.status(400).json({ error: 'Missing code or state parameter' });
     }
 
-    // Decode state data
-    const { codeVerifier, userId } = JSON.parse(
-      Buffer.from(stateData, 'base64url').toString('utf-8')
-    );
+    // Get code verifier from cookie
+    const cookies = req.headers.cookie?.split(';').reduce((acc, cookie) => {
+      const [key, value] = cookie.trim().split('=');
+      acc[key] = value;
+      return acc;
+    }, {}) || {};
+
+    const codeVerifier = cookies.twitter_code_verifier;
+
+    if (!codeVerifier) {
+      console.error('Missing code verifier cookie');
+      const appUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:5173';
+      return res.redirect(`${appUrl}/?twitter_error=missing_code_verifier`);
+    }
 
     const clientId = process.env.TWITTER_CLIENT_ID;
     const clientSecret = process.env.TWITTER_CLIENT_SECRET;
@@ -95,10 +111,15 @@ export default async function handler(req, res) {
 
     // Redirect back to the app with success message
     const appUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:5173';
+
+    // Clear the code verifier cookie
+    res.setHeader('Set-Cookie', 'twitter_code_verifier=; HttpOnly; Secure; SameSite=Lax; Max-Age=0; Path=/');
+
     return res.redirect(`${appUrl}/?twitter_connected=true`);
 
   } catch (error) {
     console.error('Twitter OAuth callback error:', error);
-    return res.status(500).json({ error: 'OAuth callback failed', message: error.message });
+    const appUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:5173';
+    return res.redirect(`${appUrl}/?twitter_error=internal_error`);
   }
 }
