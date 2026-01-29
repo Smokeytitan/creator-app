@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useUser, useAuth, UserButton } from '@clerk/clerk-react';
 import CreatorRosterEditorial from './components/CreatorRosterEditorial';
 import CreatorProspectsEditorial from './components/CreatorProspectsEditorial';
 import ContentRequestsEditorial from './components/ContentRequestsEditorial';
@@ -13,6 +14,7 @@ import { IMPORTED_CREATORS } from './data/importedCreators';
 import { getCreators, bulkImportCreators } from './services/creatorsServiceSupabase';
 import { getCampaigns } from './services/campaignsServiceSupabase';
 import { supabase } from './lib/supabaseClient';
+import SignInPage from './components/auth/SignInPage';
 
 // Google Sheets CSV export URL
 const GOOGLE_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1J75nBdYNyQivMdi7XihhpYr6aXOnCNcJIAjTQLwjkXk/export?format=csv&gid=1537582832';
@@ -20,6 +22,36 @@ const GOOGLE_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1J75nBdYNyQivMd
 const DEFAULT_CREATORS = IMPORTED_CREATORS;
 
 export default function App() {
+  // Authentication
+  const { isSignedIn, isLoaded } = useAuth();
+  const { user } = useUser();
+
+  // Check if user is admin (default to true for existing users during migration)
+  const isAdmin = user?.publicMetadata?.role === 'admin' || !user?.publicMetadata?.role;
+
+  // Show loading while auth is loading
+  if (!isLoaded) {
+    return (
+      <div className="min-h-screen w-full bg-[var(--color-bg-primary)] flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block h-10 w-10 animate-spin rounded-full border-4 border-solid border-polygon-primary border-r-transparent"></div>
+          <p className="mt-4 text-polygon-text-secondary font-medium">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show sign in page if not authenticated
+  if (!isSignedIn) {
+    return <SignInPage />;
+  }
+
+  // For now, all authenticated users see the admin view
+  // In Phase 3, we'll add CreatorPortal for non-admin users
+  return <AdminView />;
+}
+
+function AdminView() {
   const [activeTab, setActiveTab] = useState(() => {
     const stored = localStorage.getItem('activeTab');
     // Default to channels tab now that roster/requests/analytics are hidden
@@ -198,6 +230,7 @@ export default function App() {
               </button>
             )}
             <ThemeToggle />
+            <UserButton afterSignOutUrl="/" />
           </div>
         </div>
       </div>
