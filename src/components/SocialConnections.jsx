@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useUser, useAuth } from '@clerk/clerk-react';
+import { useUser } from '@clerk/clerk-react';
 
 const PLATFORMS = [
   {
@@ -41,10 +41,11 @@ const PLATFORMS = [
 
 export default function SocialConnections() {
   const { user } = useUser();
-  const { getToken } = useAuth();
   const [connections, setConnections] = useState([]);
   const [loading, setLoading] = useState(true);
   const [connecting, setConnecting] = useState(null);
+
+  console.log('SocialConnections render:', { user: user?.id, connectionsCount: connections.length });
 
   useEffect(() => {
     loadConnections();
