@@ -8,6 +8,7 @@ import Analytics from './components/Analytics';
 import FlashCampaignManager from './components/FlashCampaignManager';
 import BotAnalyticsEditorial from './components/BotAnalyticsEditorial';
 import ChannelManagerEditorial from './components/ChannelManagerEditorial';
+import SocialConnections from './components/SocialConnections';
 import { GoogleSheetsService } from './services/googleSheetsService';
 import ThemeToggle from './components/ThemeToggle';
 import { IMPORTED_CREATORS } from './data/importedCreators';
@@ -308,6 +309,16 @@ function AdminView() {
           >
             Channels
           </button>
+          <button
+            onClick={() => setActiveTab('social')}
+            className={`flex-1 px-4 py-3 text-sm font-semibold whitespace-nowrap transition-all duration-200 ${
+              activeTab === 'social'
+                ? 'bg-gradient-to-r from-[var(--color-accent-primary)] to-[var(--color-accent-secondary)] text-white rounded-t-lg'
+                : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)] rounded-t-lg'
+            }`}
+          >
+            Social Accounts
+          </button>
         </nav>
       </div>
 
@@ -391,6 +402,17 @@ function AdminView() {
             >
               Channel Manager
             </button>
+
+            <button
+              onClick={() => setActiveTab('social')}
+              className={`px-4 py-3 text-sm font-semibold transition-all duration-200 text-left rounded-lg ${
+                activeTab === 'social'
+                  ? 'bg-gradient-to-r from-[var(--color-accent-primary)] to-[var(--color-accent-secondary)] text-white'
+                  : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)]'
+              }`}
+            >
+              Social Accounts
+            </button>
           </nav>
         </div>
 
@@ -412,6 +434,7 @@ function AdminView() {
               {activeTab === 'kaito' && <FlashCampaignManager />}
               {activeTab === 'botanalytics' && <BotAnalyticsEditorial />}
               {activeTab === 'channels' && <ChannelManagerEditorial />}
+              {activeTab === 'social' && <SocialConnections />}
             </>
           )}
         </div>
