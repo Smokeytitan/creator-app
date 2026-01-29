@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useUser, useSession } from '@clerk/clerk-react';
-import { createClient } from '@supabase/supabase-js';
+import { useUser } from '@clerk/clerk-react';
+import { supabase } from '../lib/supabaseClient';
 
 const PLATFORMS = [
   {
@@ -42,24 +42,9 @@ const PLATFORMS = [
 
 export default function SocialConnections() {
   const { user } = useUser();
-  const { session } = useSession();
   const [connections, setConnections] = useState([]);
   const [loading, setLoading] = useState(true);
   const [connecting, setConnecting] = useState(null);
-
-  // Create Supabase client with Clerk token
-  const getSupabaseClient = async () => {
-    const token = await session?.getToken({ template: 'supabase' });
-    return createClient(
-      import.meta.env.VITE_SUPABASE_URL,
-      import.meta.env.VITE_SUPABASE_ANON_KEY,
-      {
-        global: {
-          headers: token ? { Authorization: `Bearer ${token}` } : {}
-        }
-      }
-    );
-  };
 
   useEffect(() => {
     loadConnections();
@@ -85,10 +70,9 @@ export default function SocialConnections() {
   }, [user]);
 
   const loadConnections = async () => {
-    if (!user || !session) return;
+    if (!user) return;
 
     try {
-      const supabase = await getSupabaseClient();
       const { data, error } = await supabase
         .from('social_connections')
         .select('*')
@@ -139,7 +123,6 @@ export default function SocialConnections() {
     }
 
     try {
-      const supabase = await getSupabaseClient();
       const { error } = await supabase
         .from('social_connections')
         .delete()
