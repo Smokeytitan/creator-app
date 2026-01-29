@@ -73,14 +73,11 @@ export default function SocialConnections() {
     if (!user) return;
 
     try {
-      const token = await getToken();
-      const response = await fetch('/api/connections/list', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      const response = await fetch(`/api/connections/list?userId=${user.id}`);
 
       if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Failed to load connections:', errorData);
         throw new Error('Failed to load connections');
       }
 
@@ -126,12 +123,8 @@ export default function SocialConnections() {
     }
 
     try {
-      const token = await getToken();
-      const response = await fetch(`/api/connections/delete?platform=${platformId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+      const response = await fetch(`/api/connections/delete?userId=${user.id}&platform=${platformId}`, {
+        method: 'DELETE'
       });
 
       if (!response.ok) {

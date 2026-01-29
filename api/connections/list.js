@@ -1,5 +1,4 @@
 import { createClient } from '@supabase/supabase-js';
-import { clerkClient } from '@clerk/clerk-sdk-node';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -7,21 +6,11 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Get Clerk session token from Authorization header
-    const authHeader = req.headers.authorization;
-    if (!authHeader?.startsWith('Bearer ')) {
-      return res.status(401).json({ error: 'Unauthorized' });
+    const { userId } = req.query;
+
+    if (!userId) {
+      return res.status(400).json({ error: 'userId parameter required' });
     }
-
-    const sessionToken = authHeader.substring(7);
-
-    // Verify the session token with Clerk
-    const session = await clerkClient.sessions.verifySession(sessionToken);
-    if (!session || !session.userId) {
-      return res.status(401).json({ error: 'Invalid session' });
-    }
-
-    const userId = session.userId;
 
     // Query Supabase with service key (secure)
     const supabase = createClient(
@@ -36,12 +25,14 @@ export default async function handler(req, res) {
 
     if (error) {
       console.error('Error loading connections:', error);
-      return res.status(500).json({ error: 'Failed to load connections' });
+      return res.status(500).json({ error: 'Failed to load connections', details: error.message });
     }
+
+    console.log('Loaded connections for user:', userId, 'count:', data?.length);
 
     return res.json({ connections: data || [] });
   } catch (error) {
     console.error('Error in connections/list:', error);
-    return res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json({ error: 'Internal server error', message: error.message });
   }
 }
