@@ -54,8 +54,10 @@ export default function SocialConnections() {
     // Check for success/error messages in URL
     const params = new URLSearchParams(window.location.search);
     if (params.get('twitter_connected') === 'true') {
-      // Reload connections after successful OAuth
-      loadConnections();
+      // Give database a moment to sync, then reload
+      setTimeout(() => {
+        loadConnections();
+      }, 500);
       // Clean up URL
       window.history.replaceState({}, '', window.location.pathname);
     } else if (params.get('twitter_error')) {
@@ -65,7 +67,7 @@ export default function SocialConnections() {
       // Clean up URL
       window.history.replaceState({}, '', window.location.pathname);
     }
-  }, []);
+  }, [user]);
 
   const loadConnections = async () => {
     if (!user) return;
