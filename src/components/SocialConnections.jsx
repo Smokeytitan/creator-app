@@ -50,6 +50,23 @@ export default function SocialConnections() {
     loadConnections();
   }, [user]);
 
+  useEffect(() => {
+    // Check for success/error messages in URL
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('twitter_connected') === 'true') {
+      // Reload connections after successful OAuth
+      loadConnections();
+      // Clean up URL
+      window.history.replaceState({}, '', window.location.pathname);
+    } else if (params.get('twitter_error')) {
+      const error = params.get('twitter_error');
+      const details = params.get('details');
+      alert(`Twitter connection failed: ${error}${details ? '\n' + details : ''}`);
+      // Clean up URL
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, []);
+
   const loadConnections = async () => {
     if (!user) return;
 
