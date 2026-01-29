@@ -22,7 +22,8 @@ export default async function handler(req, res) {
     }
 
     const clientId = process.env.TWITTER_CLIENT_ID;
-    const redirectUri = `${process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:5173'}/api/oauth/twitter/callback`;
+    const productionUrl = process.env.PRODUCTION_URL || process.env.VERCEL_URL;
+    const redirectUri = `${productionUrl ? `https://${productionUrl}` : 'http://localhost:5173'}/api/oauth/twitter/callback`;
 
     if (!clientId) {
       console.error('TWITTER_CLIENT_ID not set');

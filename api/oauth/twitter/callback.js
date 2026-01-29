@@ -8,9 +8,11 @@ export default async function handler(req, res) {
   try {
     const { code, state: userId, error: oauthError, error_description } = req.query;
 
+    const productionUrl = process.env.PRODUCTION_URL || process.env.VERCEL_URL;
+    const appUrl = productionUrl ? `https://${productionUrl}` : 'http://localhost:5173';
+
     if (oauthError) {
       console.error('Twitter OAuth error:', { oauthError, error_description });
-      const appUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:5173';
       return res.redirect(`${appUrl}/?twitter_error=${encodeURIComponent(error_description || oauthError)}`);
     }
 
@@ -29,13 +31,12 @@ export default async function handler(req, res) {
 
     if (!codeVerifier) {
       console.error('Missing code verifier cookie');
-      const appUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:5173';
       return res.redirect(`${appUrl}/?twitter_error=missing_code_verifier`);
     }
 
     const clientId = process.env.TWITTER_CLIENT_ID;
     const clientSecret = process.env.TWITTER_CLIENT_SECRET;
-    const redirectUri = `${process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:5173'}/api/oauth/twitter/callback`;
+    const redirectUri = `${appUrl}/api/oauth/twitter/callback`;
 
     if (!clientId || !clientSecret) {
       console.error('Twitter OAuth credentials not configured');
@@ -110,8 +111,6 @@ export default async function handler(req, res) {
     }
 
     // Redirect back to the app with success message
-    const appUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:5173';
-
     // Clear the code verifier cookie
     res.setHeader('Set-Cookie', 'twitter_code_verifier=; HttpOnly; Secure; SameSite=Lax; Max-Age=0; Path=/');
 
@@ -119,7 +118,8 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error('Twitter OAuth callback error:', error);
-    const appUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:5173';
+    const productionUrl = process.env.PRODUCTION_URL || process.env.VERCEL_URL;
+    const appUrl = productionUrl ? `https://${productionUrl}` : 'http://localhost:5173';
     return res.redirect(`${appUrl}/?twitter_error=internal_error`);
   }
 }
