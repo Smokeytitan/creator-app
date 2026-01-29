@@ -75,6 +75,8 @@ export default async function handler(req, res) {
     const tokenData = await tokenResponse.json();
     const { access_token, refresh_token, expires_in } = tokenData;
 
+    console.log('Token exchange successful:', { hasAccessToken: !!access_token, hasRefreshToken: !!refresh_token, expiresIn: expires_in });
+
     // Get user info from Twitter
     const userResponse = await fetch('https://api.twitter.com/2/users/me', {
       headers: {
@@ -83,12 +85,15 @@ export default async function handler(req, res) {
     });
 
     if (!userResponse.ok) {
-      console.error('Failed to fetch Twitter user info');
-      return res.status(500).json({ error: 'Failed to fetch user info' });
+      const userError = await userResponse.text();
+      console.error('Failed to fetch Twitter user info:', userError);
+      return res.redirect(`${appUrl}/?twitter_error=user_fetch_failed&details=${encodeURIComponent(userError.substring(0, 200))}`);
     }
 
     const userData = await userResponse.json();
     const { id: platformUserId, username: platformUsername } = userData.data;
+
+    console.log('Twitter user fetched:', { platformUserId, platformUsername, userId });
 
     // Store connection in Supabase
     const supabase = createClient(
@@ -98,25 +103,38 @@ export default async function handler(req, res) {
 
     const tokenExpiresAt = new Date(Date.now() + expires_in * 1000).toISOString();
 
-    const { error: dbError } = await supabase
+    const connectionData = {
+      user_id: userId,
+      platform: 'twitter',
+      platform_user_id: platformUserId,
+      platform_username: platformUsername,
+      access_token: access_token,
+      refresh_token: refresh_token,
+      token_expires_at: tokenExpiresAt,
+      connected_at: new Date().toISOString()
+    };
+
+    console.log('Attempting to save connection:', { userId, platformUserId, platformUsername });
+
+    const { data: insertedData, error: dbError } = await supabase
       .from('social_connections')
-      .upsert({
-        user_id: userId,
-        platform: 'twitter',
-        platform_user_id: platformUserId,
-        platform_username: platformUsername,
-        access_token: access_token,
-        refresh_token: refresh_token,
-        token_expires_at: tokenExpiresAt,
-        connected_at: new Date().toISOString()
-      }, {
+      .upsert(connectionData, {
         onConflict: 'user_id,platform'
-      });
+      })
+      .select();
 
     if (dbError) {
-      console.error('Failed to store Twitter connection:', dbError);
-      return res.status(500).json({ error: 'Failed to save connection' });
+      console.error('Failed to store Twitter connection:', {
+        error: dbError,
+        code: dbError.code,
+        message: dbError.message,
+        details: dbError.details,
+        hint: dbError.hint
+      });
+      return res.redirect(`${appUrl}/?twitter_error=db_save_failed&details=${encodeURIComponent(dbError.message)}`);
     }
+
+    console.log('Connection saved successfully:', insertedData);
 
     // Redirect back to the app with success message
     // Clear the code verifier cookie
