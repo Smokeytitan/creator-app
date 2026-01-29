@@ -60,8 +60,16 @@ export default async function handler(req, res) {
 
     if (!tokenResponse.ok) {
       const error = await tokenResponse.text();
-      console.error('Twitter token exchange failed:', error);
-      return res.status(500).json({ error: 'Failed to exchange authorization code' });
+      console.error('Twitter token exchange failed:', {
+        status: tokenResponse.status,
+        statusText: tokenResponse.statusText,
+        error,
+        redirectUri,
+        hasCodeVerifier: !!codeVerifier,
+        hasCode: !!code,
+        clientId
+      });
+      return res.redirect(`${appUrl}/?twitter_error=token_exchange_failed&details=${encodeURIComponent(error.substring(0, 200))}`);
     }
 
     const tokenData = await tokenResponse.json();
