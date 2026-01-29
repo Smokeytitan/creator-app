@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useUser } from '@clerk/clerk-react';
-import { supabase } from '../lib/supabaseClient';
+import { useUser, useAuth } from '@clerk/clerk-react';
 
 const PLATFORMS = [
   {
@@ -42,6 +41,7 @@ const PLATFORMS = [
 
 export default function SocialConnections() {
   const { user } = useUser();
+  const { getToken } = useAuth();
   const [connections, setConnections] = useState([]);
   const [loading, setLoading] = useState(true);
   const [connecting, setConnecting] = useState(null);
@@ -73,17 +73,20 @@ export default function SocialConnections() {
     if (!user) return;
 
     try {
-      const { data, error } = await supabase
-        .from('social_connections')
-        .select('*')
-        .eq('user_id', user.id);
+      const token = await getToken();
+      const response = await fetch('/api/connections/list', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
 
-      if (error) {
-        console.error('Error loading connections:', error);
-      } else {
-        console.log('Loaded connections:', data);
-        setConnections(data || []);
+      if (!response.ok) {
+        throw new Error('Failed to load connections');
       }
+
+      const { connections: data } = await response.json();
+      console.log('Loaded connections:', data);
+      setConnections(data || []);
     } catch (error) {
       console.error('Error loading connections:', error);
     } finally {
@@ -123,18 +126,19 @@ export default function SocialConnections() {
     }
 
     try {
-      const { error } = await supabase
-        .from('social_connections')
-        .delete()
-        .eq('user_id', user.id)
-        .eq('platform', platformId);
+      const token = await getToken();
+      const response = await fetch(`/api/connections/delete?platform=${platformId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
 
-      if (error) {
-        console.error('Error disconnecting:', error);
-        alert('Failed to disconnect. Please try again.');
-      } else {
-        loadConnections();
+      if (!response.ok) {
+        throw new Error('Failed to disconnect');
       }
+
+      loadConnections();
     } catch (error) {
       console.error('Error disconnecting:', error);
       alert('Error disconnecting. Please try again.');
