@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useUser } from '@clerk/clerk-react';
+import { useUser, useAuth } from '@clerk/clerk-react';
 
 const PLATFORMS = [
   {
@@ -41,6 +41,7 @@ const PLATFORMS = [
 
 export default function SocialConnections() {
   const { user } = useUser();
+  const { getToken } = useAuth();
   const [connections, setConnections] = useState([]);
   const [loading, setLoading] = useState(true);
   const [connecting, setConnecting] = useState(null);
@@ -74,7 +75,12 @@ export default function SocialConnections() {
     if (!user) return;
 
     try {
-      const response = await fetch(`/api/connections/list?userId=${user.id}`);
+      const token = await getToken();
+      const response = await fetch('/api/connections/list', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -124,8 +130,12 @@ export default function SocialConnections() {
     }
 
     try {
-      const response = await fetch(`/api/connections/delete?userId=${user.id}&platform=${platformId}`, {
-        method: 'DELETE'
+      const token = await getToken();
+      const response = await fetch(`/api/connections/delete?platform=${platformId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       });
 
       if (!response.ok) {

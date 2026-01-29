@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { verifyToken } from '@clerk/backend';
 
 export default async function handler(req, res) {
   if (req.method !== 'DELETE') {
@@ -6,10 +7,28 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { userId, platform } = req.query;
+    // Get session token from Authorization header
+    const authHeader = req.headers.authorization;
+    if (!authHeader?.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'Unauthorized - missing token' });
+    }
 
-    if (!userId || !platform) {
-      return res.status(400).json({ error: 'userId and platform parameters required' });
+    const token = authHeader.substring(7);
+
+    // Verify the Clerk session token
+    const payload = await verifyToken(token, {
+      secretKey: process.env.CLERK_SECRET_KEY
+    });
+
+    if (!payload || !payload.sub) {
+      return res.status(401).json({ error: 'Invalid token' });
+    }
+
+    const userId = payload.sub;
+    const { platform } = req.query;
+
+    if (!platform) {
+      return res.status(400).json({ error: 'platform parameter required' });
     }
 
     // Delete from Supabase with service key (secure)
@@ -32,6 +51,9 @@ export default async function handler(req, res) {
     return res.json({ success: true });
   } catch (error) {
     console.error('Error in connections/delete:', error);
+    if (error.message?.includes('token')) {
+      return res.status(401).json({ error: 'Invalid or expired token' });
+    }
     return res.status(500).json({ error: 'Internal server error', message: error.message });
   }
 }

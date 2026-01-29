@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { verifyToken } from '@clerk/backend';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -6,11 +7,24 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { userId } = req.query;
-
-    if (!userId) {
-      return res.status(400).json({ error: 'userId parameter required' });
+    // Get session token from Authorization header
+    const authHeader = req.headers.authorization;
+    if (!authHeader?.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'Unauthorized - missing token' });
     }
+
+    const token = authHeader.substring(7);
+
+    // Verify the Clerk session token
+    const payload = await verifyToken(token, {
+      secretKey: process.env.CLERK_SECRET_KEY
+    });
+
+    if (!payload || !payload.sub) {
+      return res.status(401).json({ error: 'Invalid token' });
+    }
+
+    const userId = payload.sub;
 
     // Query Supabase with service key (secure)
     const supabase = createClient(
@@ -33,6 +47,9 @@ export default async function handler(req, res) {
     return res.json({ connections: data || [] });
   } catch (error) {
     console.error('Error in connections/list:', error);
+    if (error.message?.includes('token')) {
+      return res.status(401).json({ error: 'Invalid or expired token' });
+    }
     return res.status(500).json({ error: 'Internal server error', message: error.message });
   }
 }
