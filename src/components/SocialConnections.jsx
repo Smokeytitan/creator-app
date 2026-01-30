@@ -14,7 +14,7 @@ const PLATFORMS = [
     name: 'Instagram',
     icon: '📷',
     color: 'bg-gradient-to-br from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600',
-    available: false // Coming soon
+    available: true
   },
   {
     id: 'facebook',
@@ -67,6 +67,16 @@ export default function SocialConnections() {
       const details = params.get('details');
       alert(`Twitter connection failed: ${error}${details ? '\n' + details : ''}`);
       // Clean up URL
+      window.history.replaceState({}, '', window.location.pathname);
+    } else if (params.get('instagram_connected') === 'true') {
+      setTimeout(() => {
+        loadConnections();
+      }, 500);
+      window.history.replaceState({}, '', window.location.pathname);
+    } else if (params.get('instagram_error')) {
+      const error = params.get('instagram_error');
+      const details = params.get('details');
+      alert(`Instagram connection failed: ${error}${details ? '\n' + details : ''}`);
       window.history.replaceState({}, '', window.location.pathname);
     }
   }, [user]);
