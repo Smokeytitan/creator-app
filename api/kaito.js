@@ -1,12 +1,9 @@
-export default async function handler(req, res) {
-  // Enable CORS
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+import { handleCors } from './_cors.js';
 
-  // Handle preflight
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
+export default async function handler(req, res) {
+  // Handle CORS and preflight
+  if (!handleCors(req, res, { methods: 'GET, OPTIONS' })) {
+    return; // CORS handled or request rejected
   }
 
   if (req.method !== 'GET') {

@@ -2,13 +2,12 @@ import { Webhook } from 'svix';
 import { createClient } from '@supabase/supabase-js';
 
 export default async function handler(req, res) {
-  // Enable CORS
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, svix-id, svix-timestamp, svix-signature');
-
-  // Handle preflight
+  // Note: Webhooks are called by external services (Clerk), not browsers
+  // CORS is not required since authentication is via signature verification
+  // Preflight handled for testing purposes only
   if (req.method === 'OPTIONS') {
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, svix-id, svix-timestamp, svix-signature');
     return res.status(200).end();
   }
 

@@ -12,7 +12,14 @@
  * - Google Cloud Translation API v2 (if configured)
  */
 
+import { handleCors } from './_cors.js';
+
 export default async function handler(req, res) {
+  // Handle CORS and preflight
+  if (!handleCors(req, res, { methods: 'POST, OPTIONS' })) {
+    return; // CORS handled or request rejected
+  }
+
   // Only allow POST requests
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -30,11 +37,6 @@ export default async function handler(req, res) {
     }
 
     console.log(`Translating text to ${targetLang}${sourceLang ? ` from ${sourceLang}` : ''}`);
-
-    // Set CORS headers
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'POST');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
     // Try DeepL first (preferred)
     if (deeplApiKey) {

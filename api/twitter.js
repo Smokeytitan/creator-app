@@ -10,6 +10,7 @@
  */
 
 import crypto from 'crypto';
+import { handleCors } from './_cors.js';
 
 /**
  * Generate OAuth 1.0a signature for Twitter API
@@ -70,6 +71,11 @@ function generateOAuthHeader(method, url, queryParams, consumerKey, consumerSecr
 }
 
 export default async function handler(req, res) {
+  // Handle CORS and preflight
+  if (!handleCors(req, res, { methods: 'POST, OPTIONS' })) {
+    return; // CORS handled or request rejected
+  }
+
   // Only allow POST requests
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -145,11 +151,6 @@ export default async function handler(req, res) {
     }
 
     const data = await response.json();
-
-    // Set CORS headers
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'POST');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
     // Return tweet data
     return res.status(200).json(data);

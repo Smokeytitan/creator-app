@@ -26,6 +26,7 @@
     "react": "^19.2.0",
     "react-datepicker": "^9.1.0",
     "react-dom": "^19.2.0",
+    "react-router-dom": "^7.13.0",
     "recharts": "^3.6.0",
     "svix": "^1.84.1",
     "vercel": "^50.3.2",

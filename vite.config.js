@@ -17,7 +17,10 @@ export default defineConfig({
         },
         configure: (proxy, options) => {
           proxy.on('proxyReq', (proxyReq, req, res) => {
-            proxyReq.setHeader('X-API-KEY', 'l5WWSDoert2mCtOH7dfDz5Ni5l7eGJMk4OCJZKXi');
+            const apiKey = process.env.VITE_KAITO_API_KEY;
+            if (apiKey) {
+              proxyReq.setHeader('X-API-KEY', apiKey);
+            }
             proxyReq.setHeader('Accept', 'application/json');
             proxyReq.setHeader('Accept-Encoding', 'gzip, deflate, br');
           });

@@ -1,13 +1,10 @@
 import crypto from 'crypto';
+import { handleCors } from '../_cors.js';
 
 export default async function handler(req, res) {
-  // Enable CORS
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
+  // Handle CORS and preflight
+  if (!handleCors(req, res, { methods: 'GET, OPTIONS' })) {
+    return; // CORS handled or request rejected
   }
 
   if (req.method !== 'GET') {
