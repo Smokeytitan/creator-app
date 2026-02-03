@@ -89,14 +89,14 @@ const transformFromDB = (row) => ({
     description: post.description || '',
     platform: post.platform || 'X',
     date: post.date || '',
-    cost: post.cost || '',
+    cost: Number(post.cost) || 0,
     link: post.link || '',
-    impressions: post.impressions || '',
-    likes: post.likes || '',
-    comments: post.comments || '',
-    retweets: post.retweets || '',
-    quotes: post.quotes || '',
-    bookmarks: post.bookmarks || '',
+    impressions: Number(post.impressions) || 0,
+    likes: Number(post.likes) || 0,
+    comments: Number(post.comments) || 0,
+    retweets: Number(post.retweets) || 0,
+    quotes: Number(post.quotes) || 0,
+    bookmarks: Number(post.bookmarks) || 0,
     tweetId: post.tweet_id || null,
     lastScanned: post.last_scanned || null,
     needsRescan: post.needs_rescan || false
@@ -244,6 +244,16 @@ export const toggleCreatorActive = async (creatorId) => {
 export const addPost = async (creatorId, postData, requestId = null) => {
   if (!supabase) return null;
 
+  // Validate and convert numeric fields
+  const validateNumber = (value, fieldName) => {
+    const num = Number(value) || 0;
+    if (num < 0) {
+      console.warn(`${fieldName} cannot be negative, using 0 instead`);
+      return 0;
+    }
+    return num;
+  };
+
   const newPost = {
     id: Date.now() + Math.random(),
     creator_id: creatorId,
@@ -251,14 +261,14 @@ export const addPost = async (creatorId, postData, requestId = null) => {
     description: postData.description || '',
     platform: postData.platform || 'X',
     date: postData.date || null,
-    cost: postData.cost || '',
+    cost: validateNumber(postData.cost, 'cost'),
     link: postData.link || '',
-    impressions: postData.impressions || '',
-    likes: postData.likes || '',
-    comments: postData.comments || '',
-    retweets: postData.retweets || '',
-    quotes: postData.quotes || '',
-    bookmarks: postData.bookmarks || '',
+    impressions: validateNumber(postData.impressions, 'impressions'),
+    likes: validateNumber(postData.likes, 'likes'),
+    comments: validateNumber(postData.comments, 'comments'),
+    retweets: validateNumber(postData.retweets, 'retweets'),
+    quotes: validateNumber(postData.quotes, 'quotes'),
+    bookmarks: validateNumber(postData.bookmarks, 'bookmarks'),
     tweet_id: postData.tweetId || null,
     last_scanned: postData.lastScanned || null,
     needs_rescan: false
@@ -278,7 +288,7 @@ export const addPost = async (creatorId, postData, requestId = null) => {
 
     console.log('Successfully inserted post:', data);
 
-    // Return updated creator
+    // Return updated creator with numeric post metrics
     return getCreatorById(creatorId);
   } catch (error) {
     console.error('Error adding post:', error);
@@ -297,18 +307,29 @@ export const updatePost = async (postId, updates) => {
   if (!supabase) return false;
 
   try {
+    // Validate numeric fields if present
+    const validateNumber = (value, fieldName) => {
+      if (value === undefined) return undefined;
+      const num = Number(value) || 0;
+      if (num < 0) {
+        console.warn(`${fieldName} cannot be negative, using 0 instead`);
+        return 0;
+      }
+      return num;
+    };
+
     const dbUpdates = {
       description: updates.description,
       platform: updates.platform,
       date: updates.date,
-      cost: updates.cost,
+      cost: validateNumber(updates.cost, 'cost'),
       link: updates.link,
-      impressions: updates.impressions,
-      likes: updates.likes,
-      comments: updates.comments,
-      retweets: updates.retweets,
-      quotes: updates.quotes,
-      bookmarks: updates.bookmarks,
+      impressions: validateNumber(updates.impressions, 'impressions'),
+      likes: validateNumber(updates.likes, 'likes'),
+      comments: validateNumber(updates.comments, 'comments'),
+      retweets: validateNumber(updates.retweets, 'retweets'),
+      quotes: validateNumber(updates.quotes, 'quotes'),
+      bookmarks: validateNumber(updates.bookmarks, 'bookmarks'),
       tweet_id: updates.tweetId,
       last_scanned: updates.lastScanned,
       needs_rescan: updates.needsRescan
@@ -404,13 +425,14 @@ export const batchUpdatePostMetrics = async (updates) => {
 
   try {
     for (const update of updates) {
+      // Ensure all metrics are numeric
       await updatePost(update.postId, {
-        impressions: update.metrics.impressions,
-        likes: update.metrics.likes,
-        comments: update.metrics.comments,
-        retweets: update.metrics.retweets,
-        quotes: update.metrics.quotes,
-        bookmarks: update.metrics.bookmarks,
+        impressions: Number(update.metrics.impressions) || 0,
+        likes: Number(update.metrics.likes) || 0,
+        comments: Number(update.metrics.comments) || 0,
+        retweets: Number(update.metrics.retweets) || 0,
+        quotes: Number(update.metrics.quotes) || 0,
+        bookmarks: Number(update.metrics.bookmarks) || 0,
         lastScanned: update.lastScanned,
         needsRescan: false
       });

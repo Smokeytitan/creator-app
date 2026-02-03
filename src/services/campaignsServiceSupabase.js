@@ -106,24 +106,30 @@ export const getCampaignById = async (campaignId) => {
 const transformFromDB = (row) => {
   // Calculate actual metrics from posts
   const posts = row.posts || [];
-  const actualImpressions = posts.reduce((sum, post) => sum + parseInt(post.impressions || 0), 0);
-  const actualCost = posts.reduce((sum, post) => sum + parseFloat(post.cost || 0), 0);
+  const actualImpressions = posts.reduce((sum, post) => {
+    const impressions = Number(post.impressions) || 0;
+    return sum + impressions;
+  }, 0);
+  const actualCost = posts.reduce((sum, post) => {
+    const cost = Number(post.cost) || 0;
+    return sum + cost;
+  }, 0);
 
   return {
     id: row.id,
     title: row.title,
     description: row.description || '',
     status: row.status,
-    estimatedCost: row.estimated_cost || 0,
-    estimatedImpressions: row.estimated_impressions || 0,
-    actualCost: actualCost || 0,
-    actualImpressions: actualImpressions || 0,
+    estimatedCost: Number(row.estimated_cost) || 0,
+    estimatedImpressions: Number(row.estimated_impressions) || 0,
+    actualCost: actualCost,
+    actualImpressions: actualImpressions,
     createdAt: row.created_at,
     posts: posts.map(post => ({
       id: post.id,
       link: post.link,
-      impressions: post.impressions,
-      cost: post.cost,
+      impressions: Number(post.impressions) || 0,
+      cost: Number(post.cost) || 0,
       platform: post.platform,
       date: post.date,
       creatorId: post.creator_id
@@ -150,8 +156,8 @@ const transformToDB = (campaign) => ({
   title: campaign.title,
   description: campaign.description || '',
   status: campaign.status,
-  estimated_cost: campaign.estimatedCost || 0,
-  estimated_impressions: campaign.estimatedImpressions || 0
+  estimated_cost: Number(campaign.estimatedCost) || 0,
+  estimated_impressions: Number(campaign.estimatedImpressions) || 0
 });
 
 /**
@@ -399,18 +405,89 @@ export const getCampaignPosts = async (campaignId) => {
       description: post.description,
       platform: post.platform,
       date: post.date,
-      cost: post.cost,
+      cost: Number(post.cost) || 0,
       link: post.link,
-      impressions: post.impressions,
-      likes: post.likes,
-      comments: post.comments,
-      retweets: post.retweets,
-      quotes: post.quotes,
-      bookmarks: post.bookmarks
+      impressions: Number(post.impressions) || 0,
+      likes: Number(post.likes) || 0,
+      comments: Number(post.comments) || 0,
+      retweets: Number(post.retweets) || 0,
+      quotes: Number(post.quotes) || 0,
+      bookmarks: Number(post.bookmarks) || 0
     }));
   } catch (error) {
     console.error('Error loading campaign posts:', error);
     return [];
+  }
+};
+
+/**
+ * Get campaign analytics from materialized view
+ * Fetches pre-calculated metrics including CPM, engagement rate, confidence, etc.
+ * @returns {Promise<Array>} Array of campaign analytics objects
+ */
+export const getCampaignAnalytics = async () => {
+  if (!supabase) {
+    console.error('Supabase not configured');
+    return [];
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('campaign_analytics')
+      .select('*')
+      .order('campaign_id', { ascending: false });
+
+    if (error) throw error;
+
+    return (data || []).map(row => ({
+      campaignId: row.campaign_id,
+      campaignTitle: row.campaign_title,
+      status: row.status,
+      estimatedCost: Number(row.estimated_cost) || 0,
+      estimatedImpressions: Number(row.estimated_impressions) || 0,
+      actualCost: Number(row.actual_cost) || 0,
+      actualImpressions: Number(row.actual_impressions) || 0,
+      postCount: Number(row.post_count) || 0,
+      totalLikes: Number(row.total_likes) || 0,
+      totalComments: Number(row.total_comments) || 0,
+      totalRetweets: Number(row.total_retweets) || 0,
+      totalQuotes: Number(row.total_quotes) || 0,
+      totalBookmarks: Number(row.total_bookmarks) || 0,
+      totalEngagements: Number(row.total_engagements) || 0,
+      avgCpm: Number(row.avg_cpm) || 0,
+      engagementRate: Number(row.engagement_rate) || 0,
+      costPerEngagement: Number(row.cost_per_engagement) || 0,
+      confidence: Number(row.confidence) || 0,
+      costVariance: Number(row.cost_variance) || 0,
+      impressionsVariance: Number(row.impressions_variance) || 0,
+      createdAt: row.created_at
+    }));
+  } catch (error) {
+    console.error('Error loading campaign analytics:', error);
+    return [];
+  }
+};
+
+/**
+ * Refresh the campaign_analytics materialized view
+ * Triggers a refresh to update all calculated metrics
+ * @returns {Promise<boolean>} True if refresh succeeded
+ */
+export const refreshCampaignAnalytics = async () => {
+  if (!supabase) {
+    console.error('Supabase not configured');
+    return false;
+  }
+
+  try {
+    // Execute refresh via RPC call
+    const { error } = await supabase.rpc('refresh_campaign_analytics');
+
+    if (error) throw error;
+    return true;
+  } catch (error) {
+    console.error('Error refreshing campaign analytics:', error);
+    return false;
   }
 };
 
@@ -468,5 +545,7 @@ export default {
   getCampaignsByCreator,
   getCampaignMetrics,
   getCampaignPosts,
+  getCampaignAnalytics,
+  refreshCampaignAnalytics,
   bulkImportCampaigns
 };
