@@ -4,6 +4,7 @@ import { getCampaigns, updateCampaign, createCampaign, deleteCampaign } from '..
 import { getCreators } from '../services/creatorsServiceSupabase';
 import ContentRequestModal from './ContentRequestModal';
 import CampaignTableRow from './CampaignTableRow';
+import DateRangePicker from './DateRangePicker';
 
 export function Campaigns() {
   console.log('[CAMPAIGNS] ===== NEW CAMPAIGNS COMPONENT LOADED - BUILD ' + Date.now() + ' =====');
@@ -16,6 +17,7 @@ export function Campaigns() {
   const [expandedCampaignId, setExpandedCampaignId] = useState(null);
   const [sortBy, setSortBy] = useState('createdAt'); // title, status, impressions, cost, cpm, createdAt
   const [sortDirection, setSortDirection] = useState('desc'); // asc, desc
+  const [dateRange, setDateRange] = useState({ startDate: null, endDate: null, label: 'All Time' });
   const [editForm, setEditForm] = useState({
     title: '',
     description: '',
@@ -193,6 +195,32 @@ export function Campaigns() {
     });
   };
 
+  const filterByDateRange = (campaign) => {
+    // If no date range is set (All Time), show all campaigns
+    if (!dateRange.startDate && !dateRange.endDate) {
+      return true;
+    }
+
+    const campaignDate = new Date(campaign.createdAt);
+    const start = dateRange.startDate ? new Date(dateRange.startDate) : null;
+    const end = dateRange.endDate ? new Date(dateRange.endDate) : null;
+
+    // Set end date to end of day for inclusive filtering
+    if (end) {
+      end.setHours(23, 59, 59, 999);
+    }
+
+    if (start && end) {
+      return campaignDate >= start && campaignDate <= end;
+    } else if (start) {
+      return campaignDate >= start;
+    } else if (end) {
+      return campaignDate <= end;
+    }
+
+    return true;
+  };
+
   const stats = [
     {
       label: "In Progress",
@@ -278,6 +306,11 @@ export function Campaigns() {
           </div>
 
           <div className="flex items-center gap-3 flex-wrap">
+            {/* Date Range Filter */}
+            <DateRangePicker
+              currentRange={dateRange}
+              onRangeChange={setDateRange}
+            />
             <button
               onClick={() => setFilter("all")}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
@@ -341,6 +374,25 @@ export function Campaigns() {
             </button>
           </div>
         </div>
+
+        {/* Filter Summary */}
+        {!loading && (
+          <div className="mb-4 text-sm text-neutral-400">
+            Showing {campaigns.filter(campaign => {
+              // Status filter
+              let statusMatch = true;
+              if (filter === "active") statusMatch = campaign.status === "in-progress";
+              else if (filter === "done") statusMatch = campaign.status === "completed";
+              else if (filter === "archived") statusMatch = campaign.status === "cancelled";
+
+              // Date filter
+              const dateMatch = filterByDateRange(campaign);
+
+              return statusMatch && dateMatch;
+            }).length} of {campaigns.length} campaigns
+            {dateRange.label !== 'All Time' && ` from ${dateRange.label.toLowerCase()}`}
+          </div>
+        )}
 
         {/* Campaign Table */}
         {loading ? (
@@ -409,13 +461,17 @@ export function Campaigns() {
             {/* Campaign Rows */}
             <div className="space-y-1">
               {(() => {
-                const filteredCampaigns = campaigns.filter(campaign => {
+                // Filter by status
+                const statusFilteredCampaigns = campaigns.filter(campaign => {
                   if (filter === "all") return true;
                   if (filter === "active") return campaign.status === "in-progress";
                   if (filter === "done") return campaign.status === "completed";
                   if (filter === "archived") return campaign.status === "cancelled";
                   return true;
                 });
+
+                // Filter by date range
+                const filteredCampaigns = statusFilteredCampaigns.filter(filterByDateRange);
 
                 const sortedCampaigns = getSortedCampaigns(filteredCampaigns);
 
