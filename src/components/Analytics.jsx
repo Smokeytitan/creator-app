@@ -414,7 +414,7 @@ export default function Analytics({ creators, requests = [] }) {
       </div>
 
       {/* Campaign Performance Overview */}
-      {analytics.campaignStats.length > 0 && (
+      {analytics.campaignStats.length > 0 && analytics.topCampaignsByImpressions.filter(c => c.confidence !== 'estimated').length > 0 && (
         <div className="card-polygon rounded-polygon shadow-sm border border-white/[0.08] overflow-hidden">
           <div className="px-6 py-4 border-b border-white/[0.08]">
             <h3 className="text-lg font-semibold text-polygon-text-primary flex items-center gap-2">
@@ -424,7 +424,7 @@ export default function Analytics({ creators, requests = [] }) {
           </div>
           <div className="p-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {analytics.topCampaignsByImpressions.slice(0, 3).map((campaign) => (
+              {analytics.topCampaignsByImpressions.filter(c => c.confidence !== 'estimated').slice(0, 3).map((campaign) => (
                 <div key={campaign.id} className="border border-white/[0.08] rounded-lg p-4 hover:border-white/[0.12] transition-colors">
                   <div className="flex items-start justify-between mb-3">
                     <h4 className="text-sm font-semibold text-polygon-text-primary line-clamp-2">
