@@ -26,7 +26,7 @@ export default function ContentRequestModal({ creators, onClose, onSubmit }) {
       // Parse cost per post (regardless of post count)
       let costPerPost = 0;
       if (creator.costPerPost) {
-        const cost = parseFloat(creator.costPerPost.replace(/[^0-9.-]+/g, ''));
+        const cost = Number(creator.costPerPost);
         console.log(`Parsed cost for ${creator.name}:`, cost);
         if (!isNaN(cost)) {
           costPerPost = cost;
@@ -38,7 +38,7 @@ export default function ContentRequestModal({ creators, onClose, onSubmit }) {
       if (posts.length > 0) {
         const totalImpressions = posts.reduce((sum, post) => {
           if (post.impressions) {
-            const impressions = parseFloat(post.impressions.replace(/[^0-9.-]+/g, ''));
+            const impressions = Number(post.impressions);
             if (!isNaN(impressions)) {
               return sum + impressions;
             }

@@ -16,42 +16,42 @@ ALTER TABLE posts
   ADD COLUMN bookmarks_new INTEGER,
   ADD COLUMN cost_new NUMERIC(10,2);
 
--- Migrate data from text to numeric (handle commas, dollar signs, etc.)
+-- Migrate data from text to numeric (handle commas, dollar signs, empty strings, whitespace, etc.)
 UPDATE posts
 SET
   impressions_new = CASE
-    WHEN impressions IS NOT NULL THEN
-      CAST(REGEXP_REPLACE(impressions, '[^0-9]', '', 'g') AS BIGINT)
+    WHEN impressions IS NOT NULL AND TRIM(impressions) != '' THEN
+      CAST(NULLIF(REGEXP_REPLACE(TRIM(impressions), '[^0-9]', '', 'g'), '') AS BIGINT)
     ELSE NULL
   END,
   likes_new = CASE
-    WHEN likes IS NOT NULL THEN
-      CAST(REGEXP_REPLACE(likes, '[^0-9]', '', 'g') AS INTEGER)
+    WHEN likes IS NOT NULL AND TRIM(likes) != '' THEN
+      CAST(NULLIF(REGEXP_REPLACE(TRIM(likes), '[^0-9]', '', 'g'), '') AS INTEGER)
     ELSE NULL
   END,
   comments_new = CASE
-    WHEN comments IS NOT NULL THEN
-      CAST(REGEXP_REPLACE(comments, '[^0-9]', '', 'g') AS INTEGER)
+    WHEN comments IS NOT NULL AND TRIM(comments) != '' THEN
+      CAST(NULLIF(REGEXP_REPLACE(TRIM(comments), '[^0-9]', '', 'g'), '') AS INTEGER)
     ELSE NULL
   END,
   retweets_new = CASE
-    WHEN retweets IS NOT NULL THEN
-      CAST(REGEXP_REPLACE(retweets, '[^0-9]', '', 'g') AS INTEGER)
+    WHEN retweets IS NOT NULL AND TRIM(retweets) != '' THEN
+      CAST(NULLIF(REGEXP_REPLACE(TRIM(retweets), '[^0-9]', '', 'g'), '') AS INTEGER)
     ELSE NULL
   END,
   quotes_new = CASE
-    WHEN quotes IS NOT NULL THEN
-      CAST(REGEXP_REPLACE(quotes, '[^0-9]', '', 'g') AS INTEGER)
+    WHEN quotes IS NOT NULL AND TRIM(quotes) != '' THEN
+      CAST(NULLIF(REGEXP_REPLACE(TRIM(quotes), '[^0-9]', '', 'g'), '') AS INTEGER)
     ELSE NULL
   END,
   bookmarks_new = CASE
-    WHEN bookmarks IS NOT NULL THEN
-      CAST(REGEXP_REPLACE(bookmarks, '[^0-9]', '', 'g') AS INTEGER)
+    WHEN bookmarks IS NOT NULL AND TRIM(bookmarks) != '' THEN
+      CAST(NULLIF(REGEXP_REPLACE(TRIM(bookmarks), '[^0-9]', '', 'g'), '') AS INTEGER)
     ELSE NULL
   END,
   cost_new = CASE
-    WHEN cost IS NOT NULL THEN
-      CAST(REGEXP_REPLACE(cost, '[^0-9.]', '', 'g') AS NUMERIC(10,2))
+    WHEN cost IS NOT NULL AND TRIM(cost) != '' THEN
+      CAST(NULLIF(REGEXP_REPLACE(TRIM(cost), '[^0-9.]', '', 'g'), '') AS NUMERIC(10,2))
     ELSE NULL
   END;
 
@@ -102,17 +102,17 @@ ALTER TABLE campaigns
   ADD COLUMN estimated_cost_new NUMERIC(10,2),
   ADD COLUMN estimated_impressions_new BIGINT;
 
--- Migrate data
+-- Migrate data (handle TEXT to numeric conversion, empty strings, and NULL)
 UPDATE campaigns
 SET
   estimated_cost_new = CASE
-    WHEN estimated_cost IS NOT NULL THEN
-      CAST(estimated_cost AS NUMERIC(10,2))
+    WHEN estimated_cost IS NOT NULL AND TRIM(estimated_cost) != '' THEN
+      CAST(NULLIF(REGEXP_REPLACE(TRIM(estimated_cost), '[^0-9.]', '', 'g'), '') AS NUMERIC(10,2))
     ELSE 0
   END,
   estimated_impressions_new = CASE
-    WHEN estimated_impressions IS NOT NULL THEN
-      CAST(estimated_impressions AS BIGINT)
+    WHEN estimated_impressions IS NOT NULL AND TRIM(estimated_impressions) != '' THEN
+      CAST(NULLIF(REGEXP_REPLACE(TRIM(estimated_impressions), '[^0-9]', '', 'g'), '') AS BIGINT)
     ELSE 0
   END;
 

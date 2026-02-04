@@ -192,9 +192,9 @@ export const createCampaign = async (campaignData) => {
 
     // Insert creator associations
     if (newCampaign.creators.length > 0) {
-      const associations = newCampaign.creators.map(creatorId => ({
+      const associations = newCampaign.creators.map(creator => ({
         campaign_id: data.id,
-        creator_id: creatorId
+        creator_id: typeof creator === 'object' ? creator.id : creator
       }));
 
       const { error: assocError } = await supabase
@@ -248,9 +248,9 @@ export const updateCampaign = async (campaignId, updates) => {
 
       // Insert new associations
       if (updates.creators.length > 0) {
-        const associations = updates.creators.map(creatorId => ({
+        const associations = updates.creators.map(creator => ({
           campaign_id: campaignId,
-          creator_id: creatorId
+          creator_id: typeof creator === 'object' ? creator.id : creator
         }));
 
         const { error: assocError } = await supabase

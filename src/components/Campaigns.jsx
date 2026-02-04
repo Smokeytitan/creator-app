@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { Rocket, CheckCircle, DollarSign, Eye, Plus, Search, X, ChevronDown, Calendar, ExternalLink, TrendingUp } from "lucide-react";
-import { getCampaigns, updateCampaign } from '../services/campaignsServiceSupabase';
+import { getCampaigns, updateCampaign, createCampaign } from '../services/campaignsServiceSupabase';
 import { getCreators } from '../services/creatorsServiceSupabase';
+import ContentRequestModal from './ContentRequestModal';
 
 export function Campaigns() {
   console.log('[CAMPAIGNS] ===== NEW CAMPAIGNS COMPONENT LOADED - BUILD ' + Date.now() + ' =====');
@@ -9,6 +10,7 @@ export function Campaigns() {
   const [campaigns, setCampaigns] = useState([]);
   const [creators, setCreators] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingCampaign, setEditingCampaign] = useState(null);
   const [expandedCampaignId, setExpandedCampaignId] = useState(null);
   const [editForm, setEditForm] = useState({
@@ -163,7 +165,7 @@ export function Campaigns() {
               Manage campaigns and track content delivery across creators
             </p>
           </div>
-          <button className="rounded-xl px-6 py-3 bg-[#E5C473] text-black font-semibold hover:bg-[#d4b563] flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E5C473] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0a0a0a] transition-colors">
+          <button onClick={() => setShowCreateModal(true)} className="rounded-xl px-6 py-3 bg-[#E5C473] text-black font-semibold hover:bg-[#d4b563] flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E5C473] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0a0a0a] transition-colors">
             <Plus className="w-5 h-5" />
             New Campaign
           </button>
@@ -632,6 +634,34 @@ export function Campaigns() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Create Campaign Modal */}
+      {showCreateModal && (
+        <ContentRequestModal
+          creators={creators}
+          onClose={() => setShowCreateModal(false)}
+          onSubmit={async (newCampaign) => {
+            try {
+              const created = await createCampaign({
+                title: newCampaign.title,
+                description: newCampaign.description,
+                creators: newCampaign.creators.map(c => typeof c === 'object' ? c.id : c),
+                status: newCampaign.status || 'pending',
+                estimatedCost: Number(newCampaign.estimatedCost) || 0,
+                estimatedImpressions: Number(newCampaign.estimatedImpressions) || 0
+              });
+
+              if (created) {
+                setCampaigns([created, ...campaigns]);
+                setShowCreateModal(false);
+              }
+            } catch (error) {
+              console.error('Error creating campaign:', error);
+              alert('Failed to create campaign: ' + error.message);
+            }
+          }}
+        />
       )}
     </section>
   );
