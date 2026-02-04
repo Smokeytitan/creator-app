@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
-import { Rocket, CheckCircle, DollarSign, Eye, Plus, Search, X, ChevronDown, Calendar, ExternalLink, TrendingUp } from "lucide-react";
-import { getCampaigns, updateCampaign, createCampaign } from '../services/campaignsServiceSupabase';
+import { Rocket, CheckCircle, DollarSign, Eye, Plus, Search, X, ChevronDown, Calendar, ExternalLink, TrendingUp, ArrowUp, ArrowDown } from "lucide-react";
+import { getCampaigns, updateCampaign, createCampaign, deleteCampaign } from '../services/campaignsServiceSupabase';
 import { getCreators } from '../services/creatorsServiceSupabase';
 import ContentRequestModal from './ContentRequestModal';
+import CampaignTableRow from './CampaignTableRow';
 
 export function Campaigns() {
   console.log('[CAMPAIGNS] ===== NEW CAMPAIGNS COMPONENT LOADED - BUILD ' + Date.now() + ' =====');
@@ -13,6 +14,8 @@ export function Campaigns() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingCampaign, setEditingCampaign] = useState(null);
   const [expandedCampaignId, setExpandedCampaignId] = useState(null);
+  const [sortBy, setSortBy] = useState('createdAt'); // title, status, impressions, cost, cpm, createdAt
+  const [sortDirection, setSortDirection] = useState('desc'); // asc, desc
   const [editForm, setEditForm] = useState({
     title: '',
     description: '',
@@ -120,6 +123,73 @@ export function Campaigns() {
         creators: newCreators,
         ...estimates
       };
+    });
+  };
+
+  const handleDelete = async (campaign) => {
+    if (!confirm(`Are you sure you want to delete "${campaign.title}"?`)) return;
+
+    try {
+      const success = await deleteCampaign(campaign.id);
+      if (success) {
+        setCampaigns(campaigns.filter(c => c.id !== campaign.id));
+      }
+    } catch (error) {
+      console.error('Error deleting campaign:', error);
+      alert('Failed to delete campaign');
+    }
+  };
+
+  const toggleSort = (column) => {
+    if (sortBy === column) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(column);
+      setSortDirection('desc');
+    }
+  };
+
+  const getSortedCampaigns = (campaignsToSort) => {
+    return [...campaignsToSort].sort((a, b) => {
+      let aVal, bVal;
+
+      switch (sortBy) {
+        case 'title':
+          aVal = a.title.toLowerCase();
+          bVal = b.title.toLowerCase();
+          break;
+        case 'status':
+          aVal = a.status;
+          bVal = b.status;
+          break;
+        case 'impressions':
+          aVal = a.actualImpressions || a.estimatedImpressions || 0;
+          bVal = b.actualImpressions || b.estimatedImpressions || 0;
+          break;
+        case 'cost':
+          aVal = a.actualCost || a.estimatedCost || 0;
+          bVal = b.actualCost || b.estimatedCost || 0;
+          break;
+        case 'cpm':
+          const aImpressions = a.actualImpressions || a.estimatedImpressions || 0;
+          const aCost = a.actualCost || a.estimatedCost || 0;
+          const bImpressions = b.actualImpressions || b.estimatedImpressions || 0;
+          const bCost = b.actualCost || b.estimatedCost || 0;
+          aVal = aImpressions > 0 ? (aCost / aImpressions) * 1000 : 0;
+          bVal = bImpressions > 0 ? (bCost / bImpressions) * 1000 : 0;
+          break;
+        case 'createdAt':
+        default:
+          aVal = new Date(a.createdAt || 0).getTime();
+          bVal = new Date(b.createdAt || 0).getTime();
+          break;
+      }
+
+      if (typeof aVal === 'string') {
+        return sortDirection === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+      }
+
+      return sortDirection === 'asc' ? aVal - bVal : bVal - aVal;
     });
   };
 
@@ -272,7 +342,7 @@ export function Campaigns() {
           </div>
         </div>
 
-        {/* Campaign Cards */}
+        {/* Campaign Table */}
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <div className="text-center">
@@ -281,191 +351,95 @@ export function Campaigns() {
             </div>
           </div>
         ) : (
-          <div className="grid gap-6 mt-8">
-            {campaigns
-              .filter(campaign => {
-                if (filter === "all") return true;
-                if (filter === "active") return campaign.status === "in-progress";
-                if (filter === "done") return campaign.status === "completed";
-                if (filter === "archived") return campaign.status === "cancelled";
-                return true;
-              })
-              .map((campaign) => {
-                // Use the pre-calculated actual impressions and cost from the service
-                const totalImpressions = campaign.actualImpressions || 0;
-                const totalCost = campaign.actualCost || 0;
-                const campaignPosts = campaign.posts || [];
-                const hasContent = campaignPosts.length > 0;
-                const isExpanded = expandedCampaignId === campaign.id;
-
-                return (
-                  <div
-                    key={campaign.id}
-                    onClick={(e) => handleEditClick(campaign, e)}
-                    className="bg-neutral-900/50 border border-white/10 rounded-2xl p-6 hover:border-white/20 transition-colors cursor-pointer"
-                  >
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex-1">
-                        <h3 className="text-xl font-bold mb-2">{campaign.title}</h3>
-                        <p className="text-neutral-400 text-sm mb-4">{campaign.description}</p>
-
-                        {/* Metrics Row */}
-                        <div className="flex items-center gap-6 text-sm">
-                          <div className="flex items-center gap-2">
-                            <Eye className="w-4 h-4 text-purple-400" />
-                            <span className="text-neutral-400">{totalImpressions.toLocaleString()} impressions</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <DollarSign className="w-4 h-4 text-yellow-400" />
-                            <span className="text-neutral-400">${totalCost.toLocaleString()} cost</span>
-                          </div>
-                          {campaign.creators && campaign.creators.length > 0 && (
-                            <div className="flex items-center gap-2 text-neutral-500">
-                              <span>{campaign.creators.length} creators</span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      <span className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${
-                        campaign.status === 'completed' ? 'bg-green-500/10 text-green-400' :
-                        campaign.status === 'in-progress' ? 'bg-blue-500/10 text-blue-400' :
-                        campaign.status === 'pending' ? 'bg-yellow-500/10 text-yellow-400' :
-                        'bg-neutral-500/10 text-neutral-400'
-                      }`}>
-                        {campaign.status}
-                      </span>
-                    </div>
-
-                    {/* Campaign Results Section */}
-                    {hasContent && (
-                      <div className="mt-4">
-                        {/* Toggle Button */}
-                        <button
-                          data-expand-button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setExpandedCampaignId(isExpanded ? null : campaign.id);
-                          }}
-                          className="w-full flex items-center justify-between px-4 py-2 bg-neutral-800 hover:bg-neutral-700 border border-white/10 rounded-lg transition-all duration-200"
-                        >
-                          <span className="flex items-center gap-2 text-sm font-semibold text-white">
-                            <TrendingUp className="w-4 h-4 text-[#E5C473]" />
-                            View Campaign Results ({campaignPosts.length} post{campaignPosts.length !== 1 ? 's' : ''})
-                          </span>
-                          <ChevronDown className={`w-4 h-4 text-[#E5C473] transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
-                        </button>
-
-                        {/* Expandable Content */}
-                        <div
-                          className={`overflow-hidden transition-all duration-500 ease-in-out ${
-                            isExpanded ? 'max-h-[2000px] opacity-100 mt-4' : 'max-h-0 opacity-0'
-                          }`}
-                        >
-                          <div className="space-y-3">
-                            <div className="flex items-center justify-between pb-2 border-b border-white/10">
-                              <h4 className="text-sm font-semibold text-white">All Campaign Posts</h4>
-                              <span className="text-xs text-neutral-500 font-mono">{campaignPosts.length} total</span>
-                            </div>
-
-                            {/* Posts List */}
-                            <div className="space-y-2 max-h-96 overflow-y-auto">
-                              {campaignPosts.map((post, idx) => {
-                                // Look up creator from the full creators list, not just campaign creators
-                                // Try both direct match and string/number conversion for compatibility
-                                const postCreator = creators.find(c =>
-                                  c.id === post.creatorId ||
-                                  String(c.id) === String(post.creatorId) ||
-                                  Number(c.id) === Number(post.creatorId)
-                                );
-
-                                // Debug log for first post to diagnose ID mismatch
-                                if (idx === 0 && !postCreator) {
-                                  console.log('Debug - Post creator ID:', post.creatorId, typeof post.creatorId);
-                                  console.log('Debug - Available creator IDs:', creators.slice(0, 3).map(c => ({ id: c.id, type: typeof c.id, name: c.name })));
-                                }
-
-                                return (
-                                  <div
-                                    key={`${post.id}-${idx}`}
-                                    className="p-3 bg-neutral-800 rounded-lg border border-white/10 hover:border-white/20 transition-all duration-200"
-                                  >
-                                    <div className="flex items-start justify-between gap-3">
-                                      <div className="flex-1 min-w-0">
-                                        {/* Creator Info */}
-                                        <div className="flex items-center gap-2 mb-2">
-                                          <span className="text-sm font-semibold text-white truncate">
-                                            {postCreator?.name || 'Unknown Creator'}
-                                          </span>
-                                          {postCreator?.handle && (
-                                            <span className="text-neutral-500 text-xs truncate">@{postCreator.handle}</span>
-                                          )}
-                                          <span className="px-2 py-0.5 text-xs bg-[#E5C473]/10 text-[#E5C473] rounded-full border border-[#E5C473]/30">
-                                            {post.platform}
-                                          </span>
-                                        </div>
-
-                                        {/* Post Metrics */}
-                                        <div className="flex items-center gap-4 text-xs text-neutral-400">
-                                          {post.date && (
-                                            <div className="flex items-center gap-1">
-                                              <Calendar className="w-3 h-3" />
-                                              {new Date(post.date).toLocaleDateString()}
-                                            </div>
-                                          )}
-                                          {post.impressions && (
-                                            <div className="flex items-center gap-1 text-purple-400">
-                                              <Eye className="w-3 h-3" />
-                                              {parseInt(post.impressions).toLocaleString()} impressions
-                                            </div>
-                                          )}
-                                          {post.cost && (
-                                            <div className="flex items-center gap-1 text-green-400">
-                                              <DollarSign className="w-3 h-3" />
-                                              {post.cost}
-                                            </div>
-                                          )}
-                                        </div>
-                                      </div>
-
-                                      {/* Link */}
-                                      {post.link && (
-                                        <a
-                                          href={post.link}
-                                          target="_blank"
-                                          rel="noopener noreferrer"
-                                          onClick={(e) => e.stopPropagation()}
-                                          className="flex items-center gap-1 text-xs text-[#E5C473] hover:text-[#d4b563] transition-colors whitespace-nowrap"
-                                        >
-                                          View
-                                          <ExternalLink className="w-3 h-3" />
-                                        </a>
-                                      )}
-                                    </div>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                );
-              })
-            }
-
-            {campaigns.filter(campaign => {
-              if (filter === "all") return true;
-              if (filter === "active") return campaign.status === "in-progress";
-              if (filter === "done") return campaign.status === "completed";
-              if (filter === "archived") return campaign.status === "cancelled";
-              return true;
-            }).length === 0 && (
-              <div className="text-center py-12">
-                <p className="text-neutral-400">No campaigns found</p>
+          <div className="mt-8">
+            {/* Table Header with Sorting */}
+            <div className="bg-neutral-900/30 border border-white/10 rounded-t-lg px-6 py-3 flex items-center justify-between">
+              <div className="flex items-center gap-6 flex-1">
+                <button
+                  onClick={() => toggleSort('title')}
+                  className="flex items-center gap-1 text-sm font-medium text-neutral-400 hover:text-white transition-colors"
+                >
+                  Campaign
+                  {sortBy === 'title' && (
+                    sortDirection === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
+                  )}
+                </button>
+                <button
+                  onClick={() => toggleSort('status')}
+                  className="flex items-center gap-1 text-sm font-medium text-neutral-400 hover:text-white transition-colors"
+                >
+                  Status
+                  {sortBy === 'status' && (
+                    sortDirection === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
+                  )}
+                </button>
               </div>
-            )}
+              <div className="flex items-center gap-6">
+                <button
+                  onClick={() => toggleSort('impressions')}
+                  className="flex items-center gap-1 text-sm font-medium text-neutral-400 hover:text-white transition-colors"
+                >
+                  Impressions
+                  {sortBy === 'impressions' && (
+                    sortDirection === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
+                  )}
+                </button>
+                <button
+                  onClick={() => toggleSort('cost')}
+                  className="flex items-center gap-1 text-sm font-medium text-neutral-400 hover:text-white transition-colors"
+                >
+                  Cost
+                  {sortBy === 'cost' && (
+                    sortDirection === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
+                  )}
+                </button>
+                <button
+                  onClick={() => toggleSort('cpm')}
+                  className="flex items-center gap-1 text-sm font-medium text-neutral-400 hover:text-white transition-colors"
+                >
+                  CPM
+                  {sortBy === 'cpm' && (
+                    sortDirection === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
+                  )}
+                </button>
+                <div className="w-24"></div> {/* Spacer for action menu */}
+              </div>
+            </div>
+
+            {/* Campaign Rows */}
+            <div className="space-y-1">
+              {(() => {
+                const filteredCampaigns = campaigns.filter(campaign => {
+                  if (filter === "all") return true;
+                  if (filter === "active") return campaign.status === "in-progress";
+                  if (filter === "done") return campaign.status === "completed";
+                  if (filter === "archived") return campaign.status === "cancelled";
+                  return true;
+                });
+
+                const sortedCampaigns = getSortedCampaigns(filteredCampaigns);
+
+                if (sortedCampaigns.length === 0) {
+                  return (
+                    <div className="text-center py-12 bg-neutral-900/50 border border-white/10 rounded-b-lg">
+                      <p className="text-neutral-400">No campaigns found</p>
+                    </div>
+                  );
+                }
+
+                return sortedCampaigns.map((campaign) => (
+                  <CampaignTableRow
+                    key={campaign.id}
+                    campaign={campaign}
+                    creators={creators}
+                    onEdit={(e) => handleEditClick(campaign, e)}
+                    onDelete={handleDelete}
+                    onExpand={() => setExpandedCampaignId(expandedCampaignId === campaign.id ? null : campaign.id)}
+                    isExpanded={expandedCampaignId === campaign.id}
+                  />
+                ));
+              })()}
+            </div>
           </div>
         )}
       </div>
