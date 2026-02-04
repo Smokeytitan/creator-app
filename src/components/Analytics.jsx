@@ -339,7 +339,7 @@ export default function Analytics({ creators, requests = [] }) {
     ? (creatorsWithActivity / analytics.totalCreators) * 100
     : 0;
 
-  const COLORS = ['#D97706', '#F59E0B', '#FBBF24', '#92400E', '#78350F'];
+  const COLORS = ['#3B82F6', '#22C55E', '#A855F7', '#F59E0B', '#EF4444'];
 
   return (
     <div className="space-y-6">
@@ -393,7 +393,7 @@ export default function Analytics({ creators, requests = [] }) {
                 }}
                 formatter={(value) => [`$${(value * 1000).toFixed(2)}`, 'CPM']}
               />
-              <Bar dataKey="cpi" fill="#F59E0B" radius={[8, 8, 0, 0]} />
+              <Bar dataKey="cpi" fill="#A855F7" radius={[8, 8, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -665,7 +665,7 @@ export default function Analytics({ creators, requests = [] }) {
                 }}
                 formatter={(value) => [formatCurrency(value), 'Spend']}
               />
-              <Bar dataKey="spend" fill="#D97706" radius={[8, 8, 0, 0]} />
+              <Bar dataKey="spend" fill="#22C55E" radius={[8, 8, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -697,7 +697,7 @@ export default function Analytics({ creators, requests = [] }) {
                 }}
                 formatter={(value) => [formatNumber(value), 'Impressions']}
               />
-              <Bar dataKey="impressions" fill="#FBBF24" radius={[8, 8, 0, 0]} />
+              <Bar dataKey="impressions" fill="#3B82F6" radius={[8, 8, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
