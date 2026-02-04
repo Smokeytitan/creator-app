@@ -317,7 +317,9 @@ const ContentRequests = ({ creators }) => {
 
       // Get cost per post from creator
       if (creator.costPerPost) {
-        const cost = parseFloat(creator.costPerPost.replace(/[^0-9.-]+/g, ''));
+        const cost = typeof creator.costPerPost === 'string'
+          ? parseFloat(creator.costPerPost.replace(/[^0-9.-]+/g, ''))
+          : Number(creator.costPerPost);
         if (!isNaN(cost)) {
           estimatedCost += cost;
         }
