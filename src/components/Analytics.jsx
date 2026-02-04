@@ -305,28 +305,39 @@ export default function Analytics({ creators, requests = [] }) {
     document.body.removeChild(link);
   };
 
-  // Calculate platform distribution (based on creator handles/platforms)
+  // Calculate platform distribution (based on creator platforms)
   const platformData = useMemo(() => {
     const platforms = {};
     creators.forEach(creator => {
-      // Simple platform detection based on handle prefix or assume Twitter/X
-      const platform = 'Twitter/X'; // Could be enhanced with actual platform data
-      if (!platforms[platform]) {
-        platforms[platform] = { spend: 0, impressions: 0 };
-      }
-
       const creatorStat = analytics.creatorStats.find(c => c.id === creator.id);
-      if (creatorStat) {
-        platforms[platform].spend += creatorStat.spend;
-        platforms[platform].impressions += creatorStat.impressions;
-      }
+      if (!creatorStat || creatorStat.spend === 0) return;
+
+      // Get creator's platforms (default to Twitter/X if none specified)
+      const creatorPlatforms = creator.platforms && creator.platforms.length > 0
+        ? creator.platforms
+        : ['Twitter/X'];
+
+      // Distribute spend and impressions evenly across creator's platforms
+      const spendPerPlatform = creatorStat.spend / creatorPlatforms.length;
+      const impressionsPerPlatform = creatorStat.impressions / creatorPlatforms.length;
+
+      creatorPlatforms.forEach(platform => {
+        if (!platforms[platform]) {
+          platforms[platform] = { spend: 0, impressions: 0 };
+        }
+        platforms[platform].spend += spendPerPlatform;
+        platforms[platform].impressions += impressionsPerPlatform;
+      });
     });
 
-    return Object.entries(platforms).map(([name, data]) => ({
-      name,
-      value: data.spend,
-      impressions: data.impressions
-    }));
+    return Object.entries(platforms)
+      .map(([name, data]) => ({
+        name,
+        value: data.spend,
+        impressions: data.impressions
+      }))
+      .filter(p => p.value > 0) // Only show platforms with spend
+      .sort((a, b) => b.value - a.value); // Sort by spend descending
   }, [creators, analytics.creatorStats]);
 
   // Calculate progress metrics
