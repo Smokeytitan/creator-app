@@ -1395,7 +1395,9 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
                               if (isChecked) {
                                 // When selecting, only allow this one creator
                                 const cost = creator.costPerPost
-                                  ? parseFloat(creator.costPerPost.replace(/[^0-9.-]+/g, ''))
+                                  ? (typeof creator.costPerPost === 'string'
+                                      ? parseFloat(creator.costPerPost.replace(/[^0-9.-]+/g, ''))
+                                      : Number(creator.costPerPost))
                                   : 0;
 
                                 setContentForm({
