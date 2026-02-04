@@ -13,6 +13,7 @@ import {
   Cell,
   Legend
 } from 'recharts';
+import KPIStrip from './KPIStrip';
 
 export default function Analytics({ creators, requests = [] }) {
   const [viewMode] = useState('creators'); // Keep for export functionality
@@ -361,48 +362,8 @@ export default function Analytics({ creators, requests = [] }) {
         </button>
       </div>
 
-      {/* Top Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-        <div className="card-polygon rounded-polygon p-4 sm:p-6 shadow-lg border-l-4 border-amber-600/50">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-400 text-xs sm:text-sm font-medium mb-1">Total Influencers</p>
-              <p className="text-2xl sm:text-3xl font-bold text-amber-500">{analytics.totalCreators}</p>
-            </div>
-            <Users className="h-10 w-10 sm:h-12 sm:w-12 text-amber-600/30" />
-          </div>
-        </div>
-
-        <div className="card-polygon rounded-polygon p-4 sm:p-6 shadow-lg border-l-4 border-amber-700/50">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-400 text-xs sm:text-sm font-medium mb-1">Total Spend</p>
-              <p className="text-2xl sm:text-3xl font-bold text-amber-400">{formatCurrency(analytics.totalSpend)}</p>
-            </div>
-            <DollarSign className="h-10 w-10 sm:h-12 sm:w-12 text-amber-700/30" />
-          </div>
-        </div>
-
-        <div className="card-polygon rounded-polygon p-4 sm:p-6 shadow-lg border-l-4 border-yellow-600/50">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-400 text-xs sm:text-sm font-medium mb-1">Total Impressions</p>
-              <p className="text-2xl sm:text-3xl font-bold text-yellow-500">{formatNumber(analytics.totalImpressions)}</p>
-            </div>
-            <Eye className="h-10 w-10 sm:h-12 sm:w-12 text-yellow-600/30" />
-          </div>
-        </div>
-
-        <div className="card-polygon rounded-polygon p-4 sm:p-6 shadow-lg border-l-4 border-orange-700/50">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-400 text-xs sm:text-sm font-medium mb-1">Total Posts</p>
-              <p className="text-2xl sm:text-3xl font-bold text-orange-400">{analytics.totalPosts}</p>
-            </div>
-            <FileText className="h-10 w-10 sm:h-12 sm:w-12 text-orange-700/30" />
-          </div>
-        </div>
-      </div>
+      {/* Executive KPI Strip */}
+      <KPIStrip campaigns={requests} filteredCampaigns={requests} />
 
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
