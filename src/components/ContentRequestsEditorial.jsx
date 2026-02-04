@@ -108,9 +108,9 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
 
                         return {
                           ...post,
-                          impressions: metrics.impression_count?.toString() || post.impressions,
-                          likes: metrics.like_count?.toString() || post.likes,
-                          comments: metrics.reply_count?.toString() || post.comments,
+                          impressions: metrics.impression_count || post.impressions,
+                          likes: metrics.like_count || post.likes,
+                          comments: metrics.reply_count || post.comments,
                           lastScanned: new Date().toISOString()
                         };
                       })
@@ -252,13 +252,13 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
       description: '',
       platforms: ['X'],
       platformData: {
-        'X': { link: '', impressions: '', likes: '', comments: '' },
-        'Facebook': { link: '', impressions: '', likes: '', comments: '' },
-        'Instagram': { link: '', impressions: '', likes: '', comments: '' },
-        'YouTube': { link: '', impressions: '', likes: '', comments: '' },
-        'TikTok': { link: '', impressions: '', likes: '', comments: '' }
+        'X': { link: '', impressions: 0, likes: 0, comments: 0 },
+        'Facebook': { link: '', impressions: 0, likes: 0, comments: 0 },
+        'Instagram': { link: '', impressions: 0, likes: 0, comments: 0 },
+        'YouTube': { link: '', impressions: 0, likes: 0, comments: 0 },
+        'TikTok': { link: '', impressions: 0, likes: 0, comments: 0 }
       },
-      cost: '',
+      cost: 0,
       date: new Date().toISOString().split('T')[0]
     });
   };
@@ -270,13 +270,13 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
       description: '',
       platforms: ['X'],
       platformData: {
-        'X': { link: '', impressions: '', likes: '', comments: '' },
-        'Facebook': { link: '', impressions: '', likes: '', comments: '' },
-        'Instagram': { link: '', impressions: '', likes: '', comments: '' },
-        'YouTube': { link: '', impressions: '', likes: '', comments: '' },
-        'TikTok': { link: '', impressions: '', likes: '', comments: '' }
+        'X': { link: '', impressions: 0, likes: 0, comments: 0 },
+        'Facebook': { link: '', impressions: 0, likes: 0, comments: 0 },
+        'Instagram': { link: '', impressions: 0, likes: 0, comments: 0 },
+        'YouTube': { link: '', impressions: 0, likes: 0, comments: 0 },
+        'TikTok': { link: '', impressions: 0, likes: 0, comments: 0 }
       },
-      cost: '',
+      cost: 0,
       date: new Date().toISOString().split('T')[0]
     });
     setFetchingTweetData(false);
@@ -333,9 +333,9 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
             ...prev.platformData,
             'X': {
               ...prev.platformData['X'],
-              impressions: metrics.impression_count?.toString() || '',
-              likes: metrics.like_count?.toString() || '',
-              comments: metrics.reply_count?.toString() || ''
+              impressions: metrics.impression_count || 0,
+              likes: metrics.like_count || 0,
+              comments: metrics.reply_count || 0
             }
           },
           date: tweetDate || prev.date // Use tweet date if available, otherwise keep current date
@@ -402,7 +402,7 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
       const platformData = contentForm.platformData[platform];
 
       // For non-X platforms, impressions are required
-      if (platform !== 'X' && !platformData.impressions.trim()) {
+      if (platform !== 'X' && (!platformData.impressions || platformData.impressions === 0)) {
         alert(`Impressions are required for ${platform}`);
         return;
       }
@@ -422,11 +422,11 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
               description: request.title,
               platform: platform,
               date: contentForm.date,
-              cost: contentForm.cost,
+              cost: Number(contentForm.cost) || 0,
               link: platformData.link,
-              impressions: platformData.impressions,
-              likes: platformData.likes || '',
-              comments: platformData.comments || '',
+              impressions: Number(platformData.impressions) || 0,
+              likes: Number(platformData.likes) || 0,
+              comments: Number(platformData.comments) || 0,
               lastScanned: platform === 'X' && platformData.impressions ? new Date().toISOString() : null,
               campaign_id: request.id
             };
@@ -458,11 +458,11 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
             description: request.title,
             platform: platform,
             date: contentForm.date,
-            cost: contentForm.cost,
+            cost: Number(contentForm.cost) || 0,
             link: platformData.link,
-            impressions: platformData.impressions,
-            likes: platformData.likes || '',
-            comments: platformData.comments || '',
+            impressions: Number(platformData.impressions) || 0,
+            likes: Number(platformData.likes) || 0,
+            comments: Number(platformData.comments) || 0,
             lastScanned: platform === 'X' && platformData.impressions ? new Date().toISOString() : null
           };
 
@@ -492,11 +492,11 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
                 description: request.title,
                 platform: platform,
                 date: contentForm.date,
-                cost: contentForm.cost,
+                cost: Number(contentForm.cost) || 0,
                 link: platformData.link,
-                impressions: platformData.impressions,
-                likes: platformData.likes || '',
-                comments: platformData.comments || '',
+                impressions: Number(platformData.impressions) || 0,
+                likes: Number(platformData.likes) || 0,
+                comments: Number(platformData.comments) || 0,
                 lastScanned: platform === 'X' && platformData.impressions ? new Date().toISOString() : null,
                 campaign_id: request.id
               };
@@ -529,11 +529,11 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
               description: request.title,
               platform: platform,
               date: contentForm.date,
-              cost: contentForm.cost,
+              cost: Number(contentForm.cost) || 0,
               link: platformData.link,
-              impressions: platformData.impressions,
-              likes: platformData.likes || '',
-              comments: platformData.comments || '',
+              impressions: Number(platformData.impressions) || 0,
+              likes: Number(platformData.likes) || 0,
+              comments: Number(platformData.comments) || 0,
               lastScanned: platform === 'X' && platformData.impressions ? new Date().toISOString() : null
             };
           });
@@ -646,13 +646,13 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
       // Sum up impressions and costs from matching posts
       matchingPosts.forEach(post => {
         if (post.impressions) {
-          const impressions = parseFloat(post.impressions.replace(/[^0-9.-]+/g, ''));
+          const impressions = Number(post.impressions);
           if (!isNaN(impressions)) {
             totalImpressions += impressions;
           }
         }
         if (post.cost) {
-          const cost = parseFloat(post.cost.replace(/[^0-9.-]+/g, ''));
+          const cost = Number(post.cost);
           if (!isNaN(cost)) {
             totalCost += cost;
           }
@@ -757,7 +757,7 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
           if (posts.length > 0) {
             const totalCreatorImpressions = posts.reduce((sum, post) => {
               if (post.impressions) {
-                const impressions = parseFloat(post.impressions.replace(/[^0-9.-]+/g, ''));
+                const impressions = Number(post.impressions);
                 if (!isNaN(impressions)) {
                   return sum + impressions;
                 }
@@ -770,7 +770,7 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
 
         // Get cost per post from creator (only if not already set)
         if (estimatedCost === 0 && creator.costPerPost) {
-          const cost = parseFloat(creator.costPerPost.replace(/[^0-9.-]+/g, ''));
+          const cost = Number(creator.costPerPost);
           if (!isNaN(cost)) {
             estimatedCost += cost;
           }
@@ -1480,10 +1480,12 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
                     Cost
                   </label>
                   <input
-                    type="text"
-                    placeholder="e.g., $1,250.00"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="1250.00"
                     value={contentForm.cost}
-                    onChange={(e) => setContentForm({ ...contentForm, cost: e.target.value })}
+                    onChange={(e) => setContentForm({ ...contentForm, cost: Number(e.target.value) || 0 })}
                     className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent-primary)]"
                   />
                 </div>
@@ -1539,10 +1541,11 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
                             Impressions {platform !== 'X' && <span className="text-red-500">*</span>}
                           </label>
                           <input
-                            type="text"
+                            type="number"
+                            min="0"
                             placeholder="10000"
                             value={contentForm.platformData[platform].impressions}
-                            onChange={(e) => updatePlatformData(platform, 'impressions', e.target.value)}
+                            onChange={(e) => updatePlatformData(platform, 'impressions', Number(e.target.value) || 0)}
                             disabled={platform === 'X' && fetchingTweetData}
                             className="w-full px-2 py-2 text-sm border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent-primary)] disabled:opacity-50"
                           />
@@ -1553,10 +1556,11 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
                             Likes
                           </label>
                           <input
-                            type="text"
+                            type="number"
+                            min="0"
                             placeholder="500"
                             value={contentForm.platformData[platform].likes}
-                            onChange={(e) => updatePlatformData(platform, 'likes', e.target.value)}
+                            onChange={(e) => updatePlatformData(platform, 'likes', Number(e.target.value) || 0)}
                             disabled={platform === 'X' && fetchingTweetData}
                             className="w-full px-2 py-2 text-sm border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent-primary)] disabled:opacity-50"
                           />
@@ -1567,10 +1571,11 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
                             {platform === 'X' ? 'Replies' : 'Comments'}
                           </label>
                           <input
-                            type="text"
+                            type="number"
+                            min="0"
                             placeholder="50"
                             value={contentForm.platformData[platform].comments}
-                            onChange={(e) => updatePlatformData(platform, 'comments', e.target.value)}
+                            onChange={(e) => updatePlatformData(platform, 'comments', Number(e.target.value) || 0)}
                             disabled={platform === 'X' && fetchingTweetData}
                             className="w-full px-2 py-2 text-sm border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent-primary)] disabled:opacity-50"
                           />

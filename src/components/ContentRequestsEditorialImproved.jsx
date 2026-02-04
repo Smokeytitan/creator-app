@@ -109,9 +109,9 @@ const ContentRequestsEditorialImproved = ({ creators, setCreators, requests = []
 
                         return {
                           ...post,
-                          impressions: metrics.impression_count?.toString() || post.impressions,
-                          likes: metrics.like_count?.toString() || post.likes,
-                          comments: metrics.reply_count?.toString() || post.comments,
+                          impressions: metrics.impression_count || post.impressions,
+                          likes: metrics.like_count || post.likes,
+                          comments: metrics.reply_count || post.comments,
                           lastScanned: new Date().toISOString()
                         };
                       })
