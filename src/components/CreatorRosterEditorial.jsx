@@ -19,7 +19,7 @@ export default function CreatorRosterEditorial({ creators, setCreators }) {
   const [viewingPostsId, setViewingPostsId] = useState(null);
   const [addingPostId, setAddingPostId] = useState(null);
   const [editingPostId, setEditingPostId] = useState(null);
-  const [postForm, setPostForm] = useState({ description: '', date: '', cost: '', link: '', impressions: '' });
+  const [postForm, setPostForm] = useState({ description: '', date: '', cost: 0, link: '', impressions: 0 });
   const excelFileInputRef = useRef(null);
   const [importing, setImporting] = useState(false);
 
@@ -154,16 +154,16 @@ export default function CreatorRosterEditorial({ creators, setCreators }) {
     setPostForm({
       description: '',
       date: new Date().toISOString().split('T')[0],
-      cost: creator?.costPerPost || '',
+      cost: Number(creator?.costPerPost) || 0,
       link: '',
-      impressions: ''
+      impressions: 0
     });
   };
 
   const cancelAddPost = (e) => {
     e.stopPropagation();
     setAddingPostId(null);
-    setPostForm({ description: '', date: '', cost: '', link: '', impressions: '' });
+    setPostForm({ description: '', date: '', cost: 0, link: '', impressions: 0 });
   };
 
   const savePost = (creatorId, e) => {
@@ -177,9 +177,9 @@ export default function CreatorRosterEditorial({ creators, setCreators }) {
       id: Date.now(),
       description: postForm.description,
       date: postForm.date || new Date().toISOString().split('T')[0],
-      cost: postForm.cost,
+      cost: Number(postForm.cost) || 0,
       link: postForm.link,
-      impressions: postForm.impressions
+      impressions: Number(postForm.impressions) || 0
     };
 
     setCreators(creators.map(c => {
@@ -193,7 +193,7 @@ export default function CreatorRosterEditorial({ creators, setCreators }) {
     }));
 
     setAddingPostId(null);
-    setPostForm({ description: '', date: '', cost: '', link: '', impressions: '' });
+    setPostForm({ description: '', date: '', cost: 0, link: '', impressions: 0 });
   };
 
   const deletePost = (creatorId, postId, e) => {
@@ -218,16 +218,16 @@ export default function CreatorRosterEditorial({ creators, setCreators }) {
     setPostForm({
       description: post.description,
       date: post.date,
-      cost: post.cost,
+      cost: Number(post.cost) || 0,
       link: post.link || '',
-      impressions: post.impressions || ''
+      impressions: Number(post.impressions) || 0
     });
   };
 
   const cancelEditPost = (e) => {
     e.stopPropagation();
     setEditingPostId(null);
-    setPostForm({ description: '', date: '', cost: '', link: '', impressions: '' });
+    setPostForm({ description: '', date: '', cost: 0, link: '', impressions: 0 });
   };
 
   const saveEditPost = (creatorId, postId, e) => {
@@ -247,9 +247,9 @@ export default function CreatorRosterEditorial({ creators, setCreators }) {
                 ...p,
                 description: postForm.description,
                 date: postForm.date,
-                cost: postForm.cost,
+                cost: Number(postForm.cost) || 0,
                 link: postForm.link,
-                impressions: postForm.impressions
+                impressions: Number(postForm.impressions) || 0
               };
             }
             return p;
@@ -260,7 +260,7 @@ export default function CreatorRosterEditorial({ creators, setCreators }) {
     }));
 
     setEditingPostId(null);
-    setPostForm({ description: '', date: '', cost: '', link: '', impressions: '' });
+    setPostForm({ description: '', date: '', cost: 0, link: '', impressions: 0 });
   };
 
   const parseCSV = (text) => {
@@ -312,7 +312,7 @@ export default function CreatorRosterEditorial({ creators, setCreators }) {
       let totalSpend = 0;
       posts.forEach(post => {
         if (post.cost) {
-          const cost = parseFloat(post.cost.replace(/[^0-9.-]+/g, ''));
+          const cost = Number(post.cost);
           if (!isNaN(cost)) {
             totalSpend += cost;
           }
@@ -906,13 +906,13 @@ export default function CreatorRosterEditorial({ creators, setCreators }) {
 
                   posts.forEach(post => {
                     if (post.impressions) {
-                      const impressions = parseFloat(post.impressions.replace(/[^0-9.-]+/g, ''));
+                      const impressions = Number(post.impressions);
                       if (!isNaN(impressions)) {
                         totalImpressions += impressions;
                       }
                     }
                     if (post.cost) {
-                      const cost = parseFloat(post.cost.replace(/[^0-9.-]+/g, ''));
+                      const cost = Number(post.cost);
                       if (!isNaN(cost)) {
                         totalCost += cost;
                       }
@@ -1035,18 +1035,21 @@ export default function CreatorRosterEditorial({ creators, setCreators }) {
                           onChange={(e) => setPostForm({ ...postForm, date: e.target.value })}
                         />
                         <input
-                          type="text"
-                          placeholder="Cost (e.g., $1,250.00)"
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          placeholder="Cost (e.g., 1250.00)"
                           className="w-full px-2 py-1 text-sm border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent-primary)]"
                           value={postForm.cost}
-                          onChange={(e) => setPostForm({ ...postForm, cost: e.target.value })}
+                          onChange={(e) => setPostForm({ ...postForm, cost: Number(e.target.value) || 0 })}
                         />
                         <input
-                          type="text"
+                          type="number"
+                          min="0"
                           placeholder="Impressions"
                           className="w-full px-2 py-1 text-sm border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent-primary)]"
                           value={postForm.impressions}
-                          onChange={(e) => setPostForm({ ...postForm, impressions: e.target.value })}
+                          onChange={(e) => setPostForm({ ...postForm, impressions: Number(e.target.value) || 0 })}
                         />
                         <input
                           type="url"
@@ -1095,18 +1098,21 @@ export default function CreatorRosterEditorial({ creators, setCreators }) {
                                   onChange={(e) => setPostForm({ ...postForm, date: e.target.value })}
                                 />
                                 <input
-                                  type="text"
-                                  placeholder="Cost (e.g., $1,250.00)"
+                                  type="number"
+                                  step="0.01"
+                                  min="0"
+                                  placeholder="Cost (e.g., 1250.00)"
                                   className="w-full px-2 py-1 text-sm border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent-primary)]"
                                   value={postForm.cost}
-                                  onChange={(e) => setPostForm({ ...postForm, cost: e.target.value })}
+                                  onChange={(e) => setPostForm({ ...postForm, cost: Number(e.target.value) || 0 })}
                                 />
                                 <input
-                                  type="text"
+                                  type="number"
+                                  min="0"
                                   placeholder="Impressions"
                                   className="w-full px-2 py-1 text-sm border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent-primary)]"
                                   value={postForm.impressions}
-                                  onChange={(e) => setPostForm({ ...postForm, impressions: e.target.value })}
+                                  onChange={(e) => setPostForm({ ...postForm, impressions: Number(e.target.value) || 0 })}
                                 />
                                 <input
                                   type="url"
