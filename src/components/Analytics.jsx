@@ -413,66 +413,6 @@ export default function Analytics({ creators, requests = [] }) {
         </div>
       </div>
 
-      {/* Progress Metrics */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Q4 Budget Used */}
-        <div className="card-polygon rounded-polygon shadow-sm border border-white/[0.08] p-6">
-          <div className="flex items-center justify-between mb-2">
-            <h4 className="text-sm font-medium text-polygon-text-secondary">Total Budget Used</h4>
-            <span className="text-sm font-semibold text-polygon-text-primary">
-              {analytics.totalSpend > 0 ? '100%' : '0%'}
-            </span>
-          </div>
-          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
-            <div
-              className="bg-gradient-to-r from-blue-500 to-blue-600 h-3 rounded-full transition-all duration-500"
-              style={{ width: analytics.totalSpend > 0 ? '100%' : '0%' }}
-            ></div>
-          </div>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-            {formatCurrency(analytics.totalSpend)} spent
-          </p>
-        </div>
-
-        {/* Avg Impressions per Post */}
-        <div className="card-polygon rounded-polygon shadow-sm border border-white/[0.08] p-6">
-          <div className="flex items-center justify-between mb-2">
-            <h4 className="text-sm font-medium text-polygon-text-secondary">Avg Impressions per Post</h4>
-            <span className="text-sm font-semibold text-polygon-text-primary">
-              {formatNumber(avgImpressionsPerPost)}
-            </span>
-          </div>
-          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
-            <div
-              className="bg-gradient-to-r from-green-500 to-green-600 h-3 rounded-full transition-all duration-500"
-              style={{ width: avgImpressionsPerPost > 0 ? '85%' : '0%' }}
-            ></div>
-          </div>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-            Across {analytics.totalPosts} posts
-          </p>
-        </div>
-
-        {/* Influencers with Activity */}
-        <div className="card-polygon rounded-polygon shadow-sm border border-white/[0.08] p-6">
-          <div className="flex items-center justify-between mb-2">
-            <h4 className="text-sm font-medium text-polygon-text-secondary">Influencers with Activity</h4>
-            <span className="text-sm font-semibold text-polygon-text-primary">
-              {activityPercentage.toFixed(0)}%
-            </span>
-          </div>
-          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
-            <div
-              className="bg-gradient-to-r from-polygon-primary to-polygon-primary-hover h-3 rounded-full transition-all duration-500"
-              style={{ width: `${activityPercentage}%` }}
-            ></div>
-          </div>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-            {creatorsWithActivity} of {analytics.totalCreators} active
-          </p>
-        </div>
-      </div>
-
       {/* Campaign Performance Overview */}
       {analytics.campaignStats.length > 0 && (
         <div className="card-polygon rounded-polygon shadow-sm border border-white/[0.08] overflow-hidden">
