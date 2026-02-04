@@ -14,9 +14,20 @@ import {
   Legend
 } from 'recharts';
 import KPIStrip from './KPIStrip';
+import EstimatedVsActual from './EstimatedVsActual';
+import ConfidenceBadge from './ConfidenceBadge';
 
 export default function Analytics({ creators, requests = [] }) {
   const [viewMode] = useState('creators'); // Keep for export functionality
+
+  // Calculate confidence level for campaign metrics
+  const getConfidence = (campaign) => {
+    if (!campaign.posts || campaign.posts.length === 0) return 'estimated';
+    const withMetrics = campaign.posts.filter(p => p.impressions > 0 || p.cost > 0);
+    if (withMetrics.length === campaign.posts.length) return 'measured';
+    if (withMetrics.length > 0) return 'partial';
+    return 'estimated';
+  };
 
   // Calculate analytics metrics
   const analytics = useMemo(() => {
@@ -95,37 +106,17 @@ export default function Analytics({ creators, requests = [] }) {
     stats.campaignStats = [];
 
     requests.forEach(request => {
-      let campaignImpressions = 0;
-      let campaignCost = 0;
-      let postCount = 0;
+      // Use actual metrics from campaign data (from Supabase)
+      const actualImpressions = Number(request.actualImpressions) || 0;
+      const actualCost = Number(request.actualCost) || 0;
+      const estimatedImpressions = Number(request.estimatedImpressions) || 0;
+      const estimatedCost = Number(request.estimatedCost) || 0;
+      const postCount = (request.posts || []).length;
 
-      // Calculate metrics for this campaign
-      (request.creators || []).forEach(campaignCreator => {
-        const creator = creators.find(c => c.id === campaignCreator.id);
-        if (!creator || !creator.posts) return;
-
-        // Find posts matching this campaign
-        const matchingPosts = creator.posts.filter(post =>
-          post.description && post.description.toLowerCase().includes(request.title.toLowerCase().split(' ').slice(0, 2).join(' ').toLowerCase())
-        );
-
-        postCount += matchingPosts.length;
-
-        matchingPosts.forEach(post => {
-          if (post.impressions) {
-            const impressions = Number(post.impressions);
-            if (!isNaN(impressions)) {
-              campaignImpressions += impressions;
-            }
-          }
-          if (post.cost) {
-            const cost = Number(post.cost);
-            if (!isNaN(cost)) {
-              campaignCost += cost;
-            }
-          }
-        });
-      });
+      // Calculate CPM from actual metrics, fall back to estimated
+      const impressionsForCPM = actualImpressions > 0 ? actualImpressions : estimatedImpressions;
+      const costForCPM = actualCost > 0 ? actualCost : estimatedCost;
+      const cpm = impressionsForCPM > 0 ? (costForCPM / impressionsForCPM) * 1000 : 0;
 
       stats.campaignStats.push({
         id: request.id,
@@ -133,9 +124,14 @@ export default function Analytics({ creators, requests = [] }) {
         status: request.status,
         creatorCount: (request.creators || []).length,
         postCount,
-        impressions: campaignImpressions,
-        cost: campaignCost,
-        cpm: campaignImpressions > 0 ? (campaignCost / campaignImpressions) * 1000 : 0,
+        actualImpressions,
+        estimatedImpressions,
+        actualCost,
+        estimatedCost,
+        impressions: actualImpressions > 0 ? actualImpressions : estimatedImpressions, // Display value
+        cost: actualCost > 0 ? actualCost : estimatedCost, // Display value
+        cpm,
+        confidence: getConfidence(request),
         dueDate: request.dueDate
       });
     });
@@ -579,6 +575,66 @@ export default function Analytics({ creators, requests = [] }) {
           </table>
         </div>
       </div>
+
+      {/* Campaign Performance Overview */}
+      {analytics.campaignStats.length > 0 && (
+        <div className="card-polygon rounded-polygon shadow-sm border border-white/[0.08] overflow-hidden">
+          <div className="px-6 py-4 border-b border-white/[0.08]">
+            <h3 className="text-lg font-semibold text-polygon-text-primary flex items-center gap-2">
+              <Target className="h-5 w-5 text-polygon-primary" />
+              Campaign Performance - Actual vs Estimated
+            </h3>
+          </div>
+          <div className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {analytics.topCampaignsByImpressions.slice(0, 3).map((campaign) => (
+                <div key={campaign.id} className="border border-white/[0.08] rounded-lg p-4 hover:border-white/[0.12] transition-colors">
+                  <div className="flex items-start justify-between mb-3">
+                    <h4 className="text-sm font-semibold text-polygon-text-primary line-clamp-2">
+                      {campaign.title}
+                    </h4>
+                    <ConfidenceBadge confidence={campaign.confidence} size="sm" />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    {/* Impressions */}
+                    <div>
+                      <EstimatedVsActual
+                        actual={campaign.actualImpressions}
+                        estimated={campaign.estimatedImpressions}
+                        label="Impressions"
+                        format="number"
+                        showIcon={false}
+                      />
+                    </div>
+
+                    {/* Cost */}
+                    <div>
+                      <EstimatedVsActual
+                        actual={campaign.actualCost}
+                        estimated={campaign.estimatedCost}
+                        label="Cost"
+                        format="currency"
+                        showIcon={false}
+                      />
+                    </div>
+                  </div>
+
+                  {/* CPM */}
+                  <div className="mt-3 pt-3 border-t border-white/[0.05]">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-400">CPM</span>
+                      <span className="text-mono font-semibold text-polygon-text-primary">
+                        ${campaign.cpm.toFixed(2)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Additional Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
