@@ -12,8 +12,8 @@
   --color-text-primary: #F5F5F5;
   --color-text-secondary: #A3A3A3;
   --color-text-tertiary: #737373;
-  --color-border: rgba(217, 119, 6, 0.1);
-  --color-border-hover: rgba(217, 119, 6, 0.2);
+  --color-border: rgba(255, 255, 255, 0.06);
+  --color-border-hover: rgba(255, 255, 255, 0.1);
 
   /* Typography Scale */
   --font-display: 'Playfair Display', Georgia, serif;
@@ -191,15 +191,15 @@ body {
 /* Polygon Card Styles */
 .card-polygon {
   background: #141217;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
   transition: all 0.3s ease;
 }
 
 .card-polygon:hover {
-  border-color: rgba(255, 255, 255, 0.16);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
   transform: translateY(-2px);
 }
 
@@ -282,6 +282,7 @@ body {
   background: var(--color-bg-secondary);
   border: 1px solid var(--color-border);
   border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   animation: fadeInUp 0.6s ease-out;
 }
@@ -289,15 +290,16 @@ body {
 .card-editorial:hover {
   border-color: var(--color-border-hover);
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
 }
 
 /* Data Metric Display */
 .metric-value {
   font-family: var(--font-mono);
-  font-size: 2.5rem;
+  font-size: 2rem;
   font-weight: 700;
   letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
   background: linear-gradient(135deg, var(--color-text-primary) 0%, var(--color-text-secondary) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -305,7 +307,7 @@ body {
 }
 
 .metric-label {
-  font-size: 0.75rem;
+  font-size: 0.625rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.1em;
