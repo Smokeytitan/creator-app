@@ -373,42 +373,7 @@ export default function Analytics({ creators, requests = [] }) {
       <KPIStrip campaigns={requests} filteredCampaigns={requests} />
 
       {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-        {/* CPM by Influencer */}
-        <div className="card-polygon rounded-polygon shadow-sm border border-white/[0.08] p-4 sm:p-6">
-          <h3 className="text-base sm:text-lg font-semibold text-polygon-text-primary mb-3 sm:mb-4 flex items-center gap-2">
-            <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5 text-polygon-primary" />
-            CPM by Influencer
-          </h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart
-              data={analytics.topByROI.slice(0, 5)}
-              margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.2} />
-              <XAxis
-                dataKey="name"
-                stroke="#9CA3AF"
-                tick={{ fill: '#9CA3AF' }}
-                angle={-45}
-                textAnchor="end"
-                height={80}
-              />
-              <YAxis stroke="#9CA3AF" tick={{ fill: '#9CA3AF' }} />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: '#1F2937',
-                  border: 'none',
-                  borderRadius: '0.5rem',
-                  color: '#F9FAFB'
-                }}
-                formatter={(value) => [`$${(value * 1000).toFixed(2)}`, 'CPM']}
-              />
-              <Bar dataKey="cpi" fill="#A855F7" radius={[8, 8, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-
+      <div className="grid grid-cols-1 gap-4 sm:gap-6">
         {/* Budget by Platform */}
         <div className="card-polygon rounded-polygon shadow-sm border border-white/[0.08] p-6">
           <h3 className="text-lg font-semibold text-polygon-text-primary mb-4">Budget by Platform</h3>
