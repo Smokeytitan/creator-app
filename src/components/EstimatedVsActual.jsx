@@ -15,7 +15,8 @@ const EstimatedVsActual = ({
   estimated,
   label = '',
   format = 'number',
-  showIcon = true
+  showIcon = true,
+  showDelta = true
 }) => {
   // Format value based on type
   const formatValue = (value, formatType) => {
@@ -72,7 +73,7 @@ const EstimatedVsActual = ({
         </div>
 
         {/* Delta badge */}
-        {hasVariance && (
+        {showDelta && hasVariance && (
           <div
             className={`
               inline-flex items-center gap-1
@@ -116,7 +117,8 @@ EstimatedVsActual.propTypes = {
   estimated: PropTypes.number.isRequired,
   label: PropTypes.string,
   format: PropTypes.oneOf(['number', 'currency']),
-  showIcon: PropTypes.bool
+  showIcon: PropTypes.bool,
+  showDelta: PropTypes.bool
 };
 
 export default EstimatedVsActual;

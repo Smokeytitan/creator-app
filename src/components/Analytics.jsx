@@ -442,6 +442,7 @@ export default function Analytics({ creators, requests = [] }) {
                         label="Impressions"
                         format="number"
                         showIcon={false}
+                        showDelta={false}
                       />
                     </div>
 
@@ -453,6 +454,7 @@ export default function Analytics({ creators, requests = [] }) {
                         label="Cost"
                         format="currency"
                         showIcon={false}
+                        showDelta={false}
                       />
                     </div>
                   </div>
