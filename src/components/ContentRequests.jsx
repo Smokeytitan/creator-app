@@ -202,13 +202,13 @@ const ContentRequests = ({ creators }) => {
       // Sum up impressions and costs from matching posts
       matchingPosts.forEach(post => {
         if (post.impressions) {
-          const impressions = parseFloat(post.impressions.replace(/[^0-9.-]+/g, ''));
+          const impressions = Number(post.impressions);
           if (!isNaN(impressions)) {
             totalImpressions += impressions;
           }
         }
         if (post.cost) {
-          const cost = parseFloat(post.cost.replace(/[^0-9.-]+/g, ''));
+          const cost = Number(post.cost);
           if (!isNaN(cost)) {
             totalCost += cost;
           }
@@ -305,7 +305,7 @@ const ContentRequests = ({ creators }) => {
       if (posts.length > 0) {
         const totalCreatorImpressions = posts.reduce((sum, post) => {
           if (post.impressions) {
-            const impressions = parseFloat(post.impressions.replace(/[^0-9.-]+/g, ''));
+            const impressions = Number(post.impressions);
             if (!isNaN(impressions)) {
               return sum + impressions;
             }

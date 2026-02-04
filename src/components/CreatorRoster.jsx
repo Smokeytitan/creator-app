@@ -456,7 +456,7 @@ export default function CreatorRoster({ creators, setCreators }) {
       let totalSpend = 0;
       posts.forEach(post => {
         if (post.cost) {
-          const cost = parseFloat(post.cost.replace(/[^0-9.-]+/g, ''));
+          const cost = Number(post.cost);
           if (!isNaN(cost)) {
             totalSpend += cost;
           }
@@ -976,13 +976,13 @@ export default function CreatorRoster({ creators, setCreators }) {
 
                   posts.forEach(post => {
                     if (post.impressions) {
-                      const impressions = parseFloat(post.impressions.replace(/[^0-9.-]+/g, ''));
+                      const impressions = Number(post.impressions);
                       if (!isNaN(impressions)) {
                         totalImpressions += impressions;
                       }
                     }
                     if (post.cost) {
-                      const cost = parseFloat(post.cost.replace(/[^0-9.-]+/g, ''));
+                      const cost = Number(post.cost);
                       if (!isNaN(cost)) {
                         totalCost += cost;
                       }

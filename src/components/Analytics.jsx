@@ -34,17 +34,17 @@ export default function Analytics({ creators, requests = [] }) {
       let creatorImpressions = 0;
 
       posts.forEach(post => {
-        // Parse cost
+        // Parse cost (now numeric from database)
         if (post.cost) {
-          const cost = parseFloat(post.cost.replace(/[^0-9.-]+/g, ''));
+          const cost = Number(post.cost);
           if (!isNaN(cost)) {
             creatorSpend += cost;
           }
         }
 
-        // Parse impressions
+        // Parse impressions (now numeric from database)
         if (post.impressions) {
-          const impressions = parseFloat(post.impressions.replace(/[^0-9.-]+/g, ''));
+          const impressions = Number(post.impressions);
           if (!isNaN(impressions)) {
             creatorImpressions += impressions;
           }
@@ -112,13 +112,13 @@ export default function Analytics({ creators, requests = [] }) {
 
         matchingPosts.forEach(post => {
           if (post.impressions) {
-            const impressions = parseFloat(post.impressions.replace(/[^0-9.-]+/g, ''));
+            const impressions = Number(post.impressions);
             if (!isNaN(impressions)) {
               campaignImpressions += impressions;
             }
           }
           if (post.cost) {
-            const cost = parseFloat(post.cost.replace(/[^0-9.-]+/g, ''));
+            const cost = Number(post.cost);
             if (!isNaN(cost)) {
               campaignCost += cost;
             }
