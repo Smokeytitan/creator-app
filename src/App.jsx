@@ -279,7 +279,8 @@ function AdminView() {
           >
             Analytics
           </button>
-          <button
+          {/* Hidden: Kaito tab */}
+          {/* <button
             onClick={() => setActiveTab('kaito')}
             className={`flex-1 px-4 py-3 text-sm font-semibold whitespace-nowrap transition-all duration-200 ${
               activeTab === 'kaito'
@@ -288,7 +289,7 @@ function AdminView() {
             }`}
           >
             Kaito
-          </button>
+          </button> */}
           <button
             onClick={() => setActiveTab('botanalytics')}
             className={`flex-1 px-4 py-3 text-sm font-semibold whitespace-nowrap transition-all duration-200 ${
@@ -370,7 +371,8 @@ function AdminView() {
               Analytics
             </button>
 
-            <button
+            {/* Hidden: Kaito tab */}
+            {/* <button
               onClick={() => setActiveTab('kaito')}
               className={`px-4 py-3 text-sm font-semibold transition-all duration-200 text-left rounded-lg ${
                 activeTab === 'kaito'
@@ -379,7 +381,7 @@ function AdminView() {
               }`}
             >
               Kaito Leaderboard
-            </button>
+            </button> */}
 
             <button
               onClick={() => setActiveTab('botanalytics')}
@@ -431,7 +433,8 @@ function AdminView() {
               {activeTab === 'prospects' && <CreatorProspectsEditorial prospects={prospects} setProspects={setProspects} setCreators={setCreators} />}
               {activeTab === 'requests' && <Campaigns />}
               {activeTab === 'analytics' && <Analytics creators={creators} requests={requests} />}
-              {activeTab === 'kaito' && <FlashCampaignManager />}
+              {/* Hidden: Kaito tab content */}
+              {/* {activeTab === 'kaito' && <FlashCampaignManager />} */}
               {activeTab === 'botanalytics' && <BotAnalyticsEditorial />}
               {activeTab === 'channels' && <ChannelManagerEditorial />}
               {activeTab === 'social' && <SocialConnections />}
