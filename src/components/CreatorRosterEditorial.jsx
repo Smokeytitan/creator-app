@@ -952,7 +952,7 @@ export default function CreatorRosterEditorial({ creators, setCreators }) {
 
                             {avgCostPerPost > 0 && (
                               <div className="bg-[var(--color-bg-tertiary)] rounded-lg p-3 border border-[var(--color-border)]">
-                                <div className="text-xs text-[var(--color-text-tertiary)] mb-1 uppercase tracking-wide">Avg Cost/Post</div>
+                                <div className="text-xs text-[var(--color-text-tertiary)] mb-1 uppercase tracking-wide">Cost/Post</div>
                                 <div className="text-lg font-bold text-[var(--color-accent-secondary)] text-mono">
                                   ${avgCostPerPost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                 </div>

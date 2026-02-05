@@ -1022,7 +1022,7 @@ export default function CreatorRoster({ creators, setCreators }) {
 
                             {avgCostPerPost > 0 && (
                               <div className="bg-polygon-bg-secondary rounded-polygon p-3">
-                                <div className="text-xs text-polygon-text-secondary mb-1">Avg Cost/Post</div>
+                                <div className="text-xs text-polygon-text-secondary mb-1">Cost/Post</div>
                                 <div className="text-lg font-bold text-green-600 dark:text-green-400">
                                   ${avgCostPerPost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                 </div>
