@@ -9,20 +9,28 @@ import { ClerkProvider } from '@clerk/clerk-react'
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
 
-if (!PUBLISHABLE_KEY) {
-  throw new Error('Missing Clerk Publishable Key')
-}
+// Check if using placeholder credentials (for local testing without auth)
+const isPlaceholder = !PUBLISHABLE_KEY || PUBLISHABLE_KEY.includes('placeholder')
+
+// Conditionally render with or without ClerkProvider
+const AppContent = () => (
+  <ThemeProvider>
+    <ToastProvider>
+      <App bypassAuth={isPlaceholder} />
+    </ToastProvider>
+  </ThemeProvider>
+)
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <ErrorBoundary>
-      <ClerkProvider publishableKey={PUBLISHABLE_KEY}>
-        <ThemeProvider>
-          <ToastProvider>
-            <App />
-          </ToastProvider>
-        </ThemeProvider>
-      </ClerkProvider>
+      {isPlaceholder ? (
+        <AppContent />
+      ) : (
+        <ClerkProvider publishableKey={PUBLISHABLE_KEY}>
+          <AppContent />
+        </ClerkProvider>
+      )}
     </ErrorBoundary>
   </StrictMode>,
 )

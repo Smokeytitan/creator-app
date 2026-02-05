@@ -22,13 +22,23 @@ const GOOGLE_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1J75nBdYNyQivMd
 
 const DEFAULT_CREATORS = IMPORTED_CREATORS;
 
-export default function App() {
-  // Authentication
+export default function App({ bypassAuth = false }) {
+  // Render different component based on auth mode
+  if (bypassAuth) {
+    return <AppWithoutAuth />;
+  }
+  return <AppWithAuth />;
+}
+
+// Component for bypassed auth mode
+function AppWithoutAuth() {
+  return <AdminView bypassAuth={true} />;
+}
+
+// Component with Clerk authentication
+function AppWithAuth() {
   const { isSignedIn, isLoaded } = useAuth();
   const { user } = useUser();
-
-  // Check if user is admin (default to true for existing users during migration)
-  const isAdmin = user?.publicMetadata?.role === 'admin' || !user?.publicMetadata?.role;
 
   // Show loading while auth is loading
   if (!isLoaded) {
@@ -48,11 +58,10 @@ export default function App() {
   }
 
   // For now, all authenticated users see the admin view
-  // In Phase 3, we'll add CreatorPortal for non-admin users
-  return <AdminView />;
+  return <AdminView bypassAuth={false} />;
 }
 
-function AdminView() {
+function AdminView({ bypassAuth = false }) {
   const [activeTab, setActiveTab] = useState(() => {
     const stored = localStorage.getItem('activeTab');
     // Default to channels tab now that roster/requests/analytics are hidden
@@ -78,22 +87,20 @@ function AdminView() {
             getCampaigns()
           ]);
 
-          // Split creators by status
-          const activeCreators = allCreators.filter(c => c.status === 'active' || !c.status);
-          const prospectCreators = allCreators.filter(c => c.status === 'prospect');
-
-          setCreators(activeCreators);
-          setProspects(prospectCreators);
-          setRequests(loadedRequests);
-          console.log(`[App] ✓ Loaded ${activeCreators.length} active creators, ${prospectCreators.length} prospects, and ${loadedRequests.length} requests from Supabase`);
-
-          // If Supabase is empty but localStorage has data, prompt for migration
+          // If Supabase returns empty data (likely due to placeholder credentials),
+          // fallback to localStorage/DEFAULT_CREATORS
           if (allCreators.length === 0) {
-            const localCreators = localStorage.getItem('creators');
-            if (localCreators && JSON.parse(localCreators).length > 0) {
-              console.warn('[App] Supabase is empty but localStorage has data. Consider running migration.');
-              // You could show a migration prompt here
-            }
+            console.warn('[App] Supabase returned no data. Falling back to localStorage/default data...');
+            loadFromLocalStorage();
+          } else {
+            // Split creators by status
+            const activeCreators = allCreators.filter(c => c.status === 'active' || !c.status);
+            const prospectCreators = allCreators.filter(c => c.status === 'prospect');
+
+            setCreators(activeCreators);
+            setProspects(prospectCreators);
+            setRequests(loadedRequests);
+            console.log(`[App] ✓ Loaded ${activeCreators.length} active creators, ${prospectCreators.length} prospects, and ${loadedRequests.length} requests from Supabase`);
           }
         } catch (error) {
           console.error('[App] Error loading from Supabase:', error);
@@ -231,7 +238,12 @@ function AdminView() {
               </button>
             )}
             <ThemeToggle />
-            <UserButton afterSignOutUrl="/" />
+            {!bypassAuth && <UserButton afterSignOutUrl="/" />}
+            {bypassAuth && (
+              <div className="px-3 py-1.5 bg-yellow-500/10 border border-yellow-500/30 rounded text-xs text-yellow-400">
+                Dev Mode
+              </div>
+            )}
           </div>
         </div>
       </div>

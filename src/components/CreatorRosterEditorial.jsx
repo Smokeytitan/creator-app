@@ -4,6 +4,8 @@ import { IMPORTED_CREATORS } from '../data/importedCreators';
 import { deleteCreator as deleteCreatorFromDB, createCreator, updateCreator as updateCreatorInDB, addPost as addPostToDB, updatePost as updatePostInDB, deletePost as deletePostFromDB, getCreators } from '../services/creatorsServiceSupabase';
 import { importExcelWorkbook } from '../services/excelImportService';
 import { uploadAndParseContract, applyContractDataToCreator, formatParsedDataForPreview } from '../services/contractService';
+import InvoiceGeneratorModal from './invoice/InvoiceGeneratorModal';
+import TemplateUploadStep from './invoice/TemplateUploadStep';
 
 export default function CreatorRosterEditorial({ creators, setCreators }) {
   const resetToImportedData = () => {
@@ -31,6 +33,26 @@ export default function CreatorRosterEditorial({ creators, setCreators }) {
   const [contractStoragePath, setContractStoragePath] = useState(null);
   const [showContractPreview, setShowContractPreview] = useState(false);
   const [contractCreatorId, setContractCreatorId] = useState(null);
+  const [showManualEntry, setShowManualEntry] = useState(false);
+  const [manualContractData, setManualContractData] = useState({
+    legalName: '',
+    legalAddress: '',
+    city: '',
+    pincode: '',
+    country: '',
+    businessName: '',
+    email: '',
+    network: '',
+    currency: 'USD',
+    walletAddress: '',
+    costPerPost: '',
+    poNumber: ''
+  });
+
+  // Invoice generation state
+  const [showInvoiceModal, setShowInvoiceModal] = useState(false);
+  const [selectedCreatorForInvoice, setSelectedCreatorForInvoice] = useState(null);
+  const [showTemplateUpload, setShowTemplateUpload] = useState(false);
 
   // Search and filter state
   const [searchTerm, setSearchTerm] = useState('');
@@ -476,6 +498,8 @@ export default function CreatorRosterEditorial({ creators, setCreators }) {
     const file = event.target.files?.[0];
     if (!file) return;
 
+    console.log('📄 Contract upload started:', file.name);
+
     // Find creator name for better messaging
     const creator = creators.find(c => c.id === creatorId);
     const creatorName = creator ? creator.name : 'creator';
@@ -485,12 +509,14 @@ export default function CreatorRosterEditorial({ creators, setCreators }) {
     setParsedContract(null);
     setContractStoragePath(null);
     setUploadingContract(true);
-    setContractProgress({ stage: 'Uploading to Supabase Storage...', progress: 0 });
+    setContractProgress({ stage: 'Uploading...', progress: 0 });
     setContractCreatorId(creatorId);
 
     try {
       // Upload and parse contract
+      console.log('📄 Calling uploadAndParseContract...');
       const result = await uploadAndParseContract(file, creatorId, setContractProgress);
+      console.log('📄 Result:', result);
 
       if (result.success) {
         setContractStoragePath(result.storagePath);
@@ -507,22 +533,26 @@ export default function CreatorRosterEditorial({ creators, setCreators }) {
           }
         }
 
+        console.log('📄 Mode:', result.mode);
         if (result.mode === 'manual') {
-          // No Claude API key - just manual entry
-          alert(result.message || `Contract uploaded successfully for ${creatorName}! The contract is stored in Supabase. You can now edit the creator to add pricing info.`);
+          // No Claude API key - show manual entry form
+          console.log('📄 Opening manual entry form');
           setUploadingContract(false);
+          setShowManualEntry(true);
         } else {
           // Auto-parsed mode
+          console.log('📄 Opening preview with parsed data');
           setParsedContract(result.data);
           setShowContractPreview(true);
           setUploadingContract(false);
         }
       } else {
+        console.error('📄 Upload failed:', result.error);
         alert(`Failed to upload contract for ${creatorName}: ` + (result.error || 'Unknown error'));
         setUploadingContract(false);
       }
     } catch (error) {
-      console.error('Contract upload error:', error);
+      console.error('📄 Contract upload error:', error);
       alert(`Failed to upload contract for ${creatorName}: ` + error.message);
       setUploadingContract(false);
     }
@@ -550,6 +580,82 @@ export default function CreatorRosterEditorial({ creators, setCreators }) {
       console.error('Error applying contract data:', error);
       alert('Failed to apply contract data: ' + error.message);
     }
+  };
+
+  const applyManualContractData = async () => {
+    if (!contractCreatorId) return;
+
+    try {
+      const updates = {};
+      if (manualContractData.legalName) updates.legalName = manualContractData.legalName;
+      if (manualContractData.legalAddress) updates.legalAddress = manualContractData.legalAddress;
+      if (manualContractData.city) updates.city = manualContractData.city;
+      if (manualContractData.pincode) updates.pincode = manualContractData.pincode;
+      if (manualContractData.country) updates.country = manualContractData.country;
+      if (manualContractData.businessName) updates.businessName = manualContractData.businessName;
+      if (manualContractData.email) updates.email = manualContractData.email;
+      if (manualContractData.network) updates.network = manualContractData.network;
+      if (manualContractData.currency) updates.currency = manualContractData.currency;
+      if (manualContractData.walletAddress) updates.walletAddress = manualContractData.walletAddress;
+      if (manualContractData.costPerPost) updates.costPerPost = manualContractData.costPerPost;
+      if (manualContractData.poNumber) updates.poNumber = manualContractData.poNumber;
+
+      const updatedCreator = await updateCreatorInDB(contractCreatorId, updates);
+
+      if (updatedCreator) {
+        setCreators(prev => prev.map(c => c.id === contractCreatorId ? updatedCreator : c));
+        alert('Contract data saved successfully!');
+      } else {
+        // Fallback to local update
+        setCreators(prev => prev.map(c => c.id === contractCreatorId ? { ...c, ...updates } : c));
+        alert('Contract data saved locally!');
+      }
+
+      setShowManualEntry(false);
+      setManualContractData({
+        legalName: '',
+        legalAddress: '',
+        city: '',
+        pincode: '',
+        country: '',
+        businessName: '',
+        email: '',
+        network: '',
+        currency: 'USD',
+        walletAddress: '',
+        costPerPost: '',
+        poNumber: ''
+      });
+      setContractCreatorId(null);
+      setContractStoragePath(null);
+    } catch (error) {
+      console.error('Error saving manual contract data:', error);
+      alert('Failed to save contract data: ' + error.message);
+    }
+  };
+
+  // Function to open contract details editor for a creator
+  const startEditContractDetails = (creator, e) => {
+    e.stopPropagation();
+
+    // Pre-populate form with existing creator data
+    setManualContractData({
+      legalName: creator.legalName || creator.legal_name || '',
+      legalAddress: creator.legalAddress || creator.legal_address || '',
+      city: creator.city || '',
+      pincode: creator.pincode || '',
+      country: creator.country || '',
+      businessName: creator.businessName || creator.business_name || '',
+      email: creator.email || '',
+      network: creator.network || '',
+      currency: creator.currency || 'USD',
+      walletAddress: creator.walletAddress || creator.wallet_address || '',
+      costPerPost: creator.costPerPost || creator.cost_per_post || '',
+      poNumber: creator.poNumber || creator.po_number || ''
+    });
+
+    setContractCreatorId(creator.id);
+    setShowManualEntry(true);
   };
 
   const cancelContractPreview = () => {
@@ -595,6 +701,16 @@ export default function CreatorRosterEditorial({ creators, setCreators }) {
               <FileSpreadsheet className="w-4 h-4 mr-2" />
               <span className="hidden sm:inline">{importing ? 'Importing...' : 'Import Excel'}</span>
               <span className="sm:hidden">{importing ? '...' : 'Excel'}</span>
+            </button>
+            <button
+              onClick={() => setShowTemplateUpload(true)}
+              className="inline-flex items-center px-4 py-2 bg-purple-500/10 border border-purple-500/30 text-purple-500 rounded-lg hover:bg-purple-500/20 hover:border-purple-500/50 transition-all duration-200 text-sm font-semibold"
+              title="Upload invoice template for PDF generation"
+              style={{ display: 'none' }}
+            >
+              <FileUp className="w-4 h-4 mr-2" />
+              <span className="hidden sm:inline">Invoice Template</span>
+              <span className="sm:hidden">Template</span>
             </button>
             <button
               onClick={exportToCSV}
@@ -976,13 +1092,13 @@ export default function CreatorRosterEditorial({ creators, setCreators }) {
 
                 <div className="flex-grow"></div>
 
-                <div className="mt-auto pt-4 border-t border-[var(--color-border)] space-y-2">
+                <div className="mt-auto pt-4 border-t border-[var(--color-border)] flex gap-2 justify-between">
                   <button
                     onClick={(e) => toggleViewPosts(c.id, e)}
-                    className="inline-flex items-center px-3 py-2 text-sm bg-[var(--color-accent-primary)]/10 text-[var(--color-accent-primary)] hover:bg-[var(--color-accent-primary)]/20 rounded-lg font-medium transition-colors w-full justify-center border border-[var(--color-accent-primary)]/20"
+                    className="flex flex-col items-center justify-center gap-1 p-2 flex-1 text-xs bg-[var(--color-accent-primary)]/10 text-[var(--color-accent-primary)] hover:bg-[var(--color-accent-primary)]/20 rounded-lg transition-colors border border-[var(--color-accent-primary)]/20"
                   >
-                    <FileText className="h-4 w-4 mr-2" />
-                    {viewingPostsId === c.id ? 'Hide' : 'View'} {(c.posts || []).length} Post{(c.posts || []).length !== 1 ? 's' : ''}
+                    <FileText className="h-5 w-5" />
+                    <span>View posts</span>
                   </button>
                   <input
                     type="file"
@@ -997,11 +1113,28 @@ export default function CreatorRosterEditorial({ creators, setCreators }) {
                       document.getElementById(`contract-upload-${c.id}`).click();
                     }}
                     disabled={uploadingContract && contractCreatorId === c.id}
-                    className="inline-flex items-center px-3 py-2 text-sm bg-purple-500/10 text-purple-500 hover:bg-purple-500/20 rounded-lg font-medium transition-colors w-full justify-center border border-purple-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
-                    title="Upload contract PDF for this creator"
+                    className="flex flex-col items-center justify-center gap-1 p-2 flex-1 text-xs bg-purple-500/10 text-purple-500 hover:bg-purple-500/20 rounded-lg transition-colors border border-purple-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <FileUp className="h-4 w-4 mr-2" />
-                    {uploadingContract && contractCreatorId === c.id ? 'Uploading...' : 'Upload Contract'}
+                    <FileUp className="h-5 w-5" />
+                    <span>Upload contract</span>
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedCreatorForInvoice(c);
+                      setShowInvoiceModal(true);
+                    }}
+                    className="flex flex-col items-center justify-center gap-1 p-2 flex-1 text-xs bg-green-500/10 text-green-500 hover:bg-green-500/20 rounded-lg transition-colors border border-green-500/20"
+                  >
+                    <Download className="h-5 w-5" />
+                    <span>Generate Invoice</span>
+                  </button>
+                  <button
+                    onClick={(e) => startEditContractDetails(c, e)}
+                    className="flex flex-col items-center justify-center gap-1 p-2 flex-1 text-xs bg-blue-500/10 text-blue-500 hover:bg-blue-500/20 rounded-lg transition-colors border border-blue-500/20"
+                  >
+                    <Edit2 className="h-5 w-5" />
+                    <span>Edit contract details</span>
                   </button>
                 </div>
 
@@ -1217,6 +1350,432 @@ export default function CreatorRosterEditorial({ creators, setCreators }) {
           </div>
         ))}
       </div>
+
+      {/* Template Upload Modal */}
+      {showTemplateUpload && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50" onClick={() => setShowTemplateUpload(false)}>
+          <div
+            className="bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-semibold text-[var(--color-text-primary)]">
+                  Upload Invoice Template
+                </h2>
+                <button
+                  onClick={() => setShowTemplateUpload(false)}
+                  className="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+              <TemplateUploadStep
+                onComplete={() => setShowTemplateUpload(false)}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Manual Contract Entry Modal */}
+      {showManualEntry && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-xl font-semibold text-[var(--color-text-primary)]">
+                    Contract Details
+                  </h2>
+                  <p className="text-sm text-[var(--color-text-secondary)] mt-1">
+                    Enter or update contract information for this creator.
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    setShowManualEntry(false);
+                    setManualContractData({
+                      legalName: '',
+                      legalAddress: '',
+                      city: '',
+                      pincode: '',
+                      country: '',
+                      businessName: '',
+                      email: '',
+                      network: '',
+                      currency: 'USD',
+                      walletAddress: '',
+                      costPerPost: '',
+                      poNumber: ''
+                    });
+                    setContractCreatorId(null);
+                  }}
+                  className="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                {/* Legal Name */}
+                <div>
+                  <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-2">
+                    Legal Name
+                  </label>
+                  <input
+                    type="text"
+                    value={manualContractData.legalName}
+                    onChange={(e) => setManualContractData({ ...manualContractData, legalName: e.target.value })}
+                    className="w-full px-3 py-2 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent-primary)]"
+                    placeholder="Enter legal name"
+                  />
+                </div>
+
+                {/* Legal Address */}
+                <div>
+                  <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-2">
+                    Legal Address
+                  </label>
+                  <textarea
+                    value={manualContractData.legalAddress}
+                    onChange={(e) => setManualContractData({ ...manualContractData, legalAddress: e.target.value })}
+                    className="w-full px-3 py-2 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent-primary)]"
+                    placeholder="Enter street address"
+                    rows="2"
+                  />
+                </div>
+
+                {/* City, Pincode, Country row */}
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-2">
+                      City
+                    </label>
+                    <input
+                      type="text"
+                      value={manualContractData.city}
+                      onChange={(e) => setManualContractData({ ...manualContractData, city: e.target.value })}
+                      className="w-full px-3 py-2 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent-primary)]"
+                      placeholder="City"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-2">
+                      Pincode
+                    </label>
+                    <input
+                      type="text"
+                      value={manualContractData.pincode}
+                      onChange={(e) => setManualContractData({ ...manualContractData, pincode: e.target.value })}
+                      className="w-full px-3 py-2 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent-primary)]"
+                      placeholder="Zip/Pincode"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-2">
+                      Country
+                    </label>
+                    <input
+                      type="text"
+                      value={manualContractData.country}
+                      onChange={(e) => setManualContractData({ ...manualContractData, country: e.target.value })}
+                      className="w-full px-3 py-2 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent-primary)]"
+                      placeholder="Country"
+                    />
+                  </div>
+                </div>
+
+                {/* Business Name */}
+                <div>
+                  <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-2">
+                    Business Name (if applicable)
+                  </label>
+                  <input
+                    type="text"
+                    value={manualContractData.businessName}
+                    onChange={(e) => setManualContractData({ ...manualContractData, businessName: e.target.value })}
+                    className="w-full px-3 py-2 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent-primary)]"
+                    placeholder="Enter business name"
+                  />
+                </div>
+
+                {/* Email */}
+                <div>
+                  <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-2">
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    value={manualContractData.email}
+                    onChange={(e) => setManualContractData({ ...manualContractData, email: e.target.value })}
+                    className="w-full px-3 py-2 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent-primary)]"
+                    placeholder="creator@example.com"
+                  />
+                </div>
+
+                {/* Network and Currency row */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-2">
+                      Network
+                    </label>
+                    <input
+                      type="text"
+                      value={manualContractData.network}
+                      onChange={(e) => setManualContractData({ ...manualContractData, network: e.target.value })}
+                      className="w-full px-3 py-2 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent-primary)]"
+                      placeholder="e.g., Ethereum, Bitcoin, etc."
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-2">
+                      Currency
+                    </label>
+                    <input
+                      type="text"
+                      value={manualContractData.currency}
+                      onChange={(e) => setManualContractData({ ...manualContractData, currency: e.target.value })}
+                      className="w-full px-3 py-2 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent-primary)]"
+                      placeholder="USD"
+                    />
+                  </div>
+                </div>
+
+                {/* Wallet Address */}
+                <div>
+                  <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-2">
+                    Wallet Address (cryptocurrency)
+                  </label>
+                  <input
+                    type="text"
+                    value={manualContractData.walletAddress}
+                    onChange={(e) => setManualContractData({ ...manualContractData, walletAddress: e.target.value })}
+                    className="w-full px-3 py-2 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent-primary)]"
+                    placeholder="0x... or crypto wallet address"
+                  />
+                </div>
+
+                {/* Row with Cost Per Post and PO Number */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-2">
+                      Cost Per Post
+                    </label>
+                    <input
+                      type="text"
+                      value={manualContractData.costPerPost}
+                      onChange={(e) => setManualContractData({ ...manualContractData, costPerPost: e.target.value })}
+                      className="w-full px-3 py-2 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent-primary)]"
+                      placeholder="$500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-2">
+                      PO Number
+                    </label>
+                    <input
+                      type="text"
+                      value={manualContractData.poNumber}
+                      onChange={(e) => setManualContractData({ ...manualContractData, poNumber: e.target.value })}
+                      className="w-full px-3 py-2 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent-primary)]"
+                      placeholder="PO-12345"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-3 mt-6 pt-6 border-t border-[var(--color-border)]">
+                <button
+                  onClick={() => {
+                    setShowManualEntry(false);
+                    setManualContractData({
+                      legalName: '',
+                      legalAddress: '',
+                      city: '',
+                      pincode: '',
+                      country: '',
+                      businessName: '',
+                      email: '',
+                      network: '',
+                      currency: 'USD',
+                      walletAddress: '',
+                      costPerPost: '',
+                      poNumber: ''
+                    });
+                    setContractCreatorId(null);
+                  }}
+                  className="flex-1 px-4 py-2 text-sm font-medium text-[var(--color-text-secondary)] bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg hover:bg-[var(--color-bg-tertiary)] transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={applyManualContractData}
+                  className="flex-1 px-4 py-2 text-sm font-medium text-white bg-[var(--color-accent-primary)] rounded-lg hover:bg-[var(--color-accent-primary-dark)] transition-colors"
+                >
+                  Save Contract Data
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Contract Preview Modal */}
+      {showContractPreview && parsedContract && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-semibold text-[var(--color-text-primary)]">
+                  Review Contract Data
+                </h2>
+                <button
+                  onClick={() => {
+                    setShowContractPreview(false);
+                    setParsedContract(null);
+                    setContractCreatorId(null);
+                  }}
+                  className="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              <div className="space-y-6">
+                {/* Creator Info */}
+                {formatParsedDataForPreview(parsedContract).creatorInfo.length > 0 && (
+                  <div>
+                    <h3 className="text-sm font-semibold text-[var(--color-text-primary)] mb-3 flex items-center">
+                      <FileText className="w-4 h-4 mr-2" />
+                      Creator Information
+                    </h3>
+                    <div className="grid grid-cols-1 gap-3">
+                      {formatParsedDataForPreview(parsedContract).creatorInfo.map((item, idx) => (
+                        <div key={idx} className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg p-3">
+                          <div className="text-xs text-[var(--color-text-secondary)] mb-1">{item.label}</div>
+                          <div className="text-sm text-[var(--color-text-primary)] font-medium">{item.value}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Pricing */}
+                {formatParsedDataForPreview(parsedContract).pricing.length > 0 && (
+                  <div>
+                    <h3 className="text-sm font-semibold text-[var(--color-text-primary)] mb-3 flex items-center">
+                      <DollarSign className="w-4 h-4 mr-2" />
+                      Pricing Information
+                    </h3>
+                    <div className="grid grid-cols-1 gap-3">
+                      {formatParsedDataForPreview(parsedContract).pricing.map((item, idx) => (
+                        <div key={idx} className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg p-3">
+                          <div className="text-xs text-[var(--color-text-secondary)] mb-1">{item.label}</div>
+                          <div className="text-sm text-[var(--color-text-primary)] font-medium">{item.value}</div>
+                          {item.platforms && (
+                            <div className="text-xs text-[var(--color-text-tertiary)] mt-1">
+                              Platforms: {item.platforms}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Deliverables */}
+                {formatParsedDataForPreview(parsedContract).deliverables.length > 0 && (
+                  <div>
+                    <h3 className="text-sm font-semibold text-[var(--color-text-primary)] mb-3">
+                      Deliverables
+                    </h3>
+                    <div className="grid grid-cols-2 gap-3">
+                      {formatParsedDataForPreview(parsedContract).deliverables.map((item, idx) => (
+                        <div key={idx} className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg p-3">
+                          <div className="text-xs text-[var(--color-text-secondary)] mb-1">{item.label}</div>
+                          <div className="text-sm text-[var(--color-text-primary)] font-medium">{item.value}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Contract Terms */}
+                {formatParsedDataForPreview(parsedContract).terms.length > 0 && (
+                  <div>
+                    <h3 className="text-sm font-semibold text-[var(--color-text-primary)] mb-3">
+                      Contract Terms
+                    </h3>
+                    <div className="grid grid-cols-1 gap-3">
+                      {formatParsedDataForPreview(parsedContract).terms.map((item, idx) => (
+                        <div key={idx} className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg p-3">
+                          <div className="text-xs text-[var(--color-text-secondary)] mb-1">{item.label}</div>
+                          <div className="text-sm text-[var(--color-text-primary)] font-medium">{item.value}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Payment */}
+                {formatParsedDataForPreview(parsedContract).payment.length > 0 && (
+                  <div>
+                    <h3 className="text-sm font-semibold text-[var(--color-text-primary)] mb-3">
+                      Payment Terms
+                    </h3>
+                    <div className="grid grid-cols-1 gap-3">
+                      {formatParsedDataForPreview(parsedContract).payment.map((item, idx) => (
+                        <div key={idx} className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg p-3">
+                          <div className="text-xs text-[var(--color-text-secondary)] mb-1">{item.label}</div>
+                          <div className="text-sm text-[var(--color-text-primary)] font-medium">{item.value}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-3 mt-6 pt-6 border-t border-[var(--color-border)]">
+                <button
+                  onClick={() => {
+                    setShowContractPreview(false);
+                    setParsedContract(null);
+                    setContractCreatorId(null);
+                  }}
+                  className="flex-1 px-4 py-2 text-sm font-medium text-[var(--color-text-secondary)] bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg hover:bg-[var(--color-bg-tertiary)] transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={applyContractData}
+                  className="flex-1 px-4 py-2 text-sm font-medium text-white bg-[var(--color-accent-primary)] rounded-lg hover:bg-[var(--color-accent-primary-dark)] transition-colors"
+                >
+                  Apply Contract Data
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Invoice Generator Modal */}
+      {selectedCreatorForInvoice && (
+        <InvoiceGeneratorModal
+          isOpen={showInvoiceModal}
+          onClose={() => {
+            setShowInvoiceModal(false);
+            setSelectedCreatorForInvoice(null);
+          }}
+          creator={selectedCreatorForInvoice}
+        />
+      )}
     </div>
   );
 }

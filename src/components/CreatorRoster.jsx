@@ -4,7 +4,9 @@ import { IMPORTED_CREATORS } from '../data/importedCreators';
 import { createCreator, updateCreator, deleteCreator as deleteCreatorSupabase, addPost, updatePost as updatePostSupabase, deletePost as deletePostSupabase } from '../services/creatorsServiceSupabase';
 import { supabase } from '../lib/supabaseClient';
 import { uploadAndParseContract, applyContractDataToCreator, formatParsedDataForPreview } from '../services/contractService';
+import InvoiceGeneratorModal from './invoice/InvoiceGeneratorModal';
 
+// Updated with invoice button
 export default function CreatorRoster({ creators, setCreators }) {
   const resetToImportedData = () => {
     if (confirm('This will replace all current creator data with the data from Google Sheets. Are you sure?')) {
@@ -30,6 +32,10 @@ export default function CreatorRoster({ creators, setCreators }) {
   const [contractStoragePath, setContractStoragePath] = useState(null);
   const [showContractPreview, setShowContractPreview] = useState(false);
   const [contractCreatorId, setContractCreatorId] = useState(null);
+
+  // Invoice generation state
+  const [showInvoiceModal, setShowInvoiceModal] = useState(false);
+  const [selectedCreatorForInvoice, setSelectedCreatorForInvoice] = useState(null);
 
   // Search and filter state
   const [searchTerm, setSearchTerm] = useState('');
@@ -674,6 +680,15 @@ export default function CreatorRoster({ creators, setCreators }) {
             <span className="sm:hidden">{uploadingContract ? '...' : 'Contract'}</span>
           </button>
           <button
+            onClick={() => setShowInvoiceModal(true)}
+            className="inline-flex items-center px-3 sm:px-4 py-2 btn-polygon-primary rounded-polygon-button text-sm shadow-polygon"
+            title="Generate invoice from creator posts"
+          >
+            <FileText className="w-4 h-4 mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">Generate Invoice</span>
+            <span className="sm:hidden">Invoice</span>
+          </button>
+          <button
             onClick={exportToCSV}
             className="inline-flex items-center px-3 sm:px-4 py-2 btn-polygon-secondary rounded-polygon-button text-sm"
           >
@@ -1046,13 +1061,25 @@ export default function CreatorRoster({ creators, setCreators }) {
 
                 <div className="flex-grow"></div>
 
-                <div className="mt-auto pt-4 border-t border-gray-100 dark:border-gray-700">
+                <div className="mt-auto pt-4 border-t border-gray-100 dark:border-gray-700 space-y-2">
                   <button
                     onClick={(e) => toggleViewPosts(c.id, e)}
                     className="inline-flex items-center px-3 py-2 text-sm bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 rounded-polygon font-medium transition-colors w-full justify-center"
                   >
                     <FileText className="h-4 w-4 mr-2" />
                     {viewingPostsId === c.id ? 'Hide' : 'View'} {(c.posts || []).length} Post{(c.posts || []).length !== 1 ? 's' : ''}
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedCreatorForInvoice(c);
+                      setShowInvoiceModal(true);
+                    }}
+                    className="inline-flex items-center px-3 py-2 text-sm bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/40 rounded-polygon font-medium transition-colors w-full justify-center"
+                    title="Generate invoice for this creator"
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Generate Invoice
                   </button>
                 </div>
 
@@ -1361,6 +1388,16 @@ export default function CreatorRoster({ creators, setCreators }) {
           </div>
         </div>
       )}
+
+      {/* Invoice Generator Modal */}
+      <InvoiceGeneratorModal
+        isOpen={showInvoiceModal}
+        onClose={() => {
+          setShowInvoiceModal(false);
+          setSelectedCreatorForInvoice(null);
+        }}
+        creators={selectedCreatorForInvoice ? [selectedCreatorForInvoice] : creators}
+      />
     </div>
   );
 }

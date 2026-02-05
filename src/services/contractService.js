@@ -42,15 +42,22 @@ export async function uploadAndParseContract(file, creatorId, onProgress = null)
 
     // Parse with Claude (only if API key is available)
     const CLAUDE_API_KEY = import.meta.env.VITE_CLAUDE_API_KEY;
+    const isValidKey = CLAUDE_API_KEY &&
+                       CLAUDE_API_KEY !== 'your_claude_api_key_here' &&
+                       CLAUDE_API_KEY.startsWith('sk-');
 
-    if (CLAUDE_API_KEY) {
+    console.log('🔑 Claude API Key check:', { exists: !!CLAUDE_API_KEY, isValid: isValidKey });
+
+    if (isValidKey) {
       // Auto-parse with Claude
+      console.log('🤖 Using Claude to parse contract...');
       const result = await parseContractWithClaude(file);
 
       if (!result.success) {
-        console.warn('Claude parsing failed, will use manual entry:', result.error);
+        console.warn('⚠️ Claude parsing failed, will use manual entry:', result.error);
         // Fall through to manual entry
       } else {
+        console.log('✅ Claude parsed successfully');
         if (onProgress) onProgress({ stage: 'complete', progress: 100 });
 
         return {
@@ -61,18 +68,21 @@ export async function uploadAndParseContract(file, creatorId, onProgress = null)
           mode: 'auto'
         };
       }
+    } else {
+      console.log('📝 No valid Claude API key, using manual entry mode');
     }
 
     // Manual entry mode (no Claude API key or parsing failed)
     if (onProgress) onProgress({ stage: 'complete', progress: 100 });
 
+    console.log('📝 Returning manual mode');
     return {
       success: true,
       data: null, // No parsed data - user will enter manually
       raw: null,
       storagePath: storagePath,
       mode: 'manual',
-      message: CLAUDE_API_KEY
+      message: isValidKey
         ? 'Claude parsing failed. Please enter data manually.'
         : 'No Claude API key configured. Please enter data manually.'
     };
@@ -104,10 +114,39 @@ export async function applyContractDataToCreator(creatorId, parsedData, storageP
       updates.contractUploadedAt = new Date().toISOString();
     }
 
+    // Extract creator info
+    if (parsedData.creatorInfo) {
+      if (parsedData.creatorInfo.legalName) {
+        updates.legalName = parsedData.creatorInfo.legalName;
+      }
+      if (parsedData.creatorInfo.legalAddress) {
+        updates.legalAddress = parsedData.creatorInfo.legalAddress;
+      }
+      // Keep backward compatibility with old 'address' field
+      if (parsedData.creatorInfo.address) {
+        updates.address = parsedData.creatorInfo.address;
+      }
+      if (parsedData.creatorInfo.businessName) {
+        updates.businessName = parsedData.creatorInfo.businessName;
+      }
+      if (parsedData.creatorInfo.email) {
+        updates.email = parsedData.creatorInfo.email;
+      }
+      if (parsedData.creatorInfo.walletAddress) {
+        updates.walletAddress = parsedData.creatorInfo.walletAddress;
+      }
+    }
+
     // Extract pricing data
     if (parsedData.pricing) {
       if (parsedData.pricing.costPerPost) {
         updates.costPerPost = `$${parsedData.pricing.costPerPost.toFixed(2)}`;
+      }
+      if (parsedData.pricing.currency) {
+        updates.currency = parsedData.pricing.currency;
+      }
+      if (parsedData.pricing.poNumber) {
+        updates.poNumber = parsedData.pricing.poNumber;
       }
 
       // Add pricing packages
@@ -165,11 +204,53 @@ export async function applyContractDataToCreator(creatorId, parsedData, storageP
  */
 export function formatParsedDataForPreview(parsedData) {
   const formatted = {
+    creatorInfo: [],
     pricing: [],
     deliverables: [],
     terms: [],
     payment: []
   };
+
+  // Format creator info
+  if (parsedData.creatorInfo) {
+    if (parsedData.creatorInfo.legalName) {
+      formatted.creatorInfo.push({
+        label: 'Legal Name',
+        value: parsedData.creatorInfo.legalName
+      });
+    }
+    if (parsedData.creatorInfo.legalAddress) {
+      formatted.creatorInfo.push({
+        label: 'Legal Address',
+        value: parsedData.creatorInfo.legalAddress
+      });
+    }
+    // Backward compatibility with old 'address' field
+    if (parsedData.creatorInfo.address && !parsedData.creatorInfo.legalAddress) {
+      formatted.creatorInfo.push({
+        label: 'Address',
+        value: parsedData.creatorInfo.address
+      });
+    }
+    if (parsedData.creatorInfo.businessName) {
+      formatted.creatorInfo.push({
+        label: 'Business Name',
+        value: parsedData.creatorInfo.businessName
+      });
+    }
+    if (parsedData.creatorInfo.email) {
+      formatted.creatorInfo.push({
+        label: 'Email',
+        value: parsedData.creatorInfo.email
+      });
+    }
+    if (parsedData.creatorInfo.walletAddress) {
+      formatted.creatorInfo.push({
+        label: 'Wallet Address',
+        value: parsedData.creatorInfo.walletAddress
+      });
+    }
+  }
 
   // Format pricing
   if (parsedData.pricing) {
@@ -187,6 +268,20 @@ export function formatParsedDataForPreview(parsedData) {
       formatted.pricing.push({
         label: 'Cost Per Post',
         value: `$${parsedData.pricing.costPerPost.toLocaleString()}`
+      });
+    }
+
+    if (parsedData.pricing.currency) {
+      formatted.pricing.push({
+        label: 'Currency',
+        value: parsedData.pricing.currency
+      });
+    }
+
+    if (parsedData.pricing.poNumber) {
+      formatted.pricing.push({
+        label: 'PO Number',
+        value: parsedData.pricing.poNumber
       });
     }
   }

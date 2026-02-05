@@ -23,32 +23,47 @@ export async function parseContractWithClaude(file) {
 
 Extract the following information and return it as JSON:
 
-1. **Pricing Information**:
+1. **Creator Information**:
+   - Creator's full legal name (as it appears on the contract)
+   - Creator's legal address (full address including street, city, state, zip)
+   - Creator's business/company name if different from personal name
+   - Creator's email address
+   - Creator's wallet address (cryptocurrency wallet if specified)
+
+2. **Pricing Information**:
    - Any package deals (e.g., "8 videos for $14,000")
    - Cost per post/video/content piece
-   - Currency
+   - Currency (USD, EUR, etc.)
+   - PO number (Purchase Order number if specified)
 
-2. **Deliverables**:
+3. **Deliverables**:
    - Total number of posts/videos/content pieces
    - Platforms (Instagram, Facebook, X/Twitter, TikTok, YouTube, etc.)
    - Content type (video, photo, story, reel, etc.)
    - Posting frequency if specified
    - Campaign duration
 
-3. **Contract Terms**:
+4. **Contract Terms**:
    - Start date
    - End date
    - Exclusivity clause (yes/no and details)
    - Number of revisions allowed
    - Approval process details
 
-4. **Payment Terms**:
+5. **Payment Terms**:
    - Payment schedule (Net 30, Net 60, etc.)
    - Payment milestones (upfront, upon completion, etc.)
    - Payment method
 
 Return ONLY valid JSON in this exact structure:
 {
+  "creatorInfo": {
+    "legalName": "Creator's full legal name",
+    "legalAddress": "Full legal address including street, city, state, zip",
+    "businessName": "Business name if applicable",
+    "email": "creator@example.com",
+    "walletAddress": "0x... or crypto wallet address if specified"
+  },
   "pricing": {
     "packages": [
       {
@@ -62,7 +77,8 @@ Return ONLY valid JSON in this exact structure:
       }
     ],
     "costPerPost": 3500,
-    "currency": "USD"
+    "currency": "USD",
+    "poNumber": "PO-12345"
   },
   "deliverables": {
     "totalPosts": 8,

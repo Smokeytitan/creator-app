@@ -83,6 +83,19 @@ const transformFromDB = (row) => ({
   contractFilePath: row.contract_file_path || null,
   contractUploadedAt: row.contract_uploaded_at || null,
   contractParsedData: row.contract_parsed_data || null,
+  // Contract details
+  legalName: row.legal_name || '',
+  legalAddress: row.legal_address || '',
+  city: row.city || '',
+  pincode: row.pincode || '',
+  country: row.country || '',
+  address: row.address || '',
+  businessName: row.business_name || '',
+  email: row.email || '',
+  network: row.network || '',
+  walletAddress: row.wallet_address || '',
+  currency: row.currency || 'USD',
+  poNumber: row.po_number || '',
   posts: (row.posts || []).map(post => ({
     id: post.id,
     campaign_id: post.campaign_id || null,
@@ -120,7 +133,20 @@ const transformToDB = (creator) => ({
   status: creator.status || 'active',
   contract_file_path: creator.contractFilePath || null,
   contract_uploaded_at: creator.contractUploadedAt || null,
-  contract_parsed_data: creator.contractParsedData || null
+  contract_parsed_data: creator.contractParsedData || null,
+  // Contract details
+  legal_name: creator.legalName || '',
+  legal_address: creator.legalAddress || '',
+  city: creator.city || '',
+  pincode: creator.pincode || '',
+  country: creator.country || '',
+  address: creator.address || '',
+  business_name: creator.businessName || '',
+  email: creator.email || '',
+  network: creator.network || '',
+  wallet_address: creator.walletAddress || '',
+  currency: creator.currency || 'USD',
+  po_number: creator.poNumber || ''
 });
 
 /**
