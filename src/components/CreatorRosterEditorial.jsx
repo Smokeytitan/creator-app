@@ -706,7 +706,6 @@ export default function CreatorRosterEditorial({ creators, setCreators }) {
               onClick={() => setShowTemplateUpload(true)}
               className="inline-flex items-center px-4 py-2 bg-purple-500/10 border border-purple-500/30 text-purple-500 rounded-lg hover:bg-purple-500/20 hover:border-purple-500/50 transition-all duration-200 text-sm font-semibold"
               title="Upload invoice template for PDF generation"
-              style={{ display: 'none' }}
             >
               <FileUp className="w-4 h-4 mr-2" />
               <span className="hidden sm:inline">Invoice Template</span>
