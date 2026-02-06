@@ -236,20 +236,6 @@ export function Campaigns() {
       iconColor: "text-green-400",
       iconBg: "bg-green-500/10",
     },
-    {
-      label: "Budget",
-      value: "$45K",
-      icon: DollarSign,
-      iconColor: "text-yellow-400",
-      iconBg: "bg-yellow-500/10",
-    },
-    {
-      label: "Reach",
-      value: "2.4M",
-      icon: Eye,
-      iconColor: "text-purple-400",
-      iconBg: "bg-purple-500/10",
-    },
   ];
 
   return (
@@ -270,7 +256,7 @@ export function Campaigns() {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-16">
           {stats.map((stat) => {
             const Icon = stat.icon;
             return (
