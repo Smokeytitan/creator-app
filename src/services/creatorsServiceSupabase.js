@@ -250,10 +250,35 @@ export const deleteCreator = async (creatorId) => {
  * @returns {Promise<object|null>} Updated creator
  */
 export const toggleCreatorActive = async (creatorId) => {
-  const creator = await getCreatorById(creatorId);
-  if (!creator) return null;
+  if (!supabase) return null;
 
-  return updateCreator(creatorId, { active: !creator.active });
+  try {
+    // Get current active state
+    const { data: current, error: fetchError } = await supabase
+      .from('creators')
+      .select('active')
+      .eq('id', creatorId)
+      .single();
+
+    if (fetchError) throw fetchError;
+    if (!current) return null;
+
+    const newActive = !(current.active !== false);
+
+    // Update only the active column
+    const { error: updateError } = await supabase
+      .from('creators')
+      .update({ active: newActive })
+      .eq('id', creatorId);
+
+    if (updateError) throw updateError;
+
+    // Return full creator with posts
+    return getCreatorById(creatorId);
+  } catch (error) {
+    console.error('Error toggling creator active:', error);
+    return null;
+  }
 };
 
 // ============================================================================
