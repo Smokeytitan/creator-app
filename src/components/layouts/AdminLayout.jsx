@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Outlet, useNavigate, useLocation, Link } from 'react-router-dom';
 import { UserButton } from '@clerk/clerk-react';
+import { ExternalLink } from 'lucide-react';
 import ThemeToggle from '../ThemeToggle';
 import { GoogleSheetsService } from '../../services/googleSheetsService';
 import { IMPORTED_CREATORS } from '../../data/importedCreators';
@@ -188,6 +189,13 @@ export default function AdminLayout({ bypassAuth = false }) {
             </Link>
           </div>
           <div className="flex items-center gap-3">
+            <Link
+              to="/"
+              className="flex items-center gap-1.5 px-3 py-2 text-sm font-semibold rounded-lg transition-all duration-200 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)]"
+            >
+              <ExternalLink size={14} />
+              Creator Portal
+            </Link>
             <ThemeToggle />
             {!bypassAuth && <UserButton afterSignOutUrl="/" />}
             {bypassAuth && (
