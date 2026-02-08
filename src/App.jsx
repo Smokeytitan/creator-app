@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useUser, useAuth, UserButton } from '@clerk/clerk-react';
 import CreatorRosterPage from './components/roster/CreatorRosterPage';
 import CreatorProspectsPage from './components/roster/CreatorProspectsPage';
+import InactiveCreatorsPage from './components/roster/InactiveCreatorsPage';
 import ContentRequestsEditorial from './components/ContentRequestsEditorial';
 import { Campaigns } from './components/Campaigns';
 import Analytics from './components/Analytics';
@@ -251,6 +252,16 @@ function AdminView({ bypassAuth = false }) {
             Prospects
           </button>
           <button
+            onClick={() => setActiveTab('inactive')}
+            className={`flex-1 px-4 py-3 text-sm font-semibold whitespace-nowrap transition-all duration-200 ${
+              activeTab === 'inactive'
+                ? 'bg-[var(--color-accent-muted)] text-[var(--color-accent-primary)] rounded-lg'
+                : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)] rounded-lg'
+            }`}
+          >
+            Inactive
+          </button>
+          <button
             onClick={() => setActiveTab('requests')}
             className={`flex-1 px-4 py-3 text-sm font-semibold whitespace-nowrap transition-all duration-200 ${
               activeTab === 'requests'
@@ -341,6 +352,17 @@ function AdminView({ bypassAuth = false }) {
             </button>
 
             <button
+              onClick={() => setActiveTab('inactive')}
+              className={`px-4 py-3 text-sm font-semibold transition-all duration-200 text-left rounded-lg ${
+                activeTab === 'inactive'
+                  ? 'bg-[var(--color-accent-muted)] text-[var(--color-accent-primary)] border-l-2 border-l-[var(--color-accent-primary)]'
+                  : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)]'
+              }`}
+            >
+              Inactive Creators
+            </button>
+
+            <button
               onClick={() => setActiveTab('requests')}
               className={`px-4 py-3 text-sm font-semibold transition-all duration-200 text-left rounded-lg ${
                 activeTab === 'requests'
@@ -422,6 +444,7 @@ function AdminView({ bypassAuth = false }) {
             <>
               {activeTab === 'roster' && <CreatorRosterPage creators={creators} setCreators={setCreators} />}
               {activeTab === 'prospects' && <CreatorProspectsPage prospects={prospects} setProspects={setProspects} setCreators={setCreators} />}
+              {activeTab === 'inactive' && <InactiveCreatorsPage creators={creators} setCreators={setCreators} />}
               {activeTab === 'requests' && <Campaigns />}
               {activeTab === 'analytics' && <Analytics creators={creators} requests={requests} />}
               {/* Hidden: Kaito tab content */}

@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useMemo } from 'react';
 import { Plus, Download, RefreshCw, FileSpreadsheet, FileUp, Search, Filter, SortAsc, X } from 'lucide-react';
 
 import useCreatorCRUD from '../../hooks/useCreatorCRUD';
@@ -36,7 +36,8 @@ export default function CreatorRosterPage({ creators, setCreators }) {
   // Hooks
   // -------------------------------------------------------------------------
   const crud = useCreatorCRUD({ items: creators, setItems: setCreators, defaultStatus: 'active', itemLabel: 'creator' });
-  const search = useSearchFilterSort({ items: creators, searchFields: ['name', 'handle'] });
+  const activeOnly = useMemo(() => creators.filter((c) => c.active !== false), [creators]);
+  const search = useSearchFilterSort({ items: activeOnly, searchFields: ['name', 'handle'] });
   const contract = useContractUpload({ creators, setCreators });
   const posts = usePosts({ creators, setCreators });
 
@@ -280,16 +281,6 @@ export default function CreatorRosterPage({ creators, setCreators }) {
           </div>
 
           <select
-            value={search.filterActiveStatus}
-            onChange={(e) => search.setFilterActiveStatus(e.target.value)}
-            className="px-3 py-1.5 text-sm border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent-primary)] transition-all"
-          >
-            <option value="all">All Status</option>
-            <option value="active_only">Active Only</option>
-            <option value="inactive_only">Inactive Only</option>
-          </select>
-
-          <select
             value={search.filterActivity}
             onChange={(e) => search.setFilterActivity(e.target.value)}
             className="px-3 py-1.5 text-sm border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent-primary)] transition-all"
@@ -322,7 +313,7 @@ export default function CreatorRosterPage({ creators, setCreators }) {
           )}
 
           <span className="text-sm text-[var(--color-text-tertiary)] ml-auto text-mono">
-            Showing {search.filteredItems.length} of {creators.length} creators
+            Showing {search.filteredItems.length} of {activeOnly.length} creators
           </span>
         </div>
       </div>
