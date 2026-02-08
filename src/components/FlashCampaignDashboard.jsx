@@ -1,5 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Plus, Zap, Clock, CheckCircle, XCircle, Eye, Calendar, Tag, Trophy, Trash2, RefreshCw, ChevronDown, TrendingUp, Users, ExternalLink } from 'lucide-react';
+import { useToast } from '../contexts/ToastContext';
+import useConfirmDialog from '../hooks/useConfirmDialog';
+import { ConfirmDialog } from './ui';
 import CampaignCreationModal from './CampaignCreationModal';
 import CampaignResultsView from './CampaignResultsView';
 import ExclusionListManager from './ExclusionListManager';
@@ -13,6 +16,8 @@ import {
 } from '../services/flashCampaignServiceSupabase';
 
 const FlashCampaignDashboard = () => {
+  const toast = useToast();
+  const { dialogProps, confirm } = useConfirmDialog();
   const [campaigns, setCampaigns] = useState([]);
   const [groupedCampaigns, setGroupedCampaigns] = useState({
     active: [],
@@ -102,14 +107,26 @@ const FlashCampaignDashboard = () => {
   };
 
   const handleCancelCampaign = async (campaignId) => {
-    if (confirm('Are you sure you want to cancel this campaign?')) {
+    const confirmed = await confirm({
+      title: 'Cancel Campaign',
+      description: 'Are you sure you want to cancel this campaign?',
+      confirmLabel: 'Cancel Campaign',
+      variant: 'danger'
+    });
+    if (confirmed) {
       await cancelCampaign(campaignId);
       await loadCampaigns();
     }
   };
 
   const handleDeleteCampaign = async (campaignId, campaignName) => {
-    if (confirm(`Are you sure you want to permanently delete the campaign "${campaignName}"? This will delete all campaign data including results and cannot be undone.`)) {
+    const confirmed = await confirm({
+      title: 'Delete Campaign',
+      description: `Are you sure you want to permanently delete the campaign "${campaignName}"? This will delete all campaign data including results and cannot be undone.`,
+      confirmLabel: 'Delete Permanently',
+      variant: 'danger'
+    });
+    if (confirmed) {
       await deleteCampaign(campaignId);
       await loadCampaigns();
       // Show success notification
@@ -513,6 +530,7 @@ const FlashCampaignDashboard = () => {
           campaign={selectedCampaign}
           onResultsUpdated={loadCampaigns}
         />
+        <ConfirmDialog {...dialogProps} />
       </div>
     );
   }
@@ -528,6 +546,7 @@ const FlashCampaignDashboard = () => {
           ← Back to Campaigns
         </button>
         <ExclusionListManager />
+        <ConfirmDialog {...dialogProps} />
       </div>
     );
   }
@@ -677,6 +696,7 @@ const FlashCampaignDashboard = () => {
         onClose={() => setIsCreateModalOpen(false)}
         onCampaignCreated={handleCampaignCreated}
       />
+      <ConfirmDialog {...dialogProps} />
     </div>
   );
 };

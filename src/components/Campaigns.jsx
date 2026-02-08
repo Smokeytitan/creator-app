@@ -2,12 +2,16 @@ import { useState, useEffect } from "react";
 import { Rocket, CheckCircle, DollarSign, Eye, Plus, Search, X, ChevronDown, Calendar, ExternalLink, TrendingUp, ArrowUp, ArrowDown } from "lucide-react";
 import { getCampaigns, updateCampaign, createCampaign, deleteCampaign } from '../services/campaignsServiceSupabase';
 import { getCreators } from '../services/creatorsServiceSupabase';
+import { useToast } from '../contexts/ToastContext';
+import useConfirmDialog from '../hooks/useConfirmDialog';
 import ContentRequestModal from './ContentRequestModal';
 import CampaignTableRow from './CampaignTableRow';
 import DateRangePicker from './DateRangePicker';
+import { ConfirmDialog } from './ui';
 
 export function Campaigns() {
-  console.log('[CAMPAIGNS] ===== NEW CAMPAIGNS COMPONENT LOADED - BUILD ' + Date.now() + ' =====');
+  const toast = useToast();
+  const { dialogProps, confirm } = useConfirmDialog();
   const [filter, setFilter] = useState("all");
   const [campaigns, setCampaigns] = useState([]);
   const [creators, setCreators] = useState([]);
@@ -18,6 +22,7 @@ export function Campaigns() {
   const [sortBy, setSortBy] = useState('createdAt'); // title, status, impressions, cost, cpm, createdAt
   const [sortDirection, setSortDirection] = useState('desc'); // asc, desc
   const [dateRange, setDateRange] = useState({ startDate: null, endDate: null, label: 'All Time' });
+  const [searchTerm, setSearchTerm] = useState('');
   const [editForm, setEditForm] = useState({
     title: '',
     description: '',
@@ -102,7 +107,7 @@ export function Campaigns() {
       }
     } catch (error) {
       console.error('Error updating campaign:', error);
-      alert('Failed to update campaign');
+      toast.error('Failed to update campaign');
     }
   };
 
@@ -129,7 +134,13 @@ export function Campaigns() {
   };
 
   const handleDelete = async (campaign) => {
-    if (!confirm(`Are you sure you want to delete "${campaign.title}"?`)) return;
+    const confirmed = await confirm({
+      title: 'Delete Campaign',
+      description: 'Are you sure you want to delete "' + campaign.title + '"? This cannot be undone.',
+      confirmLabel: 'Delete',
+      variant: 'danger'
+    });
+    if (!confirmed) return;
 
     try {
       const success = await deleteCampaign(campaign.id);
@@ -138,7 +149,7 @@ export function Campaigns() {
       }
     } catch (error) {
       console.error('Error deleting campaign:', error);
-      alert('Failed to delete campaign');
+      toast.error('Failed to delete campaign');
     }
   };
 
@@ -221,17 +232,20 @@ export function Campaigns() {
     return true;
   };
 
+  const inProgressCount = campaigns.filter(c => c.status === 'active' || c.status === 'in_progress' || c.status === 'pending').length;
+  const completedCount = campaigns.filter(c => c.status === 'done' || c.status === 'completed').length;
+
   const stats = [
     {
       label: "In Progress",
-      value: "2",
+      value: String(inProgressCount),
       icon: Rocket,
       iconColor: "text-blue-400",
       iconBg: "bg-blue-500/10",
     },
     {
       label: "Completed",
-      value: "9",
+      value: String(completedCount),
       icon: CheckCircle,
       iconColor: "text-green-400",
       iconBg: "bg-green-500/10",
@@ -239,17 +253,17 @@ export function Campaigns() {
   ];
 
   return (
-    <section className="py-20 px-6 bg-[#0a0a0a] text-white min-h-screen">
-      <div className="max-w-7xl mx-auto">
+    <section className="space-y-8 pb-12">
+      <div>
         {/* Header */}
-        <div className="flex items-end justify-between mb-16">
+        <div className="flex items-end justify-between mb-8 border-b border-[var(--color-border)] pb-8">
           <div>
-            <h1 className="text-6xl font-bold mb-4">Campaigns</h1>
-            <p className="text-xl text-neutral-400">
+            <h1 className="text-heading-1 text-[var(--color-text-primary)] mb-2">Campaigns</h1>
+            <p className="text-[var(--color-text-secondary)]">
               Manage campaigns and track content delivery across creators
             </p>
           </div>
-          <button onClick={() => setShowCreateModal(true)} className="rounded-xl px-6 py-3 bg-[#E5C473] text-black font-semibold hover:bg-[#d4b563] flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E5C473] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0a0a0a] transition-colors">
+          <button onClick={() => setShowCreateModal(true)} className="rounded-xl px-6 py-3 bg-[var(--color-accent-primary)] text-white font-semibold hover:bg-[var(--color-accent-hover)] flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0a0a0a] transition-colors">
             <Plus className="w-5 h-5" />
             New Campaign
           </button>
@@ -262,10 +276,10 @@ export function Campaigns() {
             return (
               <div
                 key={stat.label}
-                className="bg-neutral-900/50 border border-white/10 rounded-2xl p-6 hover:border-white/20 transition-colors"
+                className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl p-6 hover:border-[var(--color-border-hover)] transition-colors"
               >
                 <div className="flex items-center justify-between mb-4">
-                  <p className="text-sm font-medium text-neutral-400 uppercase tracking-wider">
+                  <p className="text-overline text-[var(--color-text-tertiary)]">
                     {stat.label}
                   </p>
                   <div className={`${stat.iconBg} p-2 rounded-lg`}>
@@ -285,7 +299,9 @@ export function Campaigns() {
               <input
                 type="text"
                 placeholder="Search campaigns..."
-                className="w-full bg-neutral-900/50 border border-white/10 rounded-xl px-4 py-3 pl-10 text-white placeholder:text-neutral-500 focus:outline-none focus:border-white/20 focus:ring-2 focus:ring-white/10"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] rounded-xl px-4 py-3 pl-10 text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:outline-none focus:border-[var(--color-accent-primary)] focus:ring-2 focus:ring-[var(--color-accent-muted)]"
               />
               <Search className="w-5 h-5 text-neutral-500 absolute left-3 top-1/2 -translate-y-1/2" />
             </div>
@@ -456,8 +472,18 @@ export function Campaigns() {
                   return true;
                 });
 
+                // Filter by search term
+                const searchFilteredCampaigns = statusFilteredCampaigns.filter(campaign => {
+                  if (!searchTerm) return true;
+                  const term = searchTerm.toLowerCase();
+                  return (
+                    (campaign.title || '').toLowerCase().includes(term) ||
+                    (campaign.description || '').toLowerCase().includes(term)
+                  );
+                });
+
                 // Filter by date range
-                const filteredCampaigns = statusFilteredCampaigns.filter(filterByDateRange);
+                const filteredCampaigns = searchFilteredCampaigns.filter(filterByDateRange);
 
                 const sortedCampaigns = getSortedCampaigns(filteredCampaigns);
 
@@ -604,7 +630,7 @@ export function Campaigns() {
                             type="checkbox"
                             checked={editForm.creators.includes(creator.id)}
                             onChange={() => toggleCreator(creator.id)}
-                            className="w-4 h-4 rounded border-white/20 bg-neutral-700 text-[#E5C473] focus:ring-2 focus:ring-[#E5C473] flex-shrink-0"
+                            className="w-4 h-4 rounded border-white/20 bg-neutral-700 text-[var(--color-accent-primary)] focus:ring-2 focus:ring-[var(--color-accent-primary)] flex-shrink-0"
                           />
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">
@@ -642,7 +668,7 @@ export function Campaigns() {
                 </button>
                 <button
                   onClick={handleSaveEdit}
-                  className="px-6 py-3 bg-[#E5C473] hover:bg-[#d4b563] text-black rounded-lg font-medium transition-colors"
+                  className="px-6 py-3 bg-[var(--color-accent-primary)] hover:bg-[var(--color-accent-hover)] text-white rounded-lg font-medium transition-colors"
                 >
                   Save Changes
                 </button>
@@ -674,11 +700,13 @@ export function Campaigns() {
               }
             } catch (error) {
               console.error('Error creating campaign:', error);
-              alert('Failed to create campaign: ' + error.message);
+              toast.error('Failed to create campaign: ' + error.message);
             }
           }}
         />
       )}
+
+      <ConfirmDialog {...dialogProps} />
     </section>
   );
 }

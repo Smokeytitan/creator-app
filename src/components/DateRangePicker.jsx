@@ -75,7 +75,7 @@ export default function DateRangePicker({ onRangeChange, currentRange }) {
                 >
                   <span>{preset.label}</span>
                   {getCurrentLabel() === preset.label && (
-                    <div className="w-1.5 h-1.5 rounded-full bg-[#E5C473]" />
+                    <div className="w-1.5 h-1.5 rounded-full bg-[var(--color-accent-primary)]" />
                   )}
                 </button>
               ))}

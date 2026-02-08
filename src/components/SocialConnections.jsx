@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useUser, useAuth } from '@clerk/clerk-react';
+import { useToast } from '../contexts/ToastContext';
+import useConfirmDialog from '../hooks/useConfirmDialog';
+import { ConfirmDialog } from './ui';
 
 const PLATFORMS = [
   {
@@ -42,6 +45,8 @@ const PLATFORMS = [
 export default function SocialConnections() {
   const { user } = useUser();
   const { getToken } = useAuth();
+  const toast = useToast();
+  const { dialogProps, confirm } = useConfirmDialog();
   const [connections, setConnections] = useState([]);
   const [loading, setLoading] = useState(true);
   const [connecting, setConnecting] = useState(null);
@@ -65,7 +70,7 @@ export default function SocialConnections() {
     } else if (params.get('twitter_error')) {
       const error = params.get('twitter_error');
       const details = params.get('details');
-      alert(`Twitter connection failed: ${error}${details ? '\n' + details : ''}`);
+      toast.error(`Twitter connection failed: ${error}${details ? ' — ' + details : ''}`);
       // Clean up URL
       window.history.replaceState({}, '', window.location.pathname);
     } else if (params.get('instagram_connected') === 'true') {
@@ -76,7 +81,7 @@ export default function SocialConnections() {
     } else if (params.get('instagram_error')) {
       const error = params.get('instagram_error');
       const details = params.get('details');
-      alert(`Instagram connection failed: ${error}${details ? '\n' + details : ''}`);
+      toast.error(`Instagram connection failed: ${error}${details ? ' — ' + details : ''}`);
       window.history.replaceState({}, '', window.location.pathname);
     }
   }, [user]);
@@ -120,7 +125,7 @@ export default function SocialConnections() {
 
       if (error) {
         console.error(`Failed to connect ${platformId}:`, error);
-        alert(`Failed to connect ${platformId}. Please try again.`);
+        toast.error(`Failed to connect ${platformId}. Please try again.`);
         setConnecting(null);
         return;
       }
@@ -129,13 +134,19 @@ export default function SocialConnections() {
       window.location.href = authUrl;
     } catch (error) {
       console.error(`Error connecting ${platformId}:`, error);
-      alert(`Error connecting ${platformId}. Please try again.`);
+      toast.error(`Error connecting ${platformId}. Please try again.`);
       setConnecting(null);
     }
   };
 
   const handleDisconnect = async (platformId) => {
-    if (!confirm(`Are you sure you want to disconnect ${platformId}?`)) {
+    const confirmed = await confirm({
+      title: 'Disconnect Platform',
+      description: 'Are you sure you want to disconnect ' + platformId + '?',
+      confirmLabel: 'Disconnect',
+      variant: 'danger'
+    });
+    if (!confirmed) {
       return;
     }
 
@@ -155,7 +166,7 @@ export default function SocialConnections() {
       loadConnections();
     } catch (error) {
       console.error('Error disconnecting:', error);
-      alert('Error disconnecting. Please try again.');
+      toast.error('Error disconnecting. Please try again.');
     }
   };
 
@@ -271,6 +282,8 @@ export default function SocialConnections() {
           </p>
         </div>
       )}
+
+      <ConfirmDialog {...dialogProps} />
     </div>
   );
 }

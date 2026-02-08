@@ -350,7 +350,7 @@ export default function Analytics({ creators, requests = [] }) {
     ? (creatorsWithActivity / analytics.totalCreators) * 100
     : 0;
 
-  const COLORS = ['#3B82F6', '#22C55E', '#A855F7', '#F59E0B', '#EF4444'];
+  const COLORS = ['#3B82F6', '#22C55E', '#A855F7', '#60A5FA', '#EF4444'];
 
   return (
     <div className="space-y-6">
@@ -362,7 +362,7 @@ export default function Analytics({ creators, requests = [] }) {
         </div>
         <button
           onClick={exportToCSV}
-          className="inline-flex items-center px-4 py-2 bg-amber-600 dark:bg-amber-600 text-white rounded-polygon hover:bg-amber-700 dark:hover:bg-amber-700 transition-colors text-sm font-medium shadow-sm"
+          className="inline-flex items-center px-4 py-2 bg-blue-600 dark:bg-blue-600 text-white rounded-polygon hover:bg-blue-700 dark:hover:bg-blue-700 transition-colors text-sm font-medium shadow-sm"
         >
           <Download className="w-4 h-4 mr-2" />
           Export
@@ -516,7 +516,7 @@ export default function Analytics({ creators, requests = [] }) {
                         <span className={`inline-flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-full ${
                           index === 0 ? 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200' :
                           index === 1 ? 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200' :
-                          index === 2 ? 'bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200' :
+                          index === 2 ? 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200' :
                           'bg-gray-100 dark:bg-gray-700 text-polygon-text-secondary'
                         } font-bold text-xs sm:text-sm`}>
                           #{index + 1}

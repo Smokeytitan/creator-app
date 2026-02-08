@@ -12,7 +12,7 @@ import ConfidenceBadge from './ConfidenceBadge';
  * - Creator efficiency scatter (CPM vs impressions)
  * - Timeline view (campaign schedule)
  *
- * Bloomberg terminal aesthetic with dark gold theme.
+ * Bloomberg terminal aesthetic with dark blue theme.
  */
 const OverviewTab = ({ campaigns = [], creators = [], posts = [] }) => {
   // Calculate all analytics
@@ -265,7 +265,7 @@ const CreatorScatter = ({ creators }) => {
             if (creator.engagementRate > 5) {
               color = '#10B981'; // green - high engagement
             } else if (creator.engagementRate > 2) {
-              color = '#D97706'; // orange - medium engagement
+              color = '#3B82F6'; // blue - medium engagement
             }
 
             return (

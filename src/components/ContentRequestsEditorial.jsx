@@ -5,8 +5,13 @@ import { extractTweetId, fetchTweets } from '../services/twitterService';
 import { createCampaign, updateCampaign, deleteCampaign as deleteCampaignSupabase, getCampaigns } from '../services/campaignsServiceSupabase';
 import { addPost } from '../services/creatorsServiceSupabase';
 import { supabase } from '../lib/supabaseClient';
+import { useToast } from '../contexts/ToastContext';
+import useConfirmDialog from '../hooks/useConfirmDialog';
+import { ConfirmDialog } from './ui';
 
 const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setRequests }) => {
+  const toast = useToast();
+  const { dialogProps, confirm } = useConfirmDialog();
   const [showModal, setShowModal] = useState(false);
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterCreatorId, setFilterCreatorId] = useState('all');
@@ -158,12 +163,12 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
 
   const saveEditRequest = async () => {
     if (!editRequestForm.title.trim()) {
-      alert('Title is required');
+      toast.warning('Title is required');
       return;
     }
 
     if (editRequestForm.selectedCreatorIds.length === 0) {
-      alert('At least one creator is required');
+      toast.warning('At least one creator is required');
       return;
     }
 
@@ -202,11 +207,11 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
         ));
         setEditingRequestId(null);
       } else {
-        alert('Failed to update campaign');
+        toast.error('Failed to update campaign');
       }
     } catch (error) {
       console.error('Error updating campaign:', error);
-      alert('Failed to update campaign: ' + error.message);
+      toast.error('Failed to update campaign: ' + error.message);
     }
   };
 
@@ -222,9 +227,13 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
   };
 
   const deleteRequest = async (requestId) => {
-    if (!confirm('Are you sure you want to delete this request?')) {
-      return;
-    }
+    const confirmed = await confirm({
+      title: 'Delete Campaign',
+      description: 'Are you sure you want to delete this campaign? This action cannot be undone.',
+      confirmLabel: 'Delete',
+      variant: 'danger'
+    });
+    if (!confirmed) return;
 
     if (!supabase) {
       // Fallback to local state if Supabase not configured
@@ -237,11 +246,11 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
       if (success) {
         setRequests(requests.filter(req => req.id !== requestId));
       } else {
-        alert('Failed to delete campaign');
+        toast.error('Failed to delete campaign');
       }
     } catch (error) {
       console.error('Error deleting campaign:', error);
-      alert('Failed to delete campaign: ' + error.message);
+      toast.error('Failed to delete campaign: ' + error.message);
     }
   };
 
@@ -323,7 +332,7 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
         // Check if tweet is at least 48 hours old (unless skipping age check for manual refresh)
         if (!skipAgeCheck && tweetDate && !isTweetOldEnough(tweetDate)) {
           console.log('Tweet is less than 48 hours old, metrics may not be final');
-          alert('This tweet is less than 48 hours old. Metrics may not be final yet. You can still add it, but consider rescanning later for accurate data.');
+          toast.warning('This tweet is less than 48 hours old. Metrics may not be final yet. You can still add it, but consider rescanning later for accurate data.');
         }
 
         // Update form with fetched metrics for X platform
@@ -388,12 +397,12 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
 
   const submitContent = async () => {
     if (contentForm.selectedCreatorIds.length === 0) {
-      alert('Please select at least one creator');
+      toast.warning('Please select at least one creator');
       return;
     }
 
     if (contentForm.platforms.length === 0) {
-      alert('Please select at least one platform');
+      toast.warning('Please select at least one platform');
       return;
     }
 
@@ -403,7 +412,7 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
 
       // For non-X platforms, impressions are required
       if (platform !== 'X' && (!platformData.impressions || platformData.impressions === 0)) {
-        alert(`Impressions are required for ${platform}`);
+        toast.warning(`Impressions are required for ${platform}`);
         return;
       }
     }
@@ -440,7 +449,7 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
         return creator;
       }));
       cancelAddContent();
-      alert(`Content added to ${contentForm.selectedCreatorIds.length} creator(s) across ${contentForm.platforms.length} platform(s) for "${request.title}"!`);
+      toast.success(`Content added to ${contentForm.selectedCreatorIds.length} creator(s) across ${contentForm.platforms.length} platform(s) for "${request.title}"!`);
       return;
     }
 
@@ -510,12 +519,12 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
           return creator;
         }));
         cancelAddContent();
-        alert(`Content added to ${contentForm.selectedCreatorIds.length} creator(s) across ${contentForm.platforms.length} platform(s) for "${request.title}"!`);
+        toast.success(`Content added to ${contentForm.selectedCreatorIds.length} creator(s) across ${contentForm.platforms.length} platform(s) for "${request.title}"!`);
         return;
       }
 
       cancelAddContent();
-      alert(`Successfully added ${totalPostsCreated} posts to ${contentForm.selectedCreatorIds.length} creator(s) across ${contentForm.platforms.length} platform(s) for "${request.title}"!`);
+      toast.success(`Successfully added ${totalPostsCreated} posts to ${contentForm.selectedCreatorIds.length} creator(s) across ${contentForm.platforms.length} platform(s) for "${request.title}"!`);
     } catch (error) {
       console.error('Error adding content:', error);
       // Fall back to localStorage on error
@@ -546,7 +555,7 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
         return creator;
       }));
       cancelAddContent();
-      alert(`Content added to ${contentForm.selectedCreatorIds.length} creator(s) across ${contentForm.platforms.length} platform(s) for "${request.title}"!`);
+      toast.success(`Content added to ${contentForm.selectedCreatorIds.length} creator(s) across ${contentForm.platforms.length} platform(s) for "${request.title}"!`);
     }
   };
 
@@ -1332,15 +1341,17 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
                 setRequests([...requests, created]);
                 setShowModal(false);
               } else {
-                alert('Failed to create campaign');
+                toast.error('Failed to create campaign');
               }
             } catch (error) {
               console.error('Error creating campaign:', error);
-              alert('Failed to create campaign: ' + error.message);
+              toast.error('Failed to create campaign: ' + error.message);
             }
           }}
         />
       )}
+
+      <ConfirmDialog {...dialogProps} />
 
       {/* Add Content Modal */}
       {addingContentForRequest && (

@@ -1,9 +1,14 @@
 import { useState, useMemo, useRef } from 'react';
 import { Download, ExternalLink, RefreshCw, Eye, TrendingUp, Users, Calendar, Award, CheckCircle, AlertCircle, Upload } from 'lucide-react';
+import { useToast } from '../contexts/ToastContext';
+import useConfirmDialog from '../hooks/useConfirmDialog';
+import { ConfirmDialog } from './ui';
 import { fetchCampaignResults, getExcludedAccounts, mergeTweetsWithResults } from '../services/flashCampaignServiceSupabase';
 import { parseFlashCampaignExcel, processTweetsForCampaign } from '../services/flashCampaignExcelService';
 
 const CampaignResultsView = ({ campaign, onResultsUpdated }) => {
+  const toast = useToast();
+  const { dialogProps, confirm } = useConfirmDialog();
   const [isRefetching, setIsRefetching] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [sortConfig, setSortConfig] = useState({ key: 'creatorRank', direction: 'asc' });
@@ -94,7 +99,7 @@ const CampaignResultsView = ({ campaign, onResultsUpdated }) => {
       }
     } catch (error) {
       console.error('Error refetching results:', error);
-      alert('Failed to refetch results. Please try again.');
+      toast.error('Failed to refetch results. Please try again.');
     } finally {
       setIsRefetching(false);
     }
@@ -106,7 +111,7 @@ const CampaignResultsView = ({ campaign, onResultsUpdated }) => {
 
     // Validate file type
     if (!file.name.match(/\.(xlsx|xls)$/i)) {
-      alert('Please select an Excel file (.xlsx or .xls)');
+      toast.warning('Please select an Excel file (.xlsx or .xls)');
       return;
     }
 
@@ -128,12 +133,12 @@ const CampaignResultsView = ({ campaign, onResultsUpdated }) => {
       );
 
       if (processResult.error) {
-        alert(`Upload failed: ${processResult.message}`);
+        toast.error(`Upload failed: ${processResult.message}`);
         return;
       }
 
       if (processResult.newTweets.length === 0) {
-        alert(processResult.message || 'No new tweets to add');
+        toast.warning(processResult.message || 'No new tweets to add');
         return;
       }
 
@@ -149,7 +154,7 @@ const CampaignResultsView = ({ campaign, onResultsUpdated }) => {
       if (processResult.skippedCount > 0) {
         message += `\n${processResult.skippedCount} tweet(s) didn't match key phrases`;
       }
-      alert(message);
+      toast.success(message);
 
       // Refresh UI
       if (onResultsUpdated) {
@@ -157,7 +162,7 @@ const CampaignResultsView = ({ campaign, onResultsUpdated }) => {
       }
     } catch (error) {
       console.error('Error uploading tweets:', error);
-      alert(`Failed to upload tweets: ${error.message}`);
+      toast.error(`Failed to upload tweets: ${error.message}`);
     } finally {
       setIsUploading(false);
       // Reset file input
@@ -239,7 +244,7 @@ const CampaignResultsView = ({ campaign, onResultsUpdated }) => {
     }
     if (rank === 3) {
       return (
-        <div className="flex items-center gap-1 px-2 py-1 bg-orange-600/10 text-orange-600 rounded-full border border-orange-600/30">
+        <div className="flex items-center gap-1 px-2 py-1 bg-blue-500/10 text-blue-500 rounded-full border border-blue-500/30">
           <Award className="w-3 h-3" />
           <span className="text-xs font-bold">#3</span>
         </div>
@@ -602,6 +607,7 @@ const CampaignResultsView = ({ campaign, onResultsUpdated }) => {
           </div>
         )}
       </div>
+      <ConfirmDialog {...dialogProps} />
     </div>
   );
 };

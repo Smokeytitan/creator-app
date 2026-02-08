@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useUser, useAuth, UserButton } from '@clerk/clerk-react';
-import CreatorRosterEditorial from './components/CreatorRosterEditorial';
-import CreatorProspectsEditorial from './components/CreatorProspectsEditorial';
+import CreatorRosterPage from './components/roster/CreatorRosterPage';
+import CreatorProspectsPage from './components/roster/CreatorProspectsPage';
 import ContentRequestsEditorial from './components/ContentRequestsEditorial';
 import { Campaigns } from './components/Campaigns';
 import Analytics from './components/Analytics';
@@ -45,8 +45,8 @@ function AppWithAuth() {
     return (
       <div className="min-h-screen w-full bg-[var(--color-bg-primary)] flex items-center justify-center">
         <div className="text-center">
-          <div className="inline-block h-10 w-10 animate-spin rounded-full border-4 border-solid border-polygon-primary border-r-transparent"></div>
-          <p className="mt-4 text-polygon-text-secondary font-medium">Loading...</p>
+          <div className="inline-block h-10 w-10 animate-spin rounded-full border-4 border-solid border-[var(--color-accent-primary)] border-r-transparent"></div>
+          <p className="mt-4 text-[var(--color-text-secondary)] font-medium">Loading...</p>
         </div>
       </div>
     );
@@ -205,42 +205,21 @@ function AdminView({ bypassAuth = false }) {
   return (
     <div className="min-h-screen w-full bg-[var(--color-bg-primary)] transition-colors overflow-x-hidden">
       {/* Header */}
-      <div className="bg-[var(--color-bg-secondary)] border-b border-[var(--color-border)] px-6 py-5 sticky top-0 z-50 backdrop-blur-xl">
+      <div className="bg-[var(--color-bg-secondary)] border-b border-[var(--color-border)] px-6 py-3 sticky top-0 z-50 backdrop-blur-xl">
         <div className="flex items-center justify-between max-w-[1920px] mx-auto">
-          <div className="flex items-center gap-4">
-            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[var(--color-accent-primary)] to-[var(--color-accent-secondary)] flex items-center justify-center">
-              <span className="text-display text-white text-xl font-bold">P</span>
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-lg bg-[var(--color-accent-primary)] flex items-center justify-center">
+              <span className="text-white text-lg font-bold">C</span>
             </div>
             <div>
-              <h1 className="text-display text-2xl text-[var(--color-text-primary)] tracking-tight">Polygon Analytics</h1>
-              <p className="text-xs text-[var(--color-text-tertiary)] text-mono uppercase tracking-wider">Creator Intelligence Platform</p>
+              <h1 className="text-display text-lg text-[var(--color-text-primary)] tracking-tight">Creator Analytics</h1>
             </div>
           </div>
           <div className="flex items-center gap-3">
-            {useSupabase && (
-              <button
-                onClick={() => {
-                  if (window.confirm('Clear local cache and reload? This will remove all localStorage data.')) {
-                    // Save current tab and theme before clearing
-                    const currentTab = localStorage.getItem('activeTab');
-                    const currentTheme = localStorage.getItem('theme-mode');
-                    localStorage.clear();
-                    // Restore tab and theme
-                    if (currentTab) localStorage.setItem('activeTab', currentTab);
-                    if (currentTheme) localStorage.setItem('theme-mode', currentTheme);
-                    window.location.reload();
-                  }
-                }}
-                className="px-3 py-1.5 text-xs font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] border border-[var(--color-border)] rounded-lg hover:bg-[var(--color-bg-tertiary)] transition-all"
-                title="Clear localStorage cache"
-              >
-                Clear Cache
-              </button>
-            )}
             <ThemeToggle />
             {!bypassAuth && <UserButton afterSignOutUrl="/" />}
             {bypassAuth && (
-              <div className="px-3 py-1.5 bg-yellow-500/10 border border-yellow-500/30 rounded text-xs text-yellow-400">
+              <div className="px-2.5 py-1 bg-yellow-500/10 border border-yellow-500/30 rounded text-xs text-yellow-400">
                 Dev Mode
               </div>
             )}
@@ -255,8 +234,8 @@ function AdminView({ bypassAuth = false }) {
             onClick={() => setActiveTab('roster')}
             className={`flex-1 px-4 py-3 text-sm font-semibold whitespace-nowrap transition-all duration-200 ${
               activeTab === 'roster'
-                ? 'bg-gradient-to-r from-[var(--color-accent-primary)] to-[var(--color-accent-secondary)] text-white rounded-t-lg'
-                : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)] rounded-t-lg'
+                ? 'bg-[var(--color-accent-muted)] text-[var(--color-accent-primary)] rounded-lg'
+                : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)] rounded-lg'
             }`}
           >
             Roster
@@ -265,8 +244,8 @@ function AdminView({ bypassAuth = false }) {
             onClick={() => setActiveTab('prospects')}
             className={`flex-1 px-4 py-3 text-sm font-semibold whitespace-nowrap transition-all duration-200 ${
               activeTab === 'prospects'
-                ? 'bg-gradient-to-r from-[var(--color-accent-primary)] to-[var(--color-accent-secondary)] text-white rounded-t-lg'
-                : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)] rounded-t-lg'
+                ? 'bg-[var(--color-accent-muted)] text-[var(--color-accent-primary)] rounded-lg'
+                : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)] rounded-lg'
             }`}
           >
             Prospects
@@ -275,8 +254,8 @@ function AdminView({ bypassAuth = false }) {
             onClick={() => setActiveTab('requests')}
             className={`flex-1 px-4 py-3 text-sm font-semibold whitespace-nowrap transition-all duration-200 ${
               activeTab === 'requests'
-                ? 'bg-gradient-to-r from-[var(--color-accent-primary)] to-[var(--color-accent-secondary)] text-white rounded-t-lg'
-                : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)] rounded-t-lg'
+                ? 'bg-[var(--color-accent-muted)] text-[var(--color-accent-primary)] rounded-lg'
+                : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)] rounded-lg'
             }`}
           >
             Campaigns
@@ -285,8 +264,8 @@ function AdminView({ bypassAuth = false }) {
             onClick={() => setActiveTab('analytics')}
             className={`flex-1 px-4 py-3 text-sm font-semibold whitespace-nowrap transition-all duration-200 ${
               activeTab === 'analytics'
-                ? 'bg-gradient-to-r from-[var(--color-accent-primary)] to-[var(--color-accent-secondary)] text-white rounded-t-lg'
-                : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)] rounded-t-lg'
+                ? 'bg-[var(--color-accent-muted)] text-[var(--color-accent-primary)] rounded-lg'
+                : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)] rounded-lg'
             }`}
           >
             Analytics
@@ -296,8 +275,8 @@ function AdminView({ bypassAuth = false }) {
             onClick={() => setActiveTab('kaito')}
             className={`flex-1 px-4 py-3 text-sm font-semibold whitespace-nowrap transition-all duration-200 ${
               activeTab === 'kaito'
-                ? 'bg-gradient-to-r from-[var(--color-accent-primary)] to-[var(--color-accent-secondary)] text-white rounded-t-lg'
-                : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)] rounded-t-lg'
+                ? 'bg-[var(--color-accent-muted)] text-[var(--color-accent-primary)] rounded-lg'
+                : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)] rounded-lg'
             }`}
           >
             Kaito
@@ -306,8 +285,8 @@ function AdminView({ bypassAuth = false }) {
             onClick={() => setActiveTab('botanalytics')}
             className={`flex-1 px-4 py-3 text-sm font-semibold whitespace-nowrap transition-all duration-200 ${
               activeTab === 'botanalytics'
-                ? 'bg-gradient-to-r from-[var(--color-accent-primary)] to-[var(--color-accent-secondary)] text-white rounded-t-lg'
-                : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)] rounded-t-lg'
+                ? 'bg-[var(--color-accent-muted)] text-[var(--color-accent-primary)] rounded-lg'
+                : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)] rounded-lg'
             }`}
           >
             Bot Analytics
@@ -316,8 +295,8 @@ function AdminView({ bypassAuth = false }) {
             onClick={() => setActiveTab('channels')}
             className={`flex-1 px-4 py-3 text-sm font-semibold whitespace-nowrap transition-all duration-200 ${
               activeTab === 'channels'
-                ? 'bg-gradient-to-r from-[var(--color-accent-primary)] to-[var(--color-accent-secondary)] text-white rounded-t-lg'
-                : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)] rounded-t-lg'
+                ? 'bg-[var(--color-accent-muted)] text-[var(--color-accent-primary)] rounded-lg'
+                : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)] rounded-lg'
             }`}
           >
             Channels
@@ -326,8 +305,8 @@ function AdminView({ bypassAuth = false }) {
             onClick={() => setActiveTab('social')}
             className={`flex-1 px-4 py-3 text-sm font-semibold whitespace-nowrap transition-all duration-200 ${
               activeTab === 'social'
-                ? 'bg-gradient-to-r from-[var(--color-accent-primary)] to-[var(--color-accent-secondary)] text-white rounded-t-lg'
-                : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)] rounded-t-lg'
+                ? 'bg-[var(--color-accent-muted)] text-[var(--color-accent-primary)] rounded-lg'
+                : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)] rounded-lg'
             }`}
           >
             Social Accounts
@@ -343,7 +322,7 @@ function AdminView({ bypassAuth = false }) {
               onClick={() => setActiveTab('roster')}
               className={`px-4 py-3 text-sm font-semibold transition-all duration-200 text-left rounded-lg ${
                 activeTab === 'roster'
-                  ? 'bg-gradient-to-r from-[var(--color-accent-primary)] to-[var(--color-accent-secondary)] text-white'
+                  ? 'bg-[var(--color-accent-muted)] text-[var(--color-accent-primary)] border-l-2 border-l-[var(--color-accent-primary)]'
                   : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)]'
               }`}
             >
@@ -354,7 +333,7 @@ function AdminView({ bypassAuth = false }) {
               onClick={() => setActiveTab('prospects')}
               className={`px-4 py-3 text-sm font-semibold transition-all duration-200 text-left rounded-lg ${
                 activeTab === 'prospects'
-                  ? 'bg-gradient-to-r from-[var(--color-accent-primary)] to-[var(--color-accent-secondary)] text-white'
+                  ? 'bg-[var(--color-accent-muted)] text-[var(--color-accent-primary)] border-l-2 border-l-[var(--color-accent-primary)]'
                   : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)]'
               }`}
             >
@@ -365,7 +344,7 @@ function AdminView({ bypassAuth = false }) {
               onClick={() => setActiveTab('requests')}
               className={`px-4 py-3 text-sm font-semibold transition-all duration-200 text-left rounded-lg ${
                 activeTab === 'requests'
-                  ? 'bg-gradient-to-r from-[var(--color-accent-primary)] to-[var(--color-accent-secondary)] text-white'
+                  ? 'bg-[var(--color-accent-muted)] text-[var(--color-accent-primary)] border-l-2 border-l-[var(--color-accent-primary)]'
                   : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)]'
               }`}
             >
@@ -376,7 +355,7 @@ function AdminView({ bypassAuth = false }) {
               onClick={() => setActiveTab('analytics')}
               className={`px-4 py-3 text-sm font-semibold transition-all duration-200 text-left rounded-lg ${
                 activeTab === 'analytics'
-                  ? 'bg-gradient-to-r from-[var(--color-accent-primary)] to-[var(--color-accent-secondary)] text-white'
+                  ? 'bg-[var(--color-accent-muted)] text-[var(--color-accent-primary)] border-l-2 border-l-[var(--color-accent-primary)]'
                   : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)]'
               }`}
             >
@@ -388,7 +367,7 @@ function AdminView({ bypassAuth = false }) {
               onClick={() => setActiveTab('kaito')}
               className={`px-4 py-3 text-sm font-semibold transition-all duration-200 text-left rounded-lg ${
                 activeTab === 'kaito'
-                  ? 'bg-gradient-to-r from-[var(--color-accent-primary)] to-[var(--color-accent-secondary)] text-white'
+                  ? 'bg-[var(--color-accent-muted)] text-[var(--color-accent-primary)] border-l-2 border-l-[var(--color-accent-primary)]'
                   : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)]'
               }`}
             >
@@ -399,7 +378,7 @@ function AdminView({ bypassAuth = false }) {
               onClick={() => setActiveTab('botanalytics')}
               className={`px-4 py-3 text-sm font-semibold transition-all duration-200 text-left rounded-lg ${
                 activeTab === 'botanalytics'
-                  ? 'bg-gradient-to-r from-[var(--color-accent-primary)] to-[var(--color-accent-secondary)] text-white'
+                  ? 'bg-[var(--color-accent-muted)] text-[var(--color-accent-primary)] border-l-2 border-l-[var(--color-accent-primary)]'
                   : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)]'
               }`}
             >
@@ -410,7 +389,7 @@ function AdminView({ bypassAuth = false }) {
               onClick={() => setActiveTab('channels')}
               className={`px-4 py-3 text-sm font-semibold transition-all duration-200 text-left rounded-lg ${
                 activeTab === 'channels'
-                  ? 'bg-gradient-to-r from-[var(--color-accent-primary)] to-[var(--color-accent-secondary)] text-white'
+                  ? 'bg-[var(--color-accent-muted)] text-[var(--color-accent-primary)] border-l-2 border-l-[var(--color-accent-primary)]'
                   : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)]'
               }`}
             >
@@ -421,7 +400,7 @@ function AdminView({ bypassAuth = false }) {
               onClick={() => setActiveTab('social')}
               className={`px-4 py-3 text-sm font-semibold transition-all duration-200 text-left rounded-lg ${
                 activeTab === 'social'
-                  ? 'bg-gradient-to-r from-[var(--color-accent-primary)] to-[var(--color-accent-secondary)] text-white'
+                  ? 'bg-[var(--color-accent-muted)] text-[var(--color-accent-primary)] border-l-2 border-l-[var(--color-accent-primary)]'
                   : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)]'
               }`}
             >
@@ -431,18 +410,18 @@ function AdminView({ bypassAuth = false }) {
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 p-3 sm:p-6 max-w-full bg-polygon-bg-primary">
+        <div className="flex-1 p-3 sm:p-6 max-w-full">
           {loading ? (
             <div className="flex items-center justify-center py-12">
               <div className="text-center">
-                <div className="inline-block h-10 w-10 animate-spin rounded-full border-4 border-solid border-polygon-primary border-r-transparent"></div>
-                <p className="mt-4 text-polygon-text-secondary font-medium">Loading creators...</p>
+                <div className="inline-block h-10 w-10 animate-spin rounded-full border-4 border-solid border-[var(--color-accent-primary)] border-r-transparent"></div>
+                <p className="mt-4 text-[var(--color-text-secondary)] font-medium">Loading creators...</p>
               </div>
             </div>
           ) : (
             <>
-              {activeTab === 'roster' && <CreatorRosterEditorial creators={creators} setCreators={setCreators} />}
-              {activeTab === 'prospects' && <CreatorProspectsEditorial prospects={prospects} setProspects={setProspects} setCreators={setCreators} />}
+              {activeTab === 'roster' && <CreatorRosterPage creators={creators} setCreators={setCreators} />}
+              {activeTab === 'prospects' && <CreatorProspectsPage prospects={prospects} setProspects={setProspects} setCreators={setCreators} />}
               {activeTab === 'requests' && <Campaigns />}
               {activeTab === 'analytics' && <Analytics creators={creators} requests={requests} />}
               {/* Hidden: Kaito tab content */}
@@ -457,4 +436,3 @@ function AdminView({ bypassAuth = false }) {
     </div>
   );
 }
-// Force redeploy Tue Feb  3 21:11:22 PST 2026

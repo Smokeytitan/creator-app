@@ -10,7 +10,7 @@ export default function ChannelManager() {
   const [selectedChannels, setSelectedChannels] = useState(new Set());
   const [message, setMessage] = useState(null);
 
-  const apiKey = 'dev_secret_key_change_in_production';
+  const apiKey = import.meta.env.VITE_CHANNEL_API_KEY || '';
 
   useEffect(() => {
     fetchChannels();

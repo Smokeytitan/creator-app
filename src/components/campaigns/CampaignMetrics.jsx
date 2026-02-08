@@ -39,7 +39,7 @@ export default function CampaignMetrics({
       label: 'Posts',
       value: postCount,
       icon: Eye,
-      color: 'text-amber-400'
+      color: 'text-blue-400'
     }
   ];
 
