@@ -280,6 +280,16 @@ export default function CreatorRosterPage({ creators, setCreators }) {
           </div>
 
           <select
+            value={search.filterActiveStatus}
+            onChange={(e) => search.setFilterActiveStatus(e.target.value)}
+            className="px-3 py-1.5 text-sm border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent-primary)] transition-all"
+          >
+            <option value="all">All Status</option>
+            <option value="active_only">Active Only</option>
+            <option value="inactive_only">Inactive Only</option>
+          </select>
+
+          <select
             value={search.filterActivity}
             onChange={(e) => search.setFilterActivity(e.target.value)}
             className="px-3 py-1.5 text-sm border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent-primary)] transition-all"
@@ -356,6 +366,7 @@ export default function CreatorRosterPage({ creators, setCreators }) {
                 creator={c}
                 onEdit={() => crud.startEdit(c)}
                 onDelete={(e) => handleDelete(c.id, e)}
+                onToggleActive={(e) => { e.stopPropagation(); crud.toggleActive(c.id); }}
                 onToggleViewPosts={(e) => posts.toggleViewPosts(c.id, e)}
                 onUploadContract={contract.handleContractUpload}
                 onGenerateInvoice={(e) => {

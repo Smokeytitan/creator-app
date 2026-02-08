@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { createCreator, updateCreator as updateCreatorInDB, deleteCreator as deleteCreatorFromDB } from '../services/creatorsServiceSupabase';
+import { createCreator, updateCreator as updateCreatorInDB, deleteCreator as deleteCreatorFromDB, toggleCreatorActive } from '../services/creatorsServiceSupabase';
 import { useToast } from '../contexts/ToastContext';
 
 const EMPTY_FORM = { name: '', handle: '', notes: '', costPerPost: '', platforms: [] };
@@ -102,6 +102,21 @@ export default function useCreatorCRUD({ items, setItems, defaultStatus = 'activ
     }
   }, [items, setItems, editForm, defaultStatus, itemLabel, resetForm, toast]);
 
+  const toggleActive = useCallback(async (itemId) => {
+    try {
+      const updated = await toggleCreatorActive(itemId);
+      if (updated) {
+        setItems(items.map((c) => (c.id === itemId ? updated : c)));
+        toast.success(updated.active ? `${itemLabel.charAt(0).toUpperCase() + itemLabel.slice(1)} reactivated` : `${itemLabel.charAt(0).toUpperCase() + itemLabel.slice(1)} deactivated`);
+      } else {
+        toast.error(`Failed to update ${itemLabel} status`);
+      }
+    } catch (error) {
+      console.error(`Error toggling ${itemLabel} active:`, error);
+      toast.error(`Failed to update ${itemLabel} status`);
+    }
+  }, [items, setItems, itemLabel, toast]);
+
   const deleteItem = useCallback(async (itemId, e) => {
     // Note: callers should use useConfirmDialog before calling this.
     // This function performs the actual deletion without its own confirm.
@@ -128,5 +143,6 @@ export default function useCreatorCRUD({ items, setItems, defaultStatus = 'activ
     saveEdit,
     saveNew,
     deleteItem,
+    toggleActive,
   };
 }

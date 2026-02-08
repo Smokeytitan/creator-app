@@ -9,6 +9,7 @@ export default function CreatorCardDisplay({
   creator,
   onEdit,
   onDelete,
+  onToggleActive,
   onToggleViewPosts,
   onUploadContract,
   onGenerateInvoice,
@@ -19,14 +20,20 @@ export default function CreatorCardDisplay({
   postsSection,
 }) {
   const c = creator;
+  const isActive = c.active !== false;
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Header: Name + Platform Badges + Delete */}
+    <div className={`flex flex-col h-full ${!isActive ? 'opacity-50' : ''}`}>
+      {/* Header: Name + Platform Badges + Toggle + Delete */}
       <div className="flex items-start justify-between mb-3">
         <div>
           <div className="flex items-center gap-2 mb-1">
             <h3 className="text-xl font-semibold text-[var(--color-text-primary)]">{c.name}</h3>
+            {!isActive && (
+              <span className="px-2 py-0.5 text-xs font-medium bg-red-500/20 text-red-400 rounded-full">
+                Inactive
+              </span>
+            )}
             {(c.platforms || []).length > 0 && (
               <div className="flex gap-1">
                 {c.platforms.map((platform) => (
@@ -42,13 +49,28 @@ export default function CreatorCardDisplay({
           </div>
           <p className="text-sm text-[var(--color-text-secondary)] text-mono">{c.handle}</p>
         </div>
-        <button
-          onClick={onDelete}
-          className="p-1 text-[var(--color-text-tertiary)] hover:text-red-400 hover:bg-red-500/10 rounded transition-colors"
-          title="Delete creator"
-        >
-          <Trash2 className="h-4 w-4" />
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={onToggleActive}
+            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+              isActive ? 'bg-green-500' : 'bg-[var(--color-bg-tertiary)] border border-[var(--color-border)]'
+            }`}
+            title={isActive ? 'Deactivate creator' : 'Activate creator'}
+          >
+            <span
+              className={`inline-block h-3.5 w-3.5 rounded-full bg-white transition-transform ${
+                isActive ? 'translate-x-4.5' : 'translate-x-0.5'
+              }`}
+            />
+          </button>
+          <button
+            onClick={onDelete}
+            className="p-1 text-[var(--color-text-tertiary)] hover:text-red-400 hover:bg-red-500/10 rounded transition-colors"
+            title="Delete creator"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+        </div>
       </div>
 
       {/* Notes */}

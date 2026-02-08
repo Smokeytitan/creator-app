@@ -10,6 +10,7 @@ import { useState, useMemo, useCallback } from 'react';
 export default function useSearchFilterSort({ items, searchFields = ['name', 'handle'] }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterActivity, setFilterActivity] = useState('all');
+  const [filterActiveStatus, setFilterActiveStatus] = useState('all');
   const [sortBy, setSortBy] = useState('name');
 
   const filteredItems = useMemo(() => {
@@ -24,6 +25,13 @@ export default function useSearchFilterSort({ items, searchFields = ['name', 'ha
           return value && String(value).toLowerCase().includes(search);
         })
       );
+    }
+
+    // Active status filter
+    if (filterActiveStatus === 'active_only') {
+      filtered = filtered.filter((c) => c.active !== false);
+    } else if (filterActiveStatus === 'inactive_only') {
+      filtered = filtered.filter((c) => c.active === false);
     }
 
     // Activity filter
@@ -59,21 +67,24 @@ export default function useSearchFilterSort({ items, searchFields = ['name', 'ha
     });
 
     return filtered;
-  }, [items, searchTerm, filterActivity, sortBy, searchFields]);
+  }, [items, searchTerm, filterActivity, filterActiveStatus, sortBy, searchFields]);
 
   const clearFilters = useCallback(() => {
     setSearchTerm('');
     setFilterActivity('all');
+    setFilterActiveStatus('all');
     setSortBy('name');
   }, []);
 
-  const hasActiveFilters = searchTerm || filterActivity !== 'all' || sortBy !== 'name';
+  const hasActiveFilters = searchTerm || filterActivity !== 'all' || filterActiveStatus !== 'all' || sortBy !== 'name';
 
   return {
     searchTerm,
     setSearchTerm,
     filterActivity,
     setFilterActivity,
+    filterActiveStatus,
+    setFilterActiveStatus,
     sortBy,
     setSortBy,
     filteredItems,
