@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { useUser, UserButton } from '@clerk/clerk-react';
+import { useUser, useAuth, UserButton } from '@clerk/clerk-react';
 import { Megaphone, User } from 'lucide-react';
 import ThemeToggle from '../ThemeToggle';
 import PendingApprovalPage from '../creator/PendingApprovalPage';
-import { supabase } from '../../lib/supabaseClient';
 
 /**
  * CreatorLayout - Layout wrapper for the creator-facing portal.
@@ -27,10 +26,10 @@ export default function CreatorLayout({ bypassAuth = false }) {
 
 function CreatorLayoutWithAuth() {
   const { user } = useUser();
+  const { getToken } = useAuth();
   const [isApproved, setIsApproved] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [approvalLoading, setApprovalLoading] = useState(true);
-
-  const isAdmin = user?.publicMetadata?.role === 'ADMIN';
 
   useEffect(() => {
     async function checkApproval() {
@@ -39,45 +38,39 @@ function CreatorLayoutWithAuth() {
         return;
       }
 
-      // Admins are always approved
+      // Check Clerk publicMetadata for admin role
       if (user.publicMetadata?.role === 'ADMIN') {
+        setIsAdmin(true);
         setIsApproved(true);
         setApprovalLoading(false);
         return;
       }
 
-      // Check Supabase for approval status
-      if (supabase) {
-        try {
-          const { data, error } = await supabase
-            .from('users')
-            .select('approved, role')
-            .eq('id', user.id)
-            .single();
+      // Check approval via API (uses service role key, bypasses RLS)
+      try {
+        const token = await getToken();
+        const res = await fetch('/api/creator/profile', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
 
-          if (error) {
-            console.error('[CreatorLayout] Error checking approval status:', error);
-            // If the user doesn't exist in DB, they're not approved
-            setIsApproved(false);
-          } else {
-            // Approved if DB says approved, or if DB role is admin
-            setIsApproved(!!data?.approved || data?.role === 'admin');
-          }
-        } catch (err) {
-          console.error('[CreatorLayout] Failed to check approval:', err);
+        if (res.ok) {
+          const { user: profile } = await res.json();
+          setIsApproved(!!profile?.approved || profile?.role === 'admin');
+          setIsAdmin(profile?.role === 'admin');
+        } else {
+          console.error('[CreatorLayout] Profile API returned', res.status);
           setIsApproved(false);
         }
-      } else {
-        // No Supabase configured -- in dev/fallback mode, allow access
-        console.warn('[CreatorLayout] Supabase not configured. Skipping approval check.');
-        setIsApproved(true);
+      } catch (err) {
+        console.error('[CreatorLayout] Failed to check approval:', err);
+        setIsApproved(false);
       }
 
       setApprovalLoading(false);
     }
 
     checkApproval();
-  }, [user]);
+  }, [user, getToken]);
 
   return (
     <CreatorLayoutShell
