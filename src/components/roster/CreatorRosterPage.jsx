@@ -1,5 +1,5 @@
 import { useRef, useState, useMemo } from 'react';
-import { Plus, Download, RefreshCw, FileSpreadsheet, FileUp, Search, Filter, SortAsc, X } from 'lucide-react';
+import { Plus, Download, RefreshCw, FileSpreadsheet, FileUp, Search, Filter, SortAsc, X, UserX } from 'lucide-react';
 
 import useCreatorCRUD from '../../hooks/useCreatorCRUD';
 import useSearchFilterSort from '../../hooks/useSearchFilterSort';
@@ -35,9 +35,12 @@ export default function CreatorRosterPage({ creators, setCreators }) {
   // -------------------------------------------------------------------------
   // Hooks
   // -------------------------------------------------------------------------
+  const [subTab, setSubTab] = useState('active');
   const crud = useCreatorCRUD({ items: creators, setItems: setCreators, defaultStatus: 'active', itemLabel: 'creator' });
   const activeOnly = useMemo(() => creators.filter((c) => c.active !== false), [creators]);
-  const search = useSearchFilterSort({ items: activeOnly, searchFields: ['name', 'handle'] });
+  const inactiveOnly = useMemo(() => creators.filter((c) => c.active === false), [creators]);
+  const displayItems = subTab === 'active' ? activeOnly : inactiveOnly;
+  const search = useSearchFilterSort({ items: displayItems, searchFields: ['name', 'handle'] });
   const contract = useContractUpload({ creators, setCreators });
   const posts = usePosts({ creators, setCreators });
 
@@ -204,59 +207,85 @@ export default function CreatorRosterPage({ creators, setCreators }) {
               Manage your content creator network and track campaign performance
             </p>
           </div>
-          <div className="flex flex-wrap gap-2">
-            <button
-              onClick={crud.startAdd}
-              className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-[var(--color-accent-primary)] to-[var(--color-accent-secondary)] text-white rounded-lg hover:shadow-lg hover:shadow-[var(--color-accent-primary)]/25 transition-all duration-200 text-sm font-semibold"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              <span className="hidden sm:inline">New Creator</span>
-              <span className="sm:hidden">New</span>
-            </button>
-            <input
-              ref={excelFileInputRef}
-              type="file"
-              accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
-              onChange={handleExcelImport}
-              className="hidden"
-            />
-            <button
-              onClick={() => excelFileInputRef.current?.click()}
-              disabled={importing}
-              className="inline-flex items-center px-4 py-2 bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] text-[var(--color-text-primary)] rounded-lg hover:bg-[var(--color-bg-secondary)] hover:border-[var(--color-border-hover)] transition-all duration-200 text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <FileSpreadsheet className="w-4 h-4 mr-2" />
-              <span className="hidden sm:inline">{importing ? 'Importing...' : 'Import Excel'}</span>
-              <span className="sm:hidden">{importing ? '...' : 'Excel'}</span>
-            </button>
-            <button
-              onClick={() => setShowTemplateUpload(true)}
-              className="inline-flex items-center px-4 py-2 bg-purple-500/10 border border-purple-500/30 text-purple-500 rounded-lg hover:bg-purple-500/20 hover:border-purple-500/50 transition-all duration-200 text-sm font-semibold"
-              title="Upload invoice template for PDF generation"
-            >
-              <FileUp className="w-4 h-4 mr-2" />
-              <span className="hidden sm:inline">Invoice Template</span>
-              <span className="sm:hidden">Template</span>
-            </button>
-            <button
-              onClick={exportToCSV}
-              className="inline-flex items-center px-4 py-2 bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] text-[var(--color-text-primary)] rounded-lg hover:bg-[var(--color-bg-secondary)] hover:border-[var(--color-border-hover)] transition-all duration-200 text-sm font-semibold"
-            >
-              <Download className="w-4 h-4 mr-2" />
-              <span className="hidden sm:inline">Export CSV</span>
-              <span className="sm:hidden">Export</span>
-            </button>
-            <button
-              onClick={resetToImportedData}
-              className="inline-flex items-center px-4 py-2 bg-[var(--color-bg-tertiary)] border border-[var(--color-accent-primary)]/30 text-[var(--color-text-primary)] rounded-lg hover:bg-[var(--color-bg-secondary)] hover:border-[var(--color-accent-primary)]/50 transition-all duration-200 text-sm font-semibold"
-              title="Reset to Google Sheets data"
-            >
-              <RefreshCw className="w-4 h-4 mr-2" />
-              <span className="hidden sm:inline">Reset Data</span>
-              <span className="sm:hidden">Reset</span>
-            </button>
-          </div>
+          {subTab === 'active' && (
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={crud.startAdd}
+                className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-[var(--color-accent-primary)] to-[var(--color-accent-secondary)] text-white rounded-lg hover:shadow-lg hover:shadow-[var(--color-accent-primary)]/25 transition-all duration-200 text-sm font-semibold"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                <span className="hidden sm:inline">New Creator</span>
+                <span className="sm:hidden">New</span>
+              </button>
+              <input
+                ref={excelFileInputRef}
+                type="file"
+                accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
+                onChange={handleExcelImport}
+                className="hidden"
+              />
+              <button
+                onClick={() => excelFileInputRef.current?.click()}
+                disabled={importing}
+                className="inline-flex items-center px-4 py-2 bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] text-[var(--color-text-primary)] rounded-lg hover:bg-[var(--color-bg-secondary)] hover:border-[var(--color-border-hover)] transition-all duration-200 text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <FileSpreadsheet className="w-4 h-4 mr-2" />
+                <span className="hidden sm:inline">{importing ? 'Importing...' : 'Import Excel'}</span>
+                <span className="sm:hidden">{importing ? '...' : 'Excel'}</span>
+              </button>
+              <button
+                onClick={() => setShowTemplateUpload(true)}
+                className="inline-flex items-center px-4 py-2 bg-purple-500/10 border border-purple-500/30 text-purple-500 rounded-lg hover:bg-purple-500/20 hover:border-purple-500/50 transition-all duration-200 text-sm font-semibold"
+                title="Upload invoice template for PDF generation"
+              >
+                <FileUp className="w-4 h-4 mr-2" />
+                <span className="hidden sm:inline">Invoice Template</span>
+                <span className="sm:hidden">Template</span>
+              </button>
+              <button
+                onClick={exportToCSV}
+                className="inline-flex items-center px-4 py-2 bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] text-[var(--color-text-primary)] rounded-lg hover:bg-[var(--color-bg-secondary)] hover:border-[var(--color-border-hover)] transition-all duration-200 text-sm font-semibold"
+              >
+                <Download className="w-4 h-4 mr-2" />
+                <span className="hidden sm:inline">Export CSV</span>
+                <span className="sm:hidden">Export</span>
+              </button>
+              <button
+                onClick={resetToImportedData}
+                className="inline-flex items-center px-4 py-2 bg-[var(--color-bg-tertiary)] border border-[var(--color-accent-primary)]/30 text-[var(--color-text-primary)] rounded-lg hover:bg-[var(--color-bg-secondary)] hover:border-[var(--color-accent-primary)]/50 transition-all duration-200 text-sm font-semibold"
+                title="Reset to Google Sheets data"
+              >
+                <RefreshCw className="w-4 h-4 mr-2" />
+                <span className="hidden sm:inline">Reset Data</span>
+                <span className="sm:hidden">Reset</span>
+              </button>
+            </div>
+          )}
         </div>
+      </div>
+
+      {/* Active / Inactive Sub-tabs */}
+      <div className="flex gap-1 bg-[var(--color-bg-tertiary)] p-1 rounded-lg w-fit">
+        <button
+          onClick={() => setSubTab('active')}
+          className={`px-4 py-2 text-sm font-semibold rounded-md transition-all ${
+            subTab === 'active'
+              ? 'bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] shadow-sm'
+              : 'text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)]'
+          }`}
+        >
+          Active ({activeOnly.length})
+        </button>
+        <button
+          onClick={() => setSubTab('inactive')}
+          className={`px-4 py-2 text-sm font-semibold rounded-md transition-all ${
+            subTab === 'inactive'
+              ? 'bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] shadow-sm'
+              : 'text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)]'
+          }`}
+        >
+          Inactive ({inactiveOnly.length})
+        </button>
       </div>
 
       {/* Search and Filter Section */}
@@ -313,15 +342,15 @@ export default function CreatorRosterPage({ creators, setCreators }) {
           )}
 
           <span className="text-sm text-[var(--color-text-tertiary)] ml-auto text-mono">
-            Showing {search.filteredItems.length} of {activeOnly.length} creators
+            Showing {search.filteredItems.length} of {displayItems.length} creators
           </span>
         </div>
       </div>
 
       {/* Card Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {/* Add-new card */}
-        {crud.isAdding && (
+        {/* Add-new card (active tab only) */}
+        {subTab === 'active' && crud.isAdding && (
           <div
             className="card-editorial p-6 border-2 border-[var(--color-accent-primary)] min-h-[400px]"
             style={{ animation: 'fadeInUp 0.4s ease-out' }}
@@ -391,6 +420,19 @@ export default function CreatorRosterPage({ creators, setCreators }) {
           </div>
         ))}
       </div>
+
+      {/* Empty state for inactive tab */}
+      {subTab === 'inactive' && search.filteredItems.length === 0 && (
+        <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
+          <div className="w-12 h-12 rounded-xl bg-[var(--color-bg-tertiary)] flex items-center justify-center mb-4">
+            <UserX className="w-6 h-6 text-[var(--color-text-tertiary)]" />
+          </div>
+          <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-1">No inactive creators</h3>
+          <p className="text-sm text-[var(--color-text-tertiary)] max-w-sm">
+            Creators you deactivate will appear here. Use the toggle on any creator card to deactivate them.
+          </p>
+        </div>
+      )}
 
       {/* Template Upload Modal */}
       {showTemplateUpload && (
