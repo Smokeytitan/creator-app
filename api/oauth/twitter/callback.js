@@ -90,8 +90,8 @@ export default async function handler(req, res) {
 
     console.log('Token exchange successful:', { hasAccessToken: !!access_token, hasRefreshToken: !!refresh_token, expiresIn: expires_in });
 
-    // Get user info from Twitter
-    const userResponse = await fetch('https://api.twitter.com/2/users/me', {
+    // Get user info from Twitter (include profile_image_url and name)
+    const userResponse = await fetch('https://api.twitter.com/2/users/me?user.fields=profile_image_url,name', {
       headers: {
         'Authorization': `Bearer ${access_token}`
       }
@@ -104,7 +104,7 @@ export default async function handler(req, res) {
     }
 
     const userData = await userResponse.json();
-    const { id: platformUserId, username: platformUsername } = userData.data;
+    const { id: platformUserId, username: platformUsername, name: platformName, profile_image_url: platformAvatarUrl } = userData.data;
 
     console.log('Twitter user fetched:', { platformUserId, platformUsername, userId });
 
@@ -148,6 +148,24 @@ export default async function handler(req, res) {
     }
 
     console.log('Connection saved successfully:', insertedData);
+
+    // Also update users table with X profile fields
+    const { error: userUpdateError } = await supabase
+      .from('users')
+      .update({
+        x_user_id: platformUserId,
+        x_handle: platformUsername,
+        x_name: platformName || null,
+        x_avatar_url: platformAvatarUrl || null,
+      })
+      .eq('id', userId);
+
+    if (userUpdateError) {
+      console.error('Failed to update user X profile fields:', userUpdateError);
+      // Non-fatal: connection was saved, profile fields are supplementary
+    } else {
+      console.log('User X profile fields updated:', { userId, platformUserId, platformUsername, platformName });
+    }
 
     // Redirect back to the app with success message
     // Clear the code verifier cookie

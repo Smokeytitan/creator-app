@@ -1,5 +1,6 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+import { BrowserRouter } from 'react-router-dom'
 import './index.css'
 import App from './App.jsx'
 import { ThemeProvider } from './contexts/ThemeContext'
@@ -16,7 +17,9 @@ const isPlaceholder = !PUBLISHABLE_KEY || PUBLISHABLE_KEY.includes('placeholder'
 const AppContent = () => (
   <ThemeProvider>
     <ToastProvider>
-      <App bypassAuth={isPlaceholder} />
+      <BrowserRouter>
+        <App bypassAuth={isPlaceholder} />
+      </BrowserRouter>
     </ToastProvider>
   </ThemeProvider>
 )

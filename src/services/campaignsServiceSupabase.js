@@ -119,6 +119,9 @@ const transformFromDB = (row) => {
     id: row.id,
     title: row.title,
     description: row.description || '',
+    brief: row.brief || '',
+    mediaUrls: row.media_urls || [],
+    briefSentAt: row.brief_sent_at || null,
     status: row.status,
     estimatedCost: Number(row.estimated_cost) || 0,
     estimatedImpressions: Number(row.estimated_impressions) || 0,
@@ -151,14 +154,23 @@ const transformFromDB = (row) => {
  * @param {object} campaign - App-formatted campaign
  * @returns {object} Database row format
  */
-const transformToDB = (campaign) => ({
-  id: campaign.id,
-  title: campaign.title,
-  description: campaign.description || '',
-  status: campaign.status,
-  estimated_cost: Number(campaign.estimatedCost) || 0,
-  estimated_impressions: Number(campaign.estimatedImpressions) || 0
-});
+const transformToDB = (campaign) => {
+  const row = {
+    id: campaign.id,
+    title: campaign.title,
+    description: campaign.description || '',
+    status: campaign.status,
+    estimated_cost: Number(campaign.estimatedCost) || 0,
+    estimated_impressions: Number(campaign.estimatedImpressions) || 0,
+  };
+
+  // Only include brief/media fields if they are explicitly provided
+  if (campaign.brief !== undefined) row.brief = campaign.brief;
+  if (campaign.mediaUrls !== undefined) row.media_urls = campaign.mediaUrls;
+  if (campaign.briefSentAt !== undefined) row.brief_sent_at = campaign.briefSentAt;
+
+  return row;
+};
 
 /**
  * Create a new content campaign
@@ -492,6 +504,57 @@ export const refreshCampaignAnalytics = async () => {
 };
 
 // ============================================================================
+// CAMPAIGN MEDIA (Supabase Storage)
+// ============================================================================
+
+/**
+ * Upload a file to Supabase Storage for a campaign
+ * @param {number} campaignId - Campaign ID
+ * @param {File} file - File to upload
+ * @returns {Promise<string>} Public URL of the uploaded file
+ */
+export const uploadCampaignMedia = async (campaignId, file) => {
+  if (!supabase) throw new Error('Supabase not configured');
+
+  const ext = file.name.split('.').pop();
+  const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${ext}`;
+  const filePath = `${campaignId}/${fileName}`;
+
+  const { error } = await supabase.storage
+    .from('campaign-media')
+    .upload(filePath, file, { cacheControl: '3600', upsert: false });
+
+  if (error) throw error;
+
+  const { data: urlData } = supabase.storage
+    .from('campaign-media')
+    .getPublicUrl(filePath);
+
+  return urlData.publicUrl;
+};
+
+/**
+ * Delete a media file from Supabase Storage
+ * @param {string} publicUrl - The public URL to delete
+ * @returns {Promise<boolean>}
+ */
+export const deleteCampaignMedia = async (publicUrl) => {
+  if (!supabase) return false;
+
+  // Extract the file path from the public URL
+  // URL format: https://<project>.supabase.co/storage/v1/object/public/campaign-media/<path>
+  const match = publicUrl.match(/campaign-media\/(.+)$/);
+  if (!match) return false;
+
+  const filePath = match[1];
+  const { error } = await supabase.storage
+    .from('campaign-media')
+    .remove([filePath]);
+
+  return !error;
+};
+
+// ============================================================================
 // BULK IMPORT/EXPORT
 // ============================================================================
 
@@ -547,5 +610,7 @@ export default {
   getCampaignPosts,
   getCampaignAnalytics,
   refreshCampaignAnalytics,
-  bulkImportCampaigns
+  bulkImportCampaigns,
+  uploadCampaignMedia,
+  deleteCampaignMedia
 };

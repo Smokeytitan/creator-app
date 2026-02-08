@@ -1,13 +1,48 @@
-import { useState, useMemo } from "react";
-import { Eye, DollarSign, Calendar } from "lucide-react";
+import { useState, useMemo, useRef } from "react";
+import { Eye, DollarSign, Calendar, Upload, X, FileText, Image, Film } from "lucide-react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import { uploadCampaignMedia } from "../services/campaignsServiceSupabase";
 
 export default function ContentRequestModal({ creators, onClose, onSubmit }) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [brief, setBrief] = useState("");
+  const [mediaFiles, setMediaFiles] = useState([]); // { file, previewUrl, uploading, uploadedUrl }
   const [selectedCreatorIds, setSelectedCreatorIds] = useState([creators?.[0]?.id].filter(Boolean));
   const [dueDate, setDueDate] = useState(new Date());
+  const fileInputRef = useRef(null);
+
+  const handleFileSelect = (e) => {
+    const files = Array.from(e.target.files || []);
+    addFiles(files);
+    // Reset input so same file can be re-selected
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const addFiles = (files) => {
+    const newEntries = files.map(file => ({
+      file,
+      previewUrl: file.type.startsWith('image/') ? URL.createObjectURL(file) : null,
+      uploading: false,
+      uploadedUrl: null,
+    }));
+    setMediaFiles(prev => [...prev, ...newEntries]);
+  };
+
+  const removeMedia = (index) => {
+    setMediaFiles(prev => {
+      const entry = prev[index];
+      if (entry.previewUrl) URL.revokeObjectURL(entry.previewUrl);
+      return prev.filter((_, i) => i !== index);
+    });
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    const files = Array.from(e.dataTransfer.files);
+    addFiles(files);
+  };
 
   const toggleCreator = (creatorId) => {
     setSelectedCreatorIds(prev =>
@@ -113,6 +148,81 @@ export default function ContentRequestModal({ creators, onClose, onSubmit }) {
               onChange={(e) => setDescription(e.target.value)}
               rows={3}
             />
+          </div>
+
+          {/* Content Brief */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              <div className="flex items-center gap-1.5">
+                <FileText className="h-4 w-4" />
+                Content Brief
+              </div>
+            </label>
+            <textarea
+              className="mt-1 w-full rounded-md border border-white/[0.12] p-2 bg-white dark:bg-gray-900 text-polygon-text-primary"
+              value={brief}
+              onChange={(e) => setBrief(e.target.value)}
+              rows={4}
+              placeholder="Detailed instructions for creators — talking points, tone, do's and don'ts..."
+            />
+          </div>
+
+          {/* Media Upload */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <div className="flex items-center gap-1.5">
+                <Image className="h-4 w-4" />
+                Brief Media
+              </div>
+            </label>
+
+            {/* Drop zone */}
+            <div
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={handleDrop}
+              onClick={() => fileInputRef.current?.click()}
+              className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4 text-center cursor-pointer hover:border-indigo-400 dark:hover:border-indigo-500 transition-colors"
+            >
+              <Upload className="h-6 w-6 mx-auto text-gray-400 mb-1" />
+              <p className="text-sm text-polygon-text-secondary">
+                Click or drag files to upload images/videos
+              </p>
+              <input
+                ref={fileInputRef}
+                type="file"
+                multiple
+                accept="image/*,video/*"
+                onChange={handleFileSelect}
+                className="hidden"
+              />
+            </div>
+
+            {/* Media previews */}
+            {mediaFiles.length > 0 && (
+              <div className="mt-3 grid grid-cols-3 gap-2">
+                {mediaFiles.map((entry, idx) => (
+                  <div key={idx} className="relative group rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+                    {entry.previewUrl ? (
+                      <img src={entry.previewUrl} alt="" className="w-full h-20 object-cover" />
+                    ) : (
+                      <div className="w-full h-20 flex items-center justify-center bg-gray-100 dark:bg-gray-800">
+                        <Film className="h-6 w-6 text-gray-400" />
+                      </div>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => removeMedia(idx)}
+                      className="absolute top-1 right-1 p-0.5 rounded-full bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                    <p className="text-[10px] text-polygon-text-secondary truncate px-1 py-0.5">
+                      {entry.file.name}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           <div>
@@ -229,14 +339,17 @@ export default function ContentRequestModal({ creators, onClose, onSubmit }) {
             Cancel
           </button>
           <button
-            className="px-4 py-2 rounded-md btn-polygon-primary  disabled:opacity-50 disabled:cursor-not-allowed"
-            onClick={() => {
+            className="px-4 py-2 rounded-md btn-polygon-primary disabled:opacity-50 disabled:cursor-not-allowed"
+            onClick={async () => {
               const selectedCreators = creators.filter(c => selectedCreatorIds.includes(c.id));
-              console.log('ContentRequestModal - selectedCreatorIds:', selectedCreatorIds);
-              console.log('ContentRequestModal - selectedCreators:', selectedCreators);
+
+              // Upload media files first — we need a temporary campaign ID
+              // Media will be uploaded after campaign creation via the onSubmit callback
               const submitData = {
                 title,
                 description,
+                brief: brief || '',
+                mediaFiles: mediaFiles.map(e => e.file), // raw File objects for caller to upload
                 creators: selectedCreators.map(c => ({
                   id: c.id,
                   name: c.name
@@ -247,7 +360,6 @@ export default function ContentRequestModal({ creators, onClose, onSubmit }) {
                 estimatedCost: estimatedCost,
                 estimatedImpressions: estimatedImpressions
               };
-              console.log('ContentRequestModal - submitting:', submitData);
               onSubmit(submitData);
             }}
             disabled={!title.trim() || selectedCreatorIds.length === 0}

@@ -69,14 +69,20 @@ export default async function handler(req, res) {
       // Build full name
       const fullName = [first_name, last_name].filter(Boolean).join(' ') || null;
 
+      // Determine role and approval status
+      const role = public_metadata?.role || 'creator';
+      const isAdmin = role === 'admin' || role === 'ADMIN';
+
       // Insert user into Supabase
+      // Admins are auto-approved; creators default to not approved
       const { data, error } = await supabase
         .from('users')
         .insert({
           id,
           email,
           full_name: fullName,
-          role: public_metadata?.role || 'creator', // Default to creator role
+          role,
+          approved: isAdmin,
         });
 
       if (error) {

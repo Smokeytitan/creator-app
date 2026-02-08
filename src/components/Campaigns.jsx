@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Rocket, CheckCircle, DollarSign, Eye, Plus, Search, X, ChevronDown, Calendar, ExternalLink, TrendingUp, ArrowUp, ArrowDown } from "lucide-react";
-import { getCampaigns, updateCampaign, createCampaign, deleteCampaign } from '../services/campaignsServiceSupabase';
+import { getCampaigns, updateCampaign, createCampaign, deleteCampaign, uploadCampaignMedia } from '../services/campaignsServiceSupabase';
 import { getCreators } from '../services/creatorsServiceSupabase';
 import { useToast } from '../contexts/ToastContext';
 import useConfirmDialog from '../hooks/useConfirmDialog';
@@ -688,6 +688,7 @@ export function Campaigns() {
               const created = await createCampaign({
                 title: newCampaign.title,
                 description: newCampaign.description,
+                brief: newCampaign.brief || '',
                 creators: newCampaign.creators.map(c => typeof c === 'object' ? c.id : c),
                 status: newCampaign.status || 'pending',
                 estimatedCost: Number(newCampaign.estimatedCost) || 0,
@@ -695,7 +696,26 @@ export function Campaigns() {
               });
 
               if (created) {
-                setCampaigns([created, ...campaigns]);
+                // Upload media files if any
+                if (newCampaign.mediaFiles?.length > 0) {
+                  const uploadedUrls = [];
+                  for (const file of newCampaign.mediaFiles) {
+                    try {
+                      const url = await uploadCampaignMedia(created.id, file);
+                      uploadedUrls.push(url);
+                    } catch (uploadErr) {
+                      console.error('Media upload failed for', file.name, uploadErr);
+                    }
+                  }
+                  if (uploadedUrls.length > 0) {
+                    const updated = await updateCampaign(created.id, { mediaUrls: uploadedUrls });
+                    setCampaigns([updated || created, ...campaigns]);
+                  } else {
+                    setCampaigns([created, ...campaigns]);
+                  }
+                } else {
+                  setCampaigns([created, ...campaigns]);
+                }
                 setShowCreateModal(false);
               }
             } catch (error) {

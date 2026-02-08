@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { Plus, Calendar, User, CheckCircle, Clock, XCircle, Trash2, Edit2, Save, X, Search, RefreshCw, Eye, DollarSign, Download, FileText, Loader2, ChevronDown, ExternalLink, TrendingUp } from 'lucide-react';
 import ContentRequestModal from './ContentRequestModal';
 import { extractTweetId, fetchTweets } from '../services/twitterService';
-import { createCampaign, updateCampaign, deleteCampaign as deleteCampaignSupabase, getCampaigns } from '../services/campaignsServiceSupabase';
+import { createCampaign, updateCampaign, deleteCampaign as deleteCampaignSupabase, getCampaigns, uploadCampaignMedia } from '../services/campaignsServiceSupabase';
 import { addPost } from '../services/creatorsServiceSupabase';
 import { supabase } from '../lib/supabaseClient';
 import { useToast } from '../contexts/ToastContext';
@@ -1331,6 +1331,7 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
               const created = await createCampaign({
                 title: newRequest.title,
                 description: newRequest.description,
+                brief: newRequest.brief || '',
                 creators: creatorIds,
                 status: newRequest.status || 'pending',
                 estimatedCost: newRequest.estimatedCost || 0,
@@ -1338,7 +1339,23 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
               });
 
               if (created) {
-                setRequests([...requests, created]);
+                // Upload media files if any
+                let finalCampaign = created;
+                if (newRequest.mediaFiles?.length > 0) {
+                  const uploadedUrls = [];
+                  for (const file of newRequest.mediaFiles) {
+                    try {
+                      const url = await uploadCampaignMedia(created.id, file);
+                      uploadedUrls.push(url);
+                    } catch (uploadErr) {
+                      console.error('Media upload failed for', file.name, uploadErr);
+                    }
+                  }
+                  if (uploadedUrls.length > 0) {
+                    finalCampaign = await updateCampaign(created.id, { mediaUrls: uploadedUrls }) || created;
+                  }
+                }
+                setRequests([...requests, finalCampaign]);
                 setShowModal(false);
               } else {
                 toast.error('Failed to create campaign');
