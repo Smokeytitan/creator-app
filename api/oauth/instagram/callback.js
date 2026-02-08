@@ -12,7 +12,7 @@ export default async function handler(req, res) {
 
     if (oauthError) {
       console.error('Instagram OAuth error:', oauthError);
-      return res.redirect(`/?instagram_error=${oauthError}`);
+      return res.redirect(`/profile?instagram_error=${oauthError}`);
     }
 
     if (!code || !userId) {
@@ -45,7 +45,7 @@ export default async function handler(req, res) {
 
     if (tokenData.error) {
       console.error('Token exchange error:', tokenData.error);
-      return res.redirect(`/?instagram_error=token_exchange_failed&details=${encodeURIComponent(tokenData.error.message || tokenData.error)}`);
+      return res.redirect(`/profile?instagram_error=token_exchange_failed&details=${encodeURIComponent(tokenData.error.message || tokenData.error)}`);
     }
 
     const accessToken = tokenData.access_token;
@@ -120,14 +120,14 @@ export default async function handler(req, res) {
 
     if (dbError) {
       console.error('Database error:', dbError);
-      return res.redirect(`/?instagram_error=database_error&details=${encodeURIComponent(dbError.message)}`);
+      return res.redirect(`/profile?instagram_error=database_error&details=${encodeURIComponent(dbError.message)}`);
     }
 
     console.log('Instagram connection saved successfully');
-    return res.redirect('/?instagram_connected=true');
+    return res.redirect('/profile?instagram_connected=true');
 
   } catch (error) {
     console.error('Instagram OAuth callback error:', error);
-    return res.redirect(`/?instagram_error=callback_failed&details=${encodeURIComponent(error.message)}`);
+    return res.redirect(`/profile?instagram_error=callback_failed&details=${encodeURIComponent(error.message)}`);
   }
 }

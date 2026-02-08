@@ -25,7 +25,6 @@ const NAV_ITEMS = [
   { key: 'analytics', path: '/admin/analytics',  label: 'Analytics',         mobileLabel: 'Analytics' },
   // Kaito is hidden for now
   { key: 'bots',      path: '/admin/bots',       label: 'Bot Management',    mobileLabel: 'Bots' },
-  { key: 'social',    path: '/admin/social',     label: 'Social Accounts',   mobileLabel: 'Social Accounts' },
   { key: 'users',     path: '/admin/users',      label: 'Users',             mobileLabel: 'Users' },
 ];
 

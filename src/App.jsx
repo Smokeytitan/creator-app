@@ -7,7 +7,6 @@ import { Campaigns } from './components/Campaigns';
 import Analytics from './components/Analytics';
 import BotAnalyticsEditorial from './components/BotAnalyticsEditorial';
 import ChannelManagerEditorial from './components/ChannelManagerEditorial';
-import SocialConnections from './components/SocialConnections';
 import SignInPage from './components/auth/SignInPage';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import AdminLayout from './components/layouts/AdminLayout';
@@ -46,7 +45,7 @@ function AppWithoutAuth() {
         <Route path="campaigns" element={<Campaigns />} />
         <Route path="analytics" element={<AdminAnalyticsRoute />} />
         <Route path="bots" element={<BotManagement />} />
-        <Route path="social" element={<SocialConnections />} />
+
         <Route path="users" element={<UserManagement />} />
       </Route>
 
@@ -94,7 +93,7 @@ function AppWithAuth() {
           <Route path="campaigns" element={<Campaigns />} />
           <Route path="analytics" element={<AdminAnalyticsRoute />} />
           <Route path="bots" element={<BotManagement />} />
-          <Route path="social" element={<SocialConnections />} />
+  
           <Route path="users" element={<UserManagement />} />
         </Route>
       </Route>

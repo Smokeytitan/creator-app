@@ -2,8 +2,10 @@ import { useState, useEffect, useCallback } from 'react';
 import { useUser } from '@clerk/clerk-react';
 import { supabase } from '../../lib/supabaseClient';
 import XAccountCard from './XAccountCard';
+import InstagramCard from './InstagramCard';
 import TelegramCard from './TelegramCard';
 import WalletCard from './WalletCard';
+import ComingSoonCard from './ComingSoonCard';
 
 /**
  * ProfilePage - Creator profile with avatar, name, and connection cards.
@@ -127,9 +129,23 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* Connection cards */}
-      <div className="grid grid-cols-1 gap-4">
+      {/* Social accounts */}
+      <h2 className="text-lg font-semibold text-[var(--color-text-primary)] mb-3">
+        Social Accounts
+      </h2>
+      <div className="grid grid-cols-1 gap-4 mb-8">
         <XAccountCard userData={userData} onRefresh={fetchUserData} />
+        <InstagramCard onRefresh={fetchUserData} />
+        <ComingSoonCard name="TikTok" subtitle="Share short-form video content" />
+        <ComingSoonCard name="Facebook" subtitle="Connect your Facebook page" />
+        <ComingSoonCard name="LinkedIn" subtitle="Professional content sharing" />
+      </div>
+
+      {/* Notifications & wallet */}
+      <h2 className="text-lg font-semibold text-[var(--color-text-primary)] mb-3">
+        Notifications & Wallet
+      </h2>
+      <div className="grid grid-cols-1 gap-4">
         <TelegramCard userData={userData} onRefresh={fetchUserData} />
         <WalletCard userData={userData} onRefresh={fetchUserData} />
       </div>
