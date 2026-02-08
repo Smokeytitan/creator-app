@@ -2,38 +2,65 @@
 
 @variant dark (.dark &);
 
+/* ─── Light mode (default) ─── */
 :root {
-  /* Background scale — charcoal grays, not pure black */
-  --color-bg-primary: #09090B;
-  --color-bg-secondary: #18181B;
-  --color-bg-tertiary: #27272A;
-  --color-bg-elevated: #3F3F46;
+  --color-bg-primary: #FFFFFF;
+  --color-bg-secondary: #F4F4F5;
+  --color-bg-tertiary: #E4E4E7;
+  --color-bg-elevated: #D4D4D8;
 
-  /* Accent — clean blue */
   --color-accent-primary: #3B82F6;
   --color-accent-hover: #2563EB;
-  --color-accent-muted: rgba(59, 130, 246, 0.15);
+  --color-accent-muted: rgba(59, 130, 246, 0.1);
+  --color-accent-secondary: #6366F1;
 
-  /* Text scale */
-  --color-text-primary: #FAFAFA;
-  --color-text-secondary: #A1A1AA;
-  --color-text-tertiary: #71717A;
+  --color-text-primary: #09090B;
+  --color-text-secondary: #52525B;
+  --color-text-tertiary: #A1A1AA;
 
-  /* Borders */
-  --color-border: rgba(255, 255, 255, 0.08);
-  --color-border-hover: rgba(255, 255, 255, 0.16);
+  --color-border: rgba(0, 0, 0, 0.08);
+  --color-border-hover: rgba(0, 0, 0, 0.16);
   --color-border-focus: var(--color-accent-primary);
 
-  /* Semantic colors */
-  --color-success: #22C55E;
-  --color-warning: #EAB308;
-  --color-error: #EF4444;
-  --color-info: #3B82F6;
+  --color-success: #16A34A;
+  --color-warning: #CA8A04;
+  --color-error: #DC2626;
+  --color-info: #2563EB;
+
+  --color-shadow-opacity: 0.08;
 
   /* Typography */
   --font-display: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-mono: 'JetBrains Mono', 'IBM Plex Mono', 'Courier New', monospace;
+}
+
+/* ─── Dark mode ─── */
+.dark {
+  --color-bg-primary: #09090B;
+  --color-bg-secondary: #18181B;
+  --color-bg-tertiary: #27272A;
+  --color-bg-elevated: #3F3F46;
+
+  --color-accent-primary: #3B82F6;
+  --color-accent-hover: #2563EB;
+  --color-accent-muted: rgba(59, 130, 246, 0.15);
+  --color-accent-secondary: #818CF8;
+
+  --color-text-primary: #FAFAFA;
+  --color-text-secondary: #A1A1AA;
+  --color-text-tertiary: #71717A;
+
+  --color-border: rgba(255, 255, 255, 0.08);
+  --color-border-hover: rgba(255, 255, 255, 0.16);
+  --color-border-focus: var(--color-accent-primary);
+
+  --color-success: #22C55E;
+  --color-warning: #EAB308;
+  --color-error: #EF4444;
+  --color-info: #3B82F6;
+
+  --color-shadow-opacity: 0.25;
 }
 
 /* ─── Toast Animations ─── */
@@ -241,7 +268,7 @@ body {
 }
 
 .btn-polygon-secondary:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--color-bg-tertiary);
   border-color: var(--color-border-hover);
 }
 
