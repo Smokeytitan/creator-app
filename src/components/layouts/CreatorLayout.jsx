@@ -51,8 +51,8 @@ function CreatorLayoutWithAuth() {
         try {
           const { data, error } = await supabase
             .from('users')
-            .select('approved')
-            .eq('clerk_id', user.id)
+            .select('approved, role')
+            .eq('id', user.id)
             .single();
 
           if (error) {
@@ -60,7 +60,8 @@ function CreatorLayoutWithAuth() {
             // If the user doesn't exist in DB, they're not approved
             setIsApproved(false);
           } else {
-            setIsApproved(!!data?.approved);
+            // Approved if DB says approved, or if DB role is admin
+            setIsApproved(!!data?.approved || data?.role === 'admin');
           }
         } catch (err) {
           console.error('[CreatorLayout] Failed to check approval:', err);
