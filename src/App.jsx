@@ -1,12 +1,9 @@
-import { useState } from 'react';
 import { Routes, Route, Navigate, useOutletContext } from 'react-router-dom';
 import { useAuth } from '@clerk/clerk-react';
 import CreatorRosterPage from './components/roster/CreatorRosterPage';
 import CreatorProspectsPage from './components/roster/CreatorProspectsPage';
 import { Campaigns } from './components/Campaigns';
 import Analytics from './components/Analytics';
-import BotAnalyticsEditorial from './components/BotAnalyticsEditorial';
-import ChannelManagerEditorial from './components/ChannelManagerEditorial';
 import SignInPage from './components/auth/SignInPage';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import AdminLayout from './components/layouts/AdminLayout';
@@ -44,7 +41,7 @@ function AppWithoutAuth() {
         <Route path="prospects" element={<AdminProspectsRoute />} />
         <Route path="campaigns" element={<Campaigns />} />
         <Route path="analytics" element={<AdminAnalyticsRoute />} />
-        <Route path="bots" element={<BotManagement />} />
+
 
         <Route path="users" element={<UserManagement />} />
       </Route>
@@ -92,7 +89,7 @@ function AppWithAuth() {
           <Route path="prospects" element={<AdminProspectsRoute />} />
           <Route path="campaigns" element={<Campaigns />} />
           <Route path="analytics" element={<AdminAnalyticsRoute />} />
-          <Route path="bots" element={<BotManagement />} />
+  
   
           <Route path="users" element={<UserManagement />} />
         </Route>
@@ -122,40 +119,4 @@ function AdminAnalyticsRoute() {
   return <Analytics creators={creators} requests={requests} />;
 }
 
-/**
- * BotManagement - Renders the bot sub-tabs (Analytics / Channels) inline,
- * preserving the existing tab UI from the original AdminView.
- */
-function BotManagement() {
-  const [botSubTab, setBotSubTab] = useState('analytics');
-
-  return (
-    <div>
-      <div className="flex gap-1 bg-[var(--color-bg-tertiary)] p-1 rounded-lg w-fit mb-6">
-        <button
-          onClick={() => setBotSubTab('analytics')}
-          className={`px-4 py-2 text-sm font-semibold rounded-md transition-all ${
-            botSubTab === 'analytics'
-              ? 'bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] shadow-sm'
-              : 'text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)]'
-          }`}
-        >
-          Bot Analytics
-        </button>
-        <button
-          onClick={() => setBotSubTab('channels')}
-          className={`px-4 py-2 text-sm font-semibold rounded-md transition-all ${
-            botSubTab === 'channels'
-              ? 'bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] shadow-sm'
-              : 'text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)]'
-          }`}
-        >
-          Channels
-        </button>
-      </div>
-      {botSubTab === 'analytics' && <BotAnalyticsEditorial />}
-      {botSubTab === 'channels' && <ChannelManagerEditorial />}
-    </div>
-  );
-}
 

@@ -23,8 +23,6 @@ const NAV_ITEMS = [
   { key: 'prospects', path: '/admin/prospects',  label: 'Creator Prospects', mobileLabel: 'Prospects' },
   { key: 'campaigns', path: '/admin/campaigns',  label: 'Campaigns',         mobileLabel: 'Campaigns' },
   { key: 'analytics', path: '/admin/analytics',  label: 'Analytics',         mobileLabel: 'Analytics' },
-  // Kaito is hidden for now
-  { key: 'bots',      path: '/admin/bots',       label: 'Bot Management',    mobileLabel: 'Bots' },
   { key: 'users',     path: '/admin/users',      label: 'Users',             mobileLabel: 'Users' },
 ];
 
