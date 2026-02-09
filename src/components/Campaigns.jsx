@@ -77,10 +77,7 @@ export function Campaigns() {
     };
   };
 
-  const handleEditClick = (campaign, e) => {
-    // Don't open modal if clicking on the expand button
-    if (e && (e.target.closest('[data-expand-button]') || e.target.closest('a'))) return;
-
+  const handleEditClick = (campaign) => {
     setEditingCampaign(campaign);
     const creatorIds = (campaign.creators || []).map(c => c.id);
     const estimates = calculateEstimates(creatorIds);
@@ -500,7 +497,7 @@ export function Campaigns() {
                     key={campaign.id}
                     campaign={campaign}
                     creators={creators}
-                    onEdit={(e) => handleEditClick(campaign, e)}
+                    onEdit={() => handleEditClick(campaign)}
                     onDelete={handleDelete}
                     onExpand={() => setExpandedCampaignId(expandedCampaignId === campaign.id ? null : campaign.id)}
                     isExpanded={expandedCampaignId === campaign.id}
@@ -691,6 +688,7 @@ export function Campaigns() {
                 brief: newCampaign.brief || '',
                 creators: newCampaign.creators.map(c => typeof c === 'object' ? c.id : c),
                 status: newCampaign.status || 'pending',
+                startDate: newCampaign.startDate || null,
                 estimatedCost: Number(newCampaign.estimatedCost) || 0,
                 estimatedImpressions: Number(newCampaign.estimatedImpressions) || 0
               });

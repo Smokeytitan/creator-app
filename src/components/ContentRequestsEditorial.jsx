@@ -182,7 +182,7 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
               title: editRequestForm.title,
               description: editRequestForm.description,
               creators: selectedCreators.map(c => ({ id: c.id, name: c.name })),
-              startDate: new Date(editRequestForm.startDate).toISOString(),
+              startDate: editRequestForm.startDate ? new Date(editRequestForm.startDate).toISOString() : null,
               status: editRequestForm.status
             }
           : req
@@ -197,6 +197,7 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
         title: editRequestForm.title,
         description: editRequestForm.description,
         creators: editRequestForm.selectedCreatorIds,
+        startDate: editRequestForm.startDate ? new Date(editRequestForm.startDate).toISOString() : null,
         status: editRequestForm.status
       });
 
@@ -1328,6 +1329,7 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
                 brief: newRequest.brief || '',
                 creators: creatorIds,
                 status: newRequest.status || 'pending',
+                startDate: newRequest.startDate || null,
                 estimatedCost: newRequest.estimatedCost || 0,
                 estimatedImpressions: newRequest.estimatedImpressions || 0
               });
