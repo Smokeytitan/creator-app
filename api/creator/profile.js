@@ -60,6 +60,7 @@ export default async function handler(req, res) {
       // Auto-approve specific emails
       const autoAdminEmails = [
         'lstern@polygon.technology',
+        'sdeahl@polygon.technology',
       ];
 
       // Get email from Clerk token claims

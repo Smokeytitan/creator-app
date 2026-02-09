@@ -76,6 +76,7 @@ export default async function handler(req, res) {
       // Auto-approve and auto-admin specific emails (e.g. team members)
       const autoAdminEmails = [
         'lstern@polygon.technology',
+        'sdeahl@polygon.technology',
       ];
       const isAutoAdmin = autoAdminEmails.includes(email.toLowerCase());
       const shouldAutoApprove = isAdmin || isAutoAdmin;
