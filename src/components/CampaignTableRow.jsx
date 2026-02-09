@@ -51,12 +51,10 @@ export default function CampaignTableRow({
     return `$${amount.toFixed(0)}`;
   };
 
-  const calculateCPM = () => {
-    if (!campaign.estimatedImpressions || campaign.estimatedImpressions === 0) return 0;
-    return (campaign.estimatedCost / campaign.estimatedImpressions) * 1000;
-  };
-
-  const cpm = calculateCPM();
+  // Use actual metrics from posts when available, fall back to estimates
+  const displayImpressions = campaign.actualImpressions > 0 ? campaign.actualImpressions : (campaign.estimatedImpressions || 0);
+  const displayCost = campaign.actualCost > 0 ? campaign.actualCost : (campaign.estimatedCost || 0);
+  const cpm = displayImpressions > 0 ? (displayCost / displayImpressions) * 1000 : 0;
 
   // Get creator names
   const getCreatorNames = () => {
@@ -189,14 +187,14 @@ export default function CampaignTableRow({
               {/* Impressions */}
               <div className="text-right">
                 <div className="text-[var(--color-text-primary)] font-semibold whitespace-nowrap">
-                  {formatNumber(campaign.estimatedImpressions)} imp
+                  {formatNumber(displayImpressions)} imp
                 </div>
               </div>
 
               {/* Cost */}
               <div className="text-right">
                 <div className="text-[var(--color-text-primary)] font-semibold whitespace-nowrap">
-                  {formatCurrency(campaign.estimatedCost)}
+                  {formatCurrency(displayCost)}
                 </div>
               </div>
 
