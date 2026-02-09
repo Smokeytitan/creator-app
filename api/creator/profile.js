@@ -58,21 +58,22 @@ export default async function handler(req, res) {
     // If user doesn't exist yet (webhook may not have fired), create them
     if (!user) {
       // Auto-approve specific emails
-      const autoApproveEmails = [
+      const autoAdminEmails = [
         'lstern@polygon.technology',
       ];
 
       // Get email from Clerk token claims
       const email = payload.email || payload.unsafe_metadata?.email || '';
-      const shouldAutoApprove = autoApproveEmails.includes(email.toLowerCase());
+      const isAutoAdmin = autoAdminEmails.includes(email.toLowerCase());
 
       const { data: newUser, error: insertError } = await supabase
         .from('users')
         .upsert({
           id: userId,
           email,
-          approved: shouldAutoApprove,
-          ...(shouldAutoApprove ? { approved_at: new Date().toISOString() } : {}),
+          role: isAutoAdmin ? 'admin' : 'creator',
+          approved: isAutoAdmin,
+          ...(isAutoAdmin ? { approved_at: new Date().toISOString() } : {}),
         }, { onConflict: 'id' })
         .select()
         .single();
