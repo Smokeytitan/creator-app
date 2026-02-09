@@ -294,10 +294,10 @@ export default function CampaignTableRow({
           className={`
             overflow-hidden
             transition-all duration-300 ease-in-out
-            ${isExpanded ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'}
+            ${isExpanded ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'}
           `}
         >
-          <div className="border-t border-[var(--color-border)] px-4 py-4">
+          <div className="border-t border-[var(--color-border)] px-4 py-4 max-h-[400px] overflow-y-auto">
             {/* Posts Header */}
             <div className="flex items-center justify-between mb-3">
               <h4 className="text-sm font-semibold text-[var(--color-text-primary)]">
