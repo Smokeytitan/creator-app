@@ -19,6 +19,33 @@ import ConfidenceBadge from './ConfidenceBadge';
 
 export default function Analytics({ creators, requests = [] }) {
   const [viewMode] = useState('creators'); // Keep for export functionality
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+
+  // Quick preset helpers
+  const setPreset = (days) => {
+    if (days === null) {
+      setStartDate('');
+      setEndDate('');
+      return;
+    }
+    const end = new Date();
+    const start = new Date();
+    start.setDate(start.getDate() - days);
+    setStartDate(start.toISOString().split('T')[0]);
+    setEndDate(end.toISOString().split('T')[0]);
+  };
+
+  // Filter a post's date against the selected range
+  const isInRange = (dateStr) => {
+    if (!startDate && !endDate) return true;
+    if (!dateStr) return false;
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return false;
+    if (startDate && d < new Date(startDate)) return false;
+    if (endDate && d > new Date(endDate + 'T23:59:59')) return false;
+    return true;
+  };
 
   // Calculate confidence level for campaign metrics
   const getConfidence = (campaign) => {
@@ -31,16 +58,26 @@ export default function Analytics({ creators, requests = [] }) {
 
   // Calculate analytics metrics
   const analytics = useMemo(() => {
+    const hasDateFilter = startDate || endDate;
+
+    // Filter campaigns by dueDate when date range is set
+    const filteredRequests = hasDateFilter
+      ? requests.filter(r => isInRange(r.dueDate))
+      : requests;
+
     const stats = {
       totalCreators: creators.length,
       totalPosts: 0,
       totalSpend: 0,
       totalImpressions: 0,
-      creatorStats: []
+      creatorStats: [],
+      filteredRequests
     };
 
     creators.forEach(creator => {
-      const posts = creator.posts || [];
+      const allPosts = creator.posts || [];
+      // Filter posts by date when date range is set
+      const posts = hasDateFilter ? allPosts.filter(p => isInRange(p.date)) : allPosts;
       const postCount = posts.length;
       let creatorSpend = 0;
       let creatorImpressions = 0;
@@ -101,11 +138,11 @@ export default function Analytics({ creators, requests = [] }) {
       .slice(0, 5);
 
     // Campaign analytics
-    stats.totalCampaigns = requests.length;
-    stats.completedCampaigns = requests.filter(r => r.status === 'completed').length;
+    stats.totalCampaigns = filteredRequests.length;
+    stats.completedCampaigns = filteredRequests.filter(r => r.status === 'completed').length;
     stats.campaignStats = [];
 
-    requests.forEach(request => {
+    filteredRequests.forEach(request => {
       // Use actual metrics from campaign data (from Supabase)
       const actualImpressions = Number(request.actualImpressions) || 0;
       const actualCost = Number(request.actualCost) || 0;
@@ -154,14 +191,14 @@ export default function Analytics({ creators, requests = [] }) {
 
     // Status distribution
     stats.statusDistribution = [
-      { name: 'Completed', value: requests.filter(r => r.status === 'completed').length },
-      { name: 'In Progress', value: requests.filter(r => r.status === 'in-progress').length },
-      { name: 'Pending', value: requests.filter(r => r.status === 'pending').length },
-      { name: 'Cancelled', value: requests.filter(r => r.status === 'cancelled').length }
+      { name: 'Completed', value: filteredRequests.filter(r => r.status === 'completed').length },
+      { name: 'In Progress', value: filteredRequests.filter(r => r.status === 'in-progress').length },
+      { name: 'Pending', value: filteredRequests.filter(r => r.status === 'pending').length },
+      { name: 'Cancelled', value: filteredRequests.filter(r => r.status === 'cancelled').length }
     ].filter(s => s.value > 0);
 
     return stats;
-  }, [creators, requests]);
+  }, [creators, requests, startDate, endDate]);
 
   const formatCurrency = (value) => {
     return new Intl.NumberFormat('en-US', {
@@ -184,7 +221,11 @@ export default function Analytics({ creators, requests = [] }) {
     if (viewMode === 'creators') {
       // Creator Analytics Export
       csv = 'CREATOR ANALYTICS\n';
-      csv += 'Date Range: All Time\n';
+      if (startDate || endDate) {
+        csv += `Date Range: ${startDate || 'Beginning'} to ${endDate || 'Present'}\n`;
+      } else {
+        csv += 'Date Range: All Time\n';
+      }
       csv += '\n';
 
       // Overall Summary
@@ -231,7 +272,8 @@ export default function Analytics({ creators, requests = [] }) {
         csv += `${index + 1},"${creator.name}","$${(creator.cpi * 1000).toFixed(2)}"\n`;
       });
 
-      filename = `creator_analytics_${timestamp}.csv`;
+      const rangeSuffix = (startDate || endDate) ? `_${startDate || 'start'}_to_${endDate || 'present'}` : '';
+      filename = `creator_analytics_${timestamp}${rangeSuffix}.csv`;
     } else {
       // Campaign Analytics Export
       csv = 'CAMPAIGN ANALYTICS\n';
@@ -290,7 +332,8 @@ export default function Analytics({ creators, requests = [] }) {
         csv += `"${status.name}",${status.value}\n`;
       });
 
-      filename = `campaign_analytics_${timestamp}.csv`;
+      const rangeSuffix = (startDate || endDate) ? `_${startDate || 'start'}_to_${endDate || 'present'}` : '';
+      filename = `campaign_analytics_${timestamp}${rangeSuffix}.csv`;
     }
 
     // Create download
@@ -355,22 +398,74 @@ export default function Analytics({ creators, requests = [] }) {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-polygon-text-primary">Analytics Dashboard</h2>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Track influencer performance and campaign metrics</p>
+      <div className="flex flex-col gap-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold text-polygon-text-primary">Analytics Dashboard</h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Track influencer performance and campaign metrics</p>
+          </div>
+          <button
+            onClick={exportToCSV}
+            className="inline-flex items-center px-4 py-2 bg-blue-600 dark:bg-blue-600 text-white rounded-polygon hover:bg-blue-700 dark:hover:bg-blue-700 transition-colors text-sm font-medium shadow-sm"
+          >
+            <Download className="w-4 h-4 mr-2" />
+            Export
+          </button>
         </div>
-        <button
-          onClick={exportToCSV}
-          className="inline-flex items-center px-4 py-2 bg-blue-600 dark:bg-blue-600 text-white rounded-polygon hover:bg-blue-700 dark:hover:bg-blue-700 transition-colors text-sm font-medium shadow-sm"
-        >
-          <Download className="w-4 h-4 mr-2" />
-          Export
-        </button>
+
+        {/* Date Range Filter */}
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-2">
+            <Calendar className="w-4 h-4 text-gray-400" />
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className="px-3 py-1.5 text-sm rounded-polygon border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-polygon-text-primary focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Start date"
+            />
+            <span className="text-gray-400 text-sm">to</span>
+            <input
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              className="px-3 py-1.5 text-sm rounded-polygon border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-polygon-text-primary focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+            {(startDate || endDate) && (
+              <button
+                onClick={() => setPreset(null)}
+                className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                title="Clear dates"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+          <div className="flex items-center gap-1.5">
+            {[
+              { label: '7d', days: 7 },
+              { label: '30d', days: 30 },
+              { label: '90d', days: 90 },
+              { label: 'All', days: null }
+            ].map(({ label, days }) => (
+              <button
+                key={label}
+                onClick={() => setPreset(days)}
+                className={`px-2.5 py-1 text-xs font-medium rounded-polygon transition-colors ${
+                  (days === null && !startDate && !endDate)
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-100 dark:bg-gray-700 text-polygon-text-secondary hover:bg-gray-200 dark:hover:bg-gray-600'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* Executive KPI Strip */}
-      <KPIStrip campaigns={requests} filteredCampaigns={requests} />
+      <KPIStrip campaigns={requests} filteredCampaigns={analytics.filteredRequests} />
 
       {/* Charts Row */}
       <div className="grid grid-cols-1 gap-4 sm:gap-6">
