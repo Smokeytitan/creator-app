@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { TrendingUp, TrendingDown, AlertTriangle, Calendar, CheckCircle, Clock, AlertCircle } from 'lucide-react';
+import { TrendingUp, TrendingDown, Calendar, CheckCircle, Clock, AlertCircle } from 'lucide-react';
 import KPIStrip from './KPIStrip';
 import ConfidenceBadge from './ConfidenceBadge';
 
@@ -400,13 +400,8 @@ const TimelineItem = ({ campaign }) => {
   const config = statusConfig[campaign.status] || statusConfig['pending'];
   const StatusIcon = config.icon;
 
-  // Determine if overdue
-  const isOverdue = campaign.isOverdue && campaign.status !== 'completed' && campaign.status !== 'cancelled';
-
   return (
-    <div className={`group flex items-start gap-3 p-3 rounded-lg border transition-all hover:border-[var(--color-border-hover)] ${
-      isOverdue ? 'border-red-500/30 bg-red-500/5' : 'border-[var(--color-border)] bg-[var(--color-bg-tertiary)]'
-    }`}>
+    <div className="group flex items-start gap-3 p-3 rounded-lg border transition-all hover:border-[var(--color-border-hover)] border-[var(--color-border)] bg-[var(--color-bg-tertiary)]">
       {/* Status Indicator */}
       <div className={`flex-shrink-0 ${config.bgColor} p-2 rounded-lg`}>
         <StatusIcon className={`h-4 w-4 ${config.color}`} />
@@ -424,18 +419,8 @@ const TimelineItem = ({ campaign }) => {
         <div className="flex items-center gap-4 text-xs text-[var(--color-text-tertiary)]">
           <div className="flex items-center gap-1">
             <Calendar className="h-3 w-3" />
-            <span>Start: {campaign.startDate}</span>
+            <span>Started: {campaign.startDate}</span>
           </div>
-          <div className="flex items-center gap-1">
-            <Calendar className="h-3 w-3" />
-            <span>Due: {campaign.dueDate}</span>
-          </div>
-          {isOverdue && (
-            <span className="text-red-500 font-semibold flex items-center gap-1">
-              <AlertTriangle className="h-3 w-3" />
-              OVERDUE
-            </span>
-          )}
         </div>
 
         {/* Mini metrics */}
@@ -588,29 +573,24 @@ function calculateAnalytics(campaigns, creators, posts) {
     .filter(c => c.impressions > 0); // Only creators with data
 
   // 6. Timeline Campaigns
-  const today = new Date();
   const timelineCampaigns = campaigns
     .map(campaign => {
-      const startDate = campaign.createdAt ? new Date(campaign.createdAt) : null;
-      const dueDate = campaign.dueDate ? new Date(campaign.dueDate) : null;
+      const campaignStartDate = campaign.startDate ? new Date(campaign.startDate) : (campaign.createdAt ? new Date(campaign.createdAt) : null);
 
       return {
         id: campaign.id,
         title: campaign.title,
         status: campaign.status || 'pending',
-        startDate: startDate ? startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A',
-        dueDate: dueDate ? dueDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A',
-        monthKey: dueDate ? dueDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : 'No Date',
-        isOverdue: dueDate ? dueDate < today : false,
+        startDate: campaignStartDate ? campaignStartDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A',
+        monthKey: campaignStartDate ? campaignStartDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : 'No Date',
         cost: campaign.actualCost || campaign.estimatedCost || 0,
         impressions: campaign.actualImpressions || campaign.estimatedImpressions || 0,
         confidence: getConfidence(campaign)
       };
     })
     .sort((a, b) => {
-      // Sort by due date
-      const dateA = a.dueDate !== 'N/A' ? new Date(a.dueDate) : new Date('2099-12-31');
-      const dateB = b.dueDate !== 'N/A' ? new Date(b.dueDate) : new Date('2099-12-31');
+      const dateA = a.startDate !== 'N/A' ? new Date(a.startDate) : new Date('2099-12-31');
+      const dateB = b.startDate !== 'N/A' ? new Date(b.startDate) : new Date('2099-12-31');
       return dateA - dateB;
     });
 

@@ -10,7 +10,7 @@ export default function ContentRequestModal({ creators, onClose, onSubmit }) {
   const [brief, setBrief] = useState("");
   const [mediaFiles, setMediaFiles] = useState([]); // { file, previewUrl, uploading, uploadedUrl }
   const [selectedCreatorIds, setSelectedCreatorIds] = useState([creators?.[0]?.id].filter(Boolean));
-  const [dueDate, setDueDate] = useState(new Date());
+  const [startDate, setStartDate] = useState(new Date());
   const fileInputRef = useRef(null);
 
   const handleFileSelect = (e) => {
@@ -319,11 +319,11 @@ export default function ContentRequestModal({ creators, onClose, onSubmit }) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Due date</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Start date</label>
             <div className="relative">
               <DatePicker
-                selected={dueDate}
-                onChange={(date) => setDueDate(date)}
+                selected={startDate}
+                onChange={(date) => setStartDate(date)}
                 dateFormat="MMMM d, yyyy"
                 className="w-full rounded-md border border-white/[0.12] p-2 pr-10 bg-white dark:bg-gray-900 text-polygon-text-primary focus:ring-2 focus:ring-polygon-primary focus:border-indigo-500 cursor-pointer"
                 showPopperArrow={false}
@@ -354,8 +354,7 @@ export default function ContentRequestModal({ creators, onClose, onSubmit }) {
                   id: c.id,
                   name: c.name
                 })),
-                startDate: new Date().toISOString(),
-                dueDate: dueDate.toISOString(),
+                startDate: startDate.toISOString(),
                 status: "pending",
                 estimatedCost: estimatedCost,
                 estimatedImpressions: estimatedImpressions

@@ -169,7 +169,7 @@ export default function Analytics({ creators, requests = [] }) {
         cost: actualCost > 0 ? actualCost : estimatedCost, // Display value
         cpm,
         confidence: getConfidence(request),
-        dueDate: request.dueDate
+        startDate: request.startDate
       });
     });
 
@@ -294,14 +294,14 @@ export default function Analytics({ creators, requests = [] }) {
 
       // All Campaigns
       csv += 'Campaign Performance\n';
-      csv += 'Campaign Title,Status,Creators,Posts,Total Cost,Total Impressions,CPM,Due Date\n';
+      csv += 'Campaign Title,Status,Creators,Posts,Total Cost,Total Impressions,CPM,Start Date\n';
 
       analytics.campaignStats
         .sort((a, b) => b.cost - a.cost)
         .forEach(campaign => {
           const cpm = campaign.cpm > 0 ? campaign.cpm.toFixed(2) : '0.00';
-          const dueDate = new Date(campaign.dueDate).toLocaleDateString();
-          csv += `"${campaign.title}","${campaign.status}",${campaign.creatorCount},${campaign.postCount},"$${campaign.cost.toFixed(2)}",${campaign.impressions},"$${cpm}","${dueDate}"\n`;
+          const campaignStartDate = campaign.startDate ? new Date(campaign.startDate).toLocaleDateString() : 'N/A';
+          csv += `"${campaign.title}","${campaign.status}",${campaign.creatorCount},${campaign.postCount},"$${campaign.cost.toFixed(2)}",${campaign.impressions},"$${cpm}","${campaignStartDate}"\n`;
         });
 
       // Top Campaigns by Impressions

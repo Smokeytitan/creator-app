@@ -11,7 +11,7 @@ export const INITIAL_REQUESTS = [
       { id: 3, name: "R2D2" },
       { id: 4, name: "Eliza" }
     ],
-    dueDate: "2025-11-18T00:00:00.000Z",
+    startDate: "2025-11-18T00:00:00.000Z",
     status: "completed"
   },
   {
@@ -24,7 +24,7 @@ export const INITIAL_REQUESTS = [
       { id: 3, name: "R2D2" },
       { id: 4, name: "Eliza" }
     ],
-    dueDate: "2025-11-19T00:00:00.000Z",
+    startDate: "2025-11-19T00:00:00.000Z",
     status: "completed"
   },
   {
@@ -37,7 +37,7 @@ export const INITIAL_REQUESTS = [
       { id: 3, name: "R2D2" },
       { id: 4, name: "Eliza" }
     ],
-    dueDate: "2025-12-02T00:00:00.000Z",
+    startDate: "2025-12-02T00:00:00.000Z",
     status: "completed"
   },
   {
@@ -49,7 +49,7 @@ export const INITIAL_REQUESTS = [
       { id: 2, name: "Jampzey" },
       { id: 3, name: "R2D2" }
     ],
-    dueDate: "2025-12-04T00:00:00.000Z",
+    startDate: "2025-12-04T00:00:00.000Z",
     status: "completed"
   },
   {
@@ -62,7 +62,7 @@ export const INITIAL_REQUESTS = [
       { id: 3, name: "R2D2" },
       { id: 4, name: "Eliza" }
     ],
-    dueDate: "2025-12-09T00:00:00.000Z",
+    startDate: "2025-12-09T00:00:00.000Z",
     status: "completed"
   },
   {
@@ -75,7 +75,7 @@ export const INITIAL_REQUESTS = [
       { id: 3, name: "R2D2" },
       { id: 4, name: "Eliza" }
     ],
-    dueDate: "2025-12-16T00:00:00.000Z",
+    startDate: "2025-12-16T00:00:00.000Z",
     status: "completed"
   },
   {
@@ -88,7 +88,7 @@ export const INITIAL_REQUESTS = [
       { id: 3, name: "R2D2" },
       { id: 4, name: "Eliza" }
     ],
-    dueDate: "2025-12-17T00:00:00.000Z",
+    startDate: "2025-12-17T00:00:00.000Z",
     status: "completed"
   },
   {
@@ -101,7 +101,7 @@ export const INITIAL_REQUESTS = [
       { id: 3, name: "R2D2" },
       { id: 4, name: "Eliza" }
     ],
-    dueDate: "2025-12-22T00:00:00.000Z",
+    startDate: "2025-12-22T00:00:00.000Z",
     status: "completed"
   },
   {
@@ -113,7 +113,7 @@ export const INITIAL_REQUESTS = [
       { id: 2, name: "Jampzey" },
       { id: 4, name: "Eliza" }
     ],
-    dueDate: "2025-12-31T00:00:00.000Z",
+    startDate: "2025-12-31T00:00:00.000Z",
     status: "completed"
   }
 ];

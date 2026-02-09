@@ -22,7 +22,7 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
     title: '',
     description: '',
     selectedCreatorIds: [],
-    dueDate: '',
+    startDate: '',
     status: 'pending'
   });
 
@@ -156,7 +156,7 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
       title: request.title,
       description: request.description,
       selectedCreatorIds: (request.creators || []).map(c => c.id),
-      dueDate: request.dueDate ? new Date(request.dueDate).toISOString().slice(0, 10) : '',
+      startDate: request.startDate ? new Date(request.startDate).toISOString().slice(0, 10) : '',
       status: request.status
     });
   };
@@ -182,7 +182,7 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
               title: editRequestForm.title,
               description: editRequestForm.description,
               creators: selectedCreators.map(c => ({ id: c.id, name: c.name })),
-              dueDate: new Date(editRequestForm.dueDate).toISOString(),
+              startDate: new Date(editRequestForm.startDate).toISOString(),
               status: editRequestForm.status
             }
           : req
@@ -221,7 +221,7 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
       title: '',
       description: '',
       selectedCreatorIds: [],
-      dueDate: '',
+      startDate: '',
       status: 'pending'
     });
   };
@@ -686,7 +686,7 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
         'Description': request.description,
         'Creators': creatorNames,
         'Status': request.status,
-        'Due Date': new Date(request.dueDate).toLocaleDateString(),
+        'Start Date': request.startDate ? new Date(request.startDate).toLocaleDateString() : 'N/A',
         'Total Impressions': metrics.totalImpressions.toLocaleString(),
         'Total Cost': `$${metrics.totalCost.toFixed(2)}`,
         'CPM': metrics.totalImpressions > 0 ? `$${((metrics.totalCost / metrics.totalImpressions) * 1000).toFixed(2)}` : '$0.00'
@@ -1019,12 +1019,12 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">Due Date</label>
+                      <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">Start Date</label>
                       <input
                         type="date"
                         className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent-primary)]"
-                        value={editRequestForm.dueDate}
-                        onChange={(e) => setEditRequestForm({ ...editRequestForm, dueDate: e.target.value })}
+                        value={editRequestForm.startDate}
+                        onChange={(e) => setEditRequestForm({ ...editRequestForm, startDate: e.target.value })}
                       />
                     </div>
                     <div>
@@ -1077,12 +1077,6 @@ const ContentRequestsEditorial = ({ creators, setCreators, requests = [], setReq
                             <div className="flex items-center text-mono">
                               <Calendar className="h-4 w-4 mr-1" />
                               Started: {new Date(request.startDate).toLocaleDateString()}
-                            </div>
-                          )}
-                          {request.dueDate && (
-                            <div className="flex items-center text-mono">
-                              <Calendar className="h-4 w-4 mr-1" />
-                              Due: {new Date(request.dueDate).toLocaleDateString()}
                             </div>
                           )}
                         </div>

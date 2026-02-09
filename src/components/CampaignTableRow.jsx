@@ -175,7 +175,7 @@ export default function CampaignTableRow({
               <span className="text-[var(--color-text-tertiary)]">•</span>
               <span className="flex items-center gap-1 whitespace-nowrap">
                 <Calendar className="w-3 h-3" />
-                Due {formatDate(campaign.dueDate || campaign.createdAt)}
+                {formatDate(campaign.startDate || campaign.createdAt)}
               </span>
             </div>
           </div>
@@ -423,7 +423,7 @@ CampaignTableRow.propTypes = {
       platform: PropTypes.string
     })),
     createdAt: PropTypes.string,
-    dueDate: PropTypes.string
+    startDate: PropTypes.string
   }).isRequired,
   creators: PropTypes.arrayOf(PropTypes.shape({
     id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,

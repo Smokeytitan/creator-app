@@ -16,22 +16,22 @@ export default function CampaignStatusBadge({
     pending: {
       label: 'Pending',
       icon: Clock,
-      className: 'bg-yellow-900/20 text-yellow-400 border-yellow-500/30'
+      className: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'
     },
     'in-progress': {
       label: 'In Progress',
       icon: Loader2,
-      className: 'bg-blue-900/20 text-blue-400 border-blue-500/30'
+      className: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20'
     },
     completed: {
       label: 'Completed',
       icon: CheckCircle,
-      className: 'bg-green-900/20 text-green-400 border-green-500/30'
+      className: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
     },
     cancelled: {
       label: 'Cancelled',
       icon: XCircle,
-      className: 'bg-red-900/20 text-red-400 border-red-500/30'
+      className: 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20'
     }
   };
 
@@ -53,7 +53,7 @@ export default function CampaignStatusBadge({
   return (
     <span
       className={`
-        inline-flex items-center gap-1.5 rounded-full border font-medium
+        inline-flex items-center gap-1.5 rounded-full border font-medium whitespace-nowrap
         ${config.className}
         ${sizeClasses[size]}
       `}

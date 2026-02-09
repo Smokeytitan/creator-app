@@ -27,7 +27,7 @@ export function Campaigns() {
     title: '',
     description: '',
     status: 'pending',
-    dueDate: '',
+    startDate: '',
     estimatedCost: 0,
     estimatedImpressions: 0,
     creators: []
@@ -89,7 +89,7 @@ export function Campaigns() {
       title: campaign.title,
       description: campaign.description,
       status: campaign.status,
-      dueDate: campaign.dueDate ? new Date(campaign.dueDate).toISOString().slice(0, 10) : '',
+      startDate: campaign.startDate ? new Date(campaign.startDate).toISOString().slice(0, 10) : '',
       estimatedCost: estimates.estimatedCost,
       estimatedImpressions: estimates.estimatedImpressions,
       creators: creatorIds
@@ -113,7 +113,7 @@ export function Campaigns() {
 
   const handleCancelEdit = () => {
     setEditingCampaign(null);
-    setEditForm({ title: '', description: '', status: 'pending', dueDate: '', estimatedCost: 0, estimatedImpressions: 0, creators: [] });
+    setEditForm({ title: '', description: '', status: 'pending', startDate: '', estimatedCost: 0, estimatedImpressions: 0, creators: [] });
   };
 
   const toggleCreator = (creatorId) => {
@@ -554,12 +554,12 @@ export function Campaigns() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-neutral-400 mb-2">
-                    Due Date
+                    Start Date
                   </label>
                   <input
                     type="date"
-                    value={editForm.dueDate}
-                    onChange={(e) => setEditForm({ ...editForm, dueDate: e.target.value })}
+                    value={editForm.startDate}
+                    onChange={(e) => setEditForm({ ...editForm, startDate: e.target.value })}
                     className="w-full bg-neutral-800 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-white/20"
                   />
                 </div>

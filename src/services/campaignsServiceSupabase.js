@@ -143,6 +143,7 @@ const transformFromDB = (row) => {
     estimatedImpressions: Number(row.estimated_impressions) || 0,
     actualCost: actualCost,
     actualImpressions: actualImpressions,
+    startDate: row.start_date || null,
     createdAt: row.created_at,
     posts: posts.map(post => ({
       id: post.id,
@@ -183,7 +184,8 @@ const transformToDB = (campaign) => {
     estimated_impressions: Number(campaign.estimatedImpressions) || 0,
   };
 
-  // Only include brief/media fields if they are explicitly provided
+  // Only include optional fields if they are explicitly provided
+  if (campaign.startDate !== undefined) row.start_date = campaign.startDate ? new Date(campaign.startDate).toISOString().split('T')[0] : null;
   if (campaign.brief !== undefined) row.brief = campaign.brief;
   if (campaign.mediaUrls !== undefined) row.media_urls = campaign.mediaUrls;
   if (campaign.briefSentAt !== undefined) row.brief_sent_at = campaign.briefSentAt;
@@ -205,7 +207,9 @@ export const createCampaign = async (campaignData) => {
     id: Date.now(), // Timestamp-based ID
     title: campaignData.title,
     description: campaignData.description || '',
+    brief: campaignData.brief,
     status: campaignData.status || 'pending',
+    startDate: campaignData.startDate || null,
     estimatedCost: campaignData.estimatedCost || 0,
     estimatedImpressions: campaignData.estimatedImpressions || 0,
     creators: campaignData.creators || []
