@@ -229,8 +229,8 @@ export function Campaigns() {
     return true;
   };
 
-  const inProgressCount = campaigns.filter(c => c.status === 'active' || c.status === 'in_progress' || c.status === 'pending').length;
-  const completedCount = campaigns.filter(c => c.status === 'done' || c.status === 'completed').length;
+  const inProgressCount = campaigns.filter(c => c.status === 'in-progress' || c.status === 'pending').length;
+  const completedCount = campaigns.filter(c => c.status === 'completed').length;
 
   const stats = [
     {
