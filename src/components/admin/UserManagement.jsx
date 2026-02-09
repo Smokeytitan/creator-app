@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { supabase } from '../../lib/supabaseClient';
 import { useToast } from '../../contexts/ToastContext';
-import { CheckCircle, XCircle, Search, UserCheck, Link2 } from 'lucide-react';
+import { CheckCircle, XCircle, Search, UserCheck, Link2, Shield, ShieldOff } from 'lucide-react';
 
 /**
  * UserManagement — Admin page for approving users and linking them to creator records.
@@ -97,6 +97,32 @@ export default function UserManagement() {
     }
   };
 
+  const handleToggleRole = async (user) => {
+    const newRole = (user.role === 'admin' || user.role === 'ADMIN') ? 'creator' : 'admin';
+    try {
+      const token = await getToken();
+      const res = await fetch('/api/admin/users/role', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ userId: user.id, role: newRole }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Failed to update role');
+      }
+
+      toast.success(`${user.full_name || user.email} is now ${newRole}`);
+      await loadData();
+    } catch (err) {
+      console.error('Role toggle error:', err);
+      toast.error(err.message);
+    }
+  };
+
   const filtered = users.filter((u) => {
     if (!searchQuery) return true;
     const q = searchQuery.toLowerCase();
@@ -163,9 +189,16 @@ export default function UserManagement() {
                     </div>
                   </td>
                   <td className="px-4 py-3">
-                    <span className="text-xs font-medium px-2 py-1 rounded-full bg-[var(--color-bg-tertiary)] text-[var(--color-text-secondary)]">
-                      {user.role || 'creator'}
-                    </span>
+                    {(user.role === 'admin' || user.role === 'ADMIN') ? (
+                      <span className="inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300">
+                        <Shield className="h-3 w-3" />
+                        Admin
+                      </span>
+                    ) : (
+                      <span className="text-xs font-medium px-2 py-1 rounded-full bg-[var(--color-bg-tertiary)] text-[var(--color-text-secondary)]">
+                        Creator
+                      </span>
+                    )}
                   </td>
                   <td className="px-4 py-3">
                     {user.approved ? (
@@ -200,20 +233,39 @@ export default function UserManagement() {
                       : '—'}
                   </td>
                   <td className="px-4 py-3">
-                    {!user.approved ? (
-                      <button
-                        onClick={() => {
-                          setLinkingUser(user);
-                          setSelectedCreatorId('');
-                        }}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-[var(--color-accent-primary)] text-white hover:bg-[var(--color-accent-hover)] transition-colors"
-                      >
-                        <UserCheck className="h-3.5 w-3.5" />
-                        Approve
-                      </button>
-                    ) : (
-                      <span className="text-xs text-[var(--color-text-tertiary)]">—</span>
-                    )}
+                    <div className="flex items-center gap-2">
+                      {!user.approved && (
+                        <button
+                          onClick={() => {
+                            setLinkingUser(user);
+                            setSelectedCreatorId('');
+                          }}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-[var(--color-accent-primary)] text-white hover:bg-[var(--color-accent-hover)] transition-colors"
+                        >
+                          <UserCheck className="h-3.5 w-3.5" />
+                          Approve
+                        </button>
+                      )}
+                      {(user.role === 'admin' || user.role === 'ADMIN') ? (
+                        <button
+                          onClick={() => handleToggleRole(user)}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)] transition-colors"
+                          title="Remove admin role"
+                        >
+                          <ShieldOff className="h-3.5 w-3.5" />
+                          Remove Admin
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => handleToggleRole(user)}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-purple-300 dark:border-purple-700 text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors"
+                          title="Make admin"
+                        >
+                          <Shield className="h-3.5 w-3.5" />
+                          Make Admin
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
