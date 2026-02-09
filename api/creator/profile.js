@@ -50,13 +50,39 @@ export default async function handler(req, res) {
       .eq('id', userId)
       .single();
 
-    if (userError) {
+    if (userError && userError.code !== 'PGRST116') {
       console.error('Error fetching user profile:', userError);
       return res.status(500).json({ error: 'Failed to fetch profile', details: userError.message });
     }
 
+    // If user doesn't exist yet (webhook may not have fired), create them
     if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+      // Auto-approve specific emails
+      const autoApproveEmails = [
+        'lstern@polygon.technology',
+      ];
+
+      // Get email from Clerk token claims
+      const email = payload.email || payload.unsafe_metadata?.email || '';
+      const shouldAutoApprove = autoApproveEmails.includes(email.toLowerCase());
+
+      const { data: newUser, error: insertError } = await supabase
+        .from('users')
+        .upsert({
+          id: userId,
+          email,
+          approved: shouldAutoApprove,
+          ...(shouldAutoApprove ? { approved_at: new Date().toISOString() } : {}),
+        }, { onConflict: 'id' })
+        .select()
+        .single();
+
+      if (insertError) {
+        console.error('Error creating user profile:', insertError);
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      return res.json({ user: newUser, connections: [] });
     }
 
     // Fetch social connections

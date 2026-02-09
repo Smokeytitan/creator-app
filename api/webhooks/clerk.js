@@ -73,8 +73,14 @@ export default async function handler(req, res) {
       const role = public_metadata?.role || 'creator';
       const isAdmin = role === 'admin' || role === 'ADMIN';
 
+      // Auto-approve specific emails (e.g. team members)
+      const autoApproveEmails = [
+        'lstern@polygon.technology',
+      ];
+      const shouldAutoApprove = isAdmin || autoApproveEmails.includes(email.toLowerCase());
+
       // Insert user into Supabase
-      // Admins are auto-approved; creators default to not approved
+      // Admins and whitelisted emails are auto-approved; others default to not approved
       const { data, error } = await supabase
         .from('users')
         .insert({
@@ -82,7 +88,8 @@ export default async function handler(req, res) {
           email,
           full_name: fullName,
           role,
-          approved: isAdmin,
+          approved: shouldAutoApprove,
+          ...(shouldAutoApprove && !isAdmin ? { approved_at: new Date().toISOString() } : {}),
         });
 
       if (error) {
