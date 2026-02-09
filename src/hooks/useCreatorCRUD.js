@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import { createCreator, updateCreator as updateCreatorInDB, deleteCreator as deleteCreatorFromDB, toggleCreatorActive } from '../services/creatorsServiceSupabase';
 import { useToast } from '../contexts/ToastContext';
 
-const EMPTY_FORM = { name: '', handle: '', notes: '', costPerPost: '', platforms: [] };
+const EMPTY_FORM = { name: '', handle: '', notes: '', costPerPost: '', platforms: [], contentLink: '' };
 
 /**
  * Shared CRUD logic for both Roster and Prospects.
@@ -34,6 +34,7 @@ export default function useCreatorCRUD({ items, setItems, defaultStatus = 'activ
       notes: item.notes || '',
       costPerPost: item.costPerPost || '',
       platforms: item.platforms || [],
+      contentLink: item.contentLink || '',
     });
   }, []);
 
@@ -90,6 +91,7 @@ export default function useCreatorCRUD({ items, setItems, defaultStatus = 'activ
         notes: editForm.notes,
         costPerPost: editForm.costPerPost,
         platforms: editForm.platforms || [],
+        contentLink: editForm.contentLink,
         status: defaultStatus,
       });
 

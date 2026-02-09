@@ -1,4 +1,4 @@
-import { Plus, Trash2, Edit2, Search, Filter, SortAsc, Download, TrendingUp } from 'lucide-react';
+import { Plus, Trash2, Edit2, Search, Filter, SortAsc, Download, TrendingUp, ExternalLink } from 'lucide-react';
 
 import useCreatorCRUD from '../../hooks/useCreatorCRUD';
 import useSearchFilterSort from '../../hooks/useSearchFilterSort';
@@ -88,10 +88,11 @@ export default function CreatorProspectsPage({ prospects, setProspects, setCreat
   // CSV export
   // -------------------------------------------------------------------------
   const exportToCSV = () => {
-    const headers = ['Name', 'Handle', 'Estimated Cost Per Post', 'Platforms', 'Notes'];
+    const headers = ['Name', 'Handle', 'Content Link', 'Estimated Cost Per Post', 'Platforms', 'Notes'];
     const rows = search.filteredItems.map((p) => [
       p.name,
       p.handle,
+      p.contentLink || '',
       p.costPerPost || '',
       (p.platforms || []).join('; '),
       p.notes || '',
@@ -265,6 +266,19 @@ export default function CreatorProspectsPage({ prospects, setProspects, setCreat
                     )}
                   </div>
                   <p className="text-sm font-mono text-[var(--color-text-secondary)]">{prospect.handle}</p>
+                  {prospect.contentLink && (
+                    <a
+                      href={prospect.contentLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="inline-flex items-center gap-1 mt-1.5 text-xs text-[var(--color-accent-primary)] hover:text-[var(--color-accent-hover)] hover:underline transition-colors"
+                      title={prospect.contentLink}
+                    >
+                      <ExternalLink className="w-3 h-3 flex-shrink-0" />
+                      <span className="truncate max-w-[200px]">{prospect.contentLink.replace(/^https?:\/\/(www\.)?/, '')}</span>
+                    </a>
+                  )}
                   {prospect.notes && (
                     <p className="text-sm text-[var(--color-text-secondary)] mt-2 line-clamp-3">{prospect.notes}</p>
                   )}
@@ -374,6 +388,17 @@ function ProspectForm({ editForm, setEditForm, togglePlatform, onSave, onCancel,
             value={editForm.handle}
             onChange={(e) => setEditForm({ ...editForm, handle: e.target.value })}
             className="w-full px-3 py-2 bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-lg text-sm font-mono text-[var(--color-text-primary)] placeholder-[var(--color-text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-primary)]"
+          />
+        </div>
+
+        <div>
+          <label className="block text-xs font-semibold text-[var(--color-text-secondary)] mb-1">Sample Content Link</label>
+          <input
+            type="url"
+            placeholder="https://x.com/username/status/..."
+            value={editForm.contentLink}
+            onChange={(e) => setEditForm({ ...editForm, contentLink: e.target.value })}
+            className="w-full px-3 py-2 bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-lg text-sm text-[var(--color-text-primary)] placeholder-[var(--color-text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-primary)]"
           />
         </div>
 

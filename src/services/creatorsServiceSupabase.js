@@ -80,6 +80,7 @@ const transformFromDB = (row) => ({
   platforms: row.platforms || [],
   active: row.active !== false,
   status: row.status || 'active',
+  contentLink: row.content_link || '',
   contractFilePath: row.contract_file_path || null,
   contractUploadedAt: row.contract_uploaded_at || null,
   contractParsedData: row.contract_parsed_data || null,
@@ -131,6 +132,7 @@ const transformToDB = (creator) => ({
   platforms: creator.platforms || [],
   active: creator.active !== false,
   status: creator.status || 'active',
+  content_link: creator.contentLink || '',
   contract_file_path: creator.contractFilePath || null,
   contract_uploaded_at: creator.contractUploadedAt || null,
   contract_parsed_data: creator.contractParsedData || null,
@@ -168,6 +170,7 @@ export const createCreator = async (creatorData) => {
     platforms: creatorData.platforms || [],
     active: creatorData.active !== false,
     status: creatorData.status || 'active',
+    contentLink: creatorData.contentLink || '',
     posts: []
   };
 
