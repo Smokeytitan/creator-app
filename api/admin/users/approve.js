@@ -66,19 +66,20 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'userId is required' });
     }
 
-    if (!creatorId) {
-      return res.status(400).json({ error: 'creatorId is required' });
+    // Approve the user, optionally linking a creator record
+    const updatePayload = {
+      approved: true,
+      approved_at: new Date().toISOString(),
+      approved_by: adminUserId,
+    };
+
+    if (creatorId) {
+      updatePayload.creator_id = creatorId;
     }
 
-    // Approve the user and link their creator_id
     const { data: updatedUser, error: updateError } = await supabase
       .from('users')
-      .update({
-        approved: true,
-        approved_at: new Date().toISOString(),
-        approved_by: adminUserId,
-        creator_id: creatorId,
-      })
+      .update(updatePayload)
       .eq('id', userId)
       .select('id, email, full_name, approved, approved_at, approved_by, creator_id')
       .single();
