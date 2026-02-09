@@ -11,27 +11,29 @@ import { createClient } from '@supabase/supabase-js';
 import { handleCors } from './_cors.js';
 
 export default async function handler(req, res) {
-  // Handle CORS and preflight
-  if (!handleCors(req, res, { methods: 'GET, OPTIONS' })) {
-    return; // CORS handled or request rejected
-  }
-
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  // Verify API key
+  // Verify API key (checked before CORS so server-to-server calls work)
   const apiKey = req.headers['x-api-key'];
-  const expectedKey = process.env.DASHBOARD_API_KEY;
+  const expectedKey = (process.env.DASHBOARD_API_KEY || '').trim();
 
   if (!expectedKey) {
     console.error('[dashboard-summary] DASHBOARD_API_KEY not configured');
     return res.status(500).json({ error: 'API key not configured on server' });
   }
 
-  if (!apiKey || apiKey !== expectedKey) {
+  if (!apiKey || apiKey.trim() !== expectedKey) {
+    // No valid API key — fall back to CORS-based browser access control
+    if (!handleCors(req, res, { methods: 'GET, OPTIONS' })) {
+      return;
+    }
     return res.status(401).json({ error: 'Unauthorized - invalid or missing API key' });
   }
+
+  // Server-to-server call with valid API key — set permissive CORS headers
+  res.setHeader('Access-Control-Allow-Origin', '*');
 
   // Initialize Supabase client
   const supabaseUrl = process.env.VITE_SUPABASE_URL;
