@@ -60,9 +60,9 @@ export default function Analytics({ creators, requests = [] }) {
   const analytics = useMemo(() => {
     const hasDateFilter = startDate || endDate;
 
-    // Filter campaigns by dueDate when date range is set
+    // Filter campaigns by createdAt when date range is set
     const filteredRequests = hasDateFilter
-      ? requests.filter(r => isInRange(r.dueDate))
+      ? requests.filter(r => isInRange(r.createdAt))
       : requests;
 
     const stats = {
