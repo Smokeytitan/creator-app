@@ -243,15 +243,32 @@ export default function UserManagement() {
               <strong>{linkingUser.full_name || linkingUser.email}</strong>
             </p>
 
-            <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-2">
-              Link to Creator Record (optional)
-            </label>
+            {/* Quick approve without linking */}
+            <button
+              onClick={() => handleApprove(linkingUser.id, null)}
+              disabled={approving}
+              className="w-full px-4 py-2.5 text-sm font-medium rounded-lg bg-[var(--color-accent-primary)] text-white hover:bg-[var(--color-accent-hover)] disabled:opacity-50 transition-colors mb-4"
+            >
+              {approving ? 'Approving...' : 'Approve'}
+            </button>
+
+            <div className="relative mb-4">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-[var(--color-border)]" />
+              </div>
+              <div className="relative flex justify-center">
+                <span className="px-3 bg-[var(--color-bg-primary)] text-xs text-[var(--color-text-tertiary)]">
+                  or link to an existing creator record
+                </span>
+              </div>
+            </div>
+
             <select
               value={selectedCreatorId}
               onChange={(e) => setSelectedCreatorId(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] text-sm text-[var(--color-text-primary)] mb-4"
+              className="w-full px-3 py-2 rounded-lg bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] text-sm text-[var(--color-text-primary)] mb-3"
             >
-              <option value="">— No creator link —</option>
+              <option value="">Select a creator...</option>
               {creators.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name} (@{c.handle})
@@ -268,10 +285,10 @@ export default function UserManagement() {
               </button>
               <button
                 onClick={() => handleApprove(linkingUser.id, selectedCreatorId || null)}
-                disabled={approving}
+                disabled={approving || !selectedCreatorId}
                 className="px-4 py-2 text-sm rounded-lg bg-[var(--color-accent-primary)] text-white hover:bg-[var(--color-accent-hover)] disabled:opacity-50 transition-colors"
               >
-                {approving ? 'Approving...' : 'Approve'}
+                {approving ? 'Approving...' : 'Approve & Link'}
               </button>
             </div>
           </div>
