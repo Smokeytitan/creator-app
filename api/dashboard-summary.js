@@ -113,6 +113,16 @@ export default async function handler(req, res) {
         (Number(tweet.bookmarks) || 0);
     }
 
+    // Sum reward pools across all campaigns
+    const allCampaignsForPool = recentCampaignsResult.data || [];
+    // Note: recentCampaignsResult only has top 5 — use full campaigns list
+    const { data: allCampaignsWithPool } = await supabase
+      .from('flash_campaigns')
+      .select('reward_pool');
+    const totalRewardPool = (allCampaignsWithPool || []).reduce(
+      (sum, c) => sum + (Number(c.reward_pool) || 0), 0
+    );
+
     // Format recent campaigns for response
     const recentCampaigns = (recentCampaignsResult.data || []).map(c => ({
       id: c.id,
@@ -134,6 +144,7 @@ export default async function handler(req, res) {
         totalTweetsCached: tweets.length,
         totalImpressions,
         totalEngagements,
+        totalRewardPool: totalRewardPool,
         excludedAccountsCount: excludedResult.count || 0,
       },
       recentCampaigns,
