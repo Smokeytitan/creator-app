@@ -1,7 +1,5 @@
 import { useState, useMemo, useRef } from "react";
-import { Eye, DollarSign, Calendar, Upload, X, FileText, Image, Film } from "lucide-react";
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
+import { Eye, DollarSign, Upload, X, FileText, Image, Film } from "lucide-react";
 import { uploadCampaignMedia } from "../services/campaignsServiceSupabase";
 
 export default function ContentRequestModal({ creators, onClose, onSubmit }) {
@@ -10,7 +8,7 @@ export default function ContentRequestModal({ creators, onClose, onSubmit }) {
   const [brief, setBrief] = useState("");
   const [mediaFiles, setMediaFiles] = useState([]); // { file, previewUrl, uploading, uploadedUrl }
   const [selectedCreatorIds, setSelectedCreatorIds] = useState([creators?.[0]?.id].filter(Boolean));
-  const [startDate, setStartDate] = useState(new Date());
+  const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
   const fileInputRef = useRef(null);
 
   const handleFileSelect = (e) => {
@@ -320,17 +318,12 @@ export default function ContentRequestModal({ creators, onClose, onSubmit }) {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Start date</label>
-            <div className="relative">
-              <DatePicker
-                selected={startDate}
-                onChange={(date) => setStartDate(date)}
-                dateFormat="MMMM d, yyyy"
-                className="w-full rounded-md border border-white/[0.12] p-2 pr-10 bg-white dark:bg-gray-900 text-polygon-text-primary focus:ring-2 focus:ring-polygon-primary focus:border-indigo-500 cursor-pointer"
-                showPopperArrow={false}
-                wrapperClassName="w-full"
-              />
-              <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
-            </div>
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className="w-full rounded-md border border-white/[0.12] p-2 bg-white dark:bg-gray-900 text-polygon-text-primary focus:ring-2 focus:ring-polygon-primary focus:border-indigo-500"
+            />
           </div>
         </div>
 
@@ -354,7 +347,7 @@ export default function ContentRequestModal({ creators, onClose, onSubmit }) {
                   id: c.id,
                   name: c.name
                 })),
-                startDate: startDate.toISOString(),
+                startDate: startDate ? new Date(startDate).toISOString() : null,
                 status: "pending",
                 estimatedCost: estimatedCost,
                 estimatedImpressions: estimatedImpressions

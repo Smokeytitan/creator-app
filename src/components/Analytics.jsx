@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { TrendingUp, DollarSign, FileText, Eye, Award, Download, Calendar, X, Target, Users, BarChart3 } from 'lucide-react';
+import { TrendingUp, DollarSign, FileText, Eye, Award, Download, Target, Users, BarChart3 } from 'lucide-react';
 import {
   BarChart,
   Bar,
@@ -16,25 +16,15 @@ import {
 import KPIStrip from './KPIStrip';
 import EstimatedVsActual from './EstimatedVsActual';
 import ConfidenceBadge from './ConfidenceBadge';
+import DateRangePicker from './DateRangePicker';
 
 export default function Analytics({ creators, requests = [] }) {
   const [viewMode] = useState('creators'); // Keep for export functionality
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+  const [dateRange, setDateRange] = useState({ startDate: null, endDate: null, label: 'All Time' });
 
-  // Quick preset helpers
-  const setPreset = (days) => {
-    if (days === null) {
-      setStartDate('');
-      setEndDate('');
-      return;
-    }
-    const end = new Date();
-    const start = new Date();
-    start.setDate(start.getDate() - days);
-    setStartDate(start.toISOString().split('T')[0]);
-    setEndDate(end.toISOString().split('T')[0]);
-  };
+  // Derived values for filtering
+  const startDate = dateRange.startDate || '';
+  const endDate = dateRange.endDate || '';
 
   // Filter a post's date against the selected range
   const isInRange = (dateStr) => {
@@ -414,54 +404,7 @@ export default function Analytics({ creators, requests = [] }) {
         </div>
 
         {/* Date Range Filter */}
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-gray-400" />
-            <input
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              className="px-3 py-1.5 text-sm rounded-polygon border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-polygon-text-primary focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Start date"
-            />
-            <span className="text-gray-400 text-sm">to</span>
-            <input
-              type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              className="px-3 py-1.5 text-sm rounded-polygon border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-polygon-text-primary focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-            {(startDate || endDate) && (
-              <button
-                onClick={() => setPreset(null)}
-                className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-                title="Clear dates"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            )}
-          </div>
-          <div className="flex items-center gap-1.5">
-            {[
-              { label: '7d', days: 7 },
-              { label: '30d', days: 30 },
-              { label: '90d', days: 90 },
-              { label: 'All', days: null }
-            ].map(({ label, days }) => (
-              <button
-                key={label}
-                onClick={() => setPreset(days)}
-                className={`px-2.5 py-1 text-xs font-medium rounded-polygon transition-colors ${
-                  (days === null && !startDate && !endDate)
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-100 dark:bg-gray-700 text-polygon-text-secondary hover:bg-gray-200 dark:hover:bg-gray-600'
-                }`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-        </div>
+        <DateRangePicker onRangeChange={setDateRange} currentRange={dateRange} />
       </div>
 
       {/* Executive KPI Strip */}
