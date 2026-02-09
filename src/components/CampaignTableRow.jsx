@@ -7,7 +7,8 @@ import {
   Edit2,
   Trash2,
   Plus,
-  Calendar
+  Calendar,
+  ExternalLink
 } from 'lucide-react';
 import CampaignStatusBadge from './campaigns/CampaignStatusBadge';
 import ConfidenceBadge from './ConfidenceBadge';
@@ -64,8 +65,10 @@ export default function CampaignTableRow({
     }
 
     const creatorList = campaign.creators
-      .map(creatorId => {
-        const creator = creators.find(c => c.id === creatorId);
+      .map(entry => {
+        // Handle both object format {id, name, ...} and plain ID format
+        if (typeof entry === 'object' && entry.name) return entry.name;
+        const creator = creators.find(c => c.id === entry);
         return creator ? creator.name : null;
       })
       .filter(Boolean);
@@ -330,7 +333,7 @@ export default function CampaignTableRow({
               <div className="space-y-2">
                 {campaign.posts.map((post, index) => (
                   <div
-                    key={index}
+                    key={post.id || index}
                     className="
                       flex items-center justify-between
                       p-3
@@ -340,22 +343,47 @@ export default function CampaignTableRow({
                     "
                   >
                     <div className="flex-1 min-w-0">
-                      <div className="text-sm text-[var(--color-text-primary)] truncate">
-                        {post.description || 'Untitled post'}
+                      {/* Creator name */}
+                      <div className="text-sm font-medium text-[var(--color-text-primary)]">
+                        {post.creatorName || 'Unknown creator'}
+                        {post.creatorHandle && (
+                          <span className="ml-1.5 text-xs font-normal text-[var(--color-text-tertiary)]">
+                            {post.creatorHandle}
+                          </span>
+                        )}
                       </div>
-                      {post.creatorName && (
-                        <div className="text-xs text-[var(--color-text-tertiary)] mt-0.5">
-                          {post.creatorName}
+
+                      {/* Post link */}
+                      {post.link ? (
+                        <a
+                          href={post.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="inline-flex items-center gap-1 mt-1 text-xs text-[var(--color-accent-primary)] hover:text-[var(--color-accent-hover)] hover:underline transition-colors"
+                          title={post.link}
+                        >
+                          <ExternalLink className="w-3 h-3 flex-shrink-0" />
+                          <span className="truncate max-w-[300px]">
+                            {post.link.replace(/^https?:\/\/(www\.)?/, '')}
+                          </span>
+                        </a>
+                      ) : post.description ? (
+                        <div className="text-xs text-[var(--color-text-secondary)] mt-1 truncate">
+                          {post.description}
                         </div>
-                      )}
+                      ) : null}
                     </div>
 
-                    <div className="flex items-center gap-4 ml-4 text-xs font-mono text-[var(--color-text-secondary)]">
-                      {post.actualImpressions && (
-                        <span>{formatNumber(post.actualImpressions)} imp</span>
+                    <div className="flex items-center gap-4 ml-4 text-xs font-mono text-[var(--color-text-secondary)] whitespace-nowrap">
+                      {post.impressions > 0 && (
+                        <span>{formatNumber(post.impressions)} imp</span>
                       )}
-                      {post.postDate && (
-                        <span>{formatDate(post.postDate)}</span>
+                      {post.cost > 0 && (
+                        <span>{formatCurrency(post.cost)}</span>
+                      )}
+                      {post.date && (
+                        <span>{formatDate(post.date)}</span>
                       )}
                     </div>
                   </div>
@@ -386,10 +414,15 @@ CampaignTableRow.propTypes = {
     estimatedCost: PropTypes.number,
     estimatedImpressions: PropTypes.number,
     posts: PropTypes.arrayOf(PropTypes.shape({
+      id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
       description: PropTypes.string,
+      link: PropTypes.string,
       creatorName: PropTypes.string,
-      actualImpressions: PropTypes.number,
-      postDate: PropTypes.string
+      creatorHandle: PropTypes.string,
+      impressions: PropTypes.number,
+      cost: PropTypes.number,
+      date: PropTypes.string,
+      platform: PropTypes.string
     })),
     createdAt: PropTypes.string,
     dueDate: PropTypes.string

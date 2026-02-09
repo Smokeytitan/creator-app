@@ -36,8 +36,18 @@ export const getCampaigns = async () => {
         ),
         posts (
           id,
+          description,
+          link,
           impressions,
-          cost
+          cost,
+          date,
+          platform,
+          creator_id,
+          creator:creators (
+            id,
+            name,
+            handle
+          )
         )
       `)
       .order('created_at', { ascending: false });
@@ -79,12 +89,18 @@ export const getCampaignById = async (campaignId) => {
         ),
         posts (
           id,
+          description,
+          link,
           impressions,
           cost,
-          link,
-          platform,
           date,
-          creator_id
+          platform,
+          creator_id,
+          creator:creators (
+            id,
+            name,
+            handle
+          )
         )
       `)
       .eq('id', campaignId)
@@ -130,12 +146,15 @@ const transformFromDB = (row) => {
     createdAt: row.created_at,
     posts: posts.map(post => ({
       id: post.id,
-      link: post.link,
+      description: post.description || '',
+      link: post.link || '',
       impressions: Number(post.impressions) || 0,
       cost: Number(post.cost) || 0,
-      platform: post.platform,
+      platform: post.platform || '',
       date: post.date,
-      creatorId: post.creator_id
+      creatorId: post.creator_id,
+      creatorName: post.creator?.name || null,
+      creatorHandle: post.creator?.handle || null
     })),
     creators: (row.campaign_creators || [])
       .filter(crc => crc.creator) // Filter out any null/undefined creators
