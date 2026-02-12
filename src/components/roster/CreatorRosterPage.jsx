@@ -1,5 +1,5 @@
 import { useRef, useState, useMemo } from 'react';
-import { Plus, Download, RefreshCw, FileSpreadsheet, FileUp, Search, Filter, SortAsc, X, UserX } from 'lucide-react';
+import { Plus, Download, RefreshCw, FileSpreadsheet, FileUp, Search, Filter, SortAsc, X, UserX, Users, Mic, Mail } from 'lucide-react';
 
 import useCreatorCRUD from '../../hooks/useCreatorCRUD';
 import useSearchFilterSort from '../../hooks/useSearchFilterSort';
@@ -21,6 +21,7 @@ import { ConfirmDialog } from '../ui';
 import { IMPORTED_CREATORS } from '../../data/importedCreators';
 import { importExcelWorkbook } from '../../services/excelImportService';
 import { getCreators } from '../../services/creatorsServiceSupabase';
+import { CONTENT_TYPES, CONTENT_TYPE_LABELS } from '../../constants/contentTypes';
 
 /**
  * CreatorRosterPage -- top-level orchestrator for the Roster tab.
@@ -36,13 +37,33 @@ export default function CreatorRosterPage({ creators, setCreators }) {
   // Hooks
   // -------------------------------------------------------------------------
   const [subTab, setSubTab] = useState('active');
+  const [contentTypeFilter, setContentTypeFilter] = useState('all'); // 'all', 'social', 'podcast', 'newsletter'
   const crud = useCreatorCRUD({ items: creators, setItems: setCreators, defaultStatus: 'active', itemLabel: 'creator' });
+
   const activeOnly = useMemo(() => creators.filter((c) => c.active !== false), [creators]);
   const inactiveOnly = useMemo(() => creators.filter((c) => c.active === false), [creators]);
-  const displayItems = subTab === 'active' ? activeOnly : inactiveOnly;
+
+  // Filter by content type
+  const filteredByActiveStatus = subTab === 'active' ? activeOnly : inactiveOnly;
+  const displayItems = useMemo(() => {
+    if (contentTypeFilter === 'all') return filteredByActiveStatus;
+    return filteredByActiveStatus.filter((c) => (c.contentType || 'social') === contentTypeFilter);
+  }, [filteredByActiveStatus, contentTypeFilter]);
+
   const search = useSearchFilterSort({ items: displayItems, searchFields: ['name', 'handle'] });
   const contract = useContractUpload({ creators, setCreators });
   const posts = usePosts({ creators, setCreators });
+
+  // Count by content type for tabs
+  const contentTypeCounts = useMemo(() => {
+    const items = subTab === 'active' ? activeOnly : inactiveOnly;
+    return {
+      all: items.length,
+      social: items.filter((c) => (c.contentType || 'social') === CONTENT_TYPES.SOCIAL).length,
+      podcast: items.filter((c) => c.contentType === CONTENT_TYPES.PODCAST).length,
+      newsletter: items.filter((c) => c.contentType === CONTENT_TYPES.NEWSLETTER).length,
+    };
+  }, [activeOnly, inactiveOnly, subTab]);
 
   // -------------------------------------------------------------------------
   // Excel import
@@ -285,6 +306,54 @@ export default function CreatorRosterPage({ creators, setCreators }) {
           }`}
         >
           Inactive ({inactiveOnly.length})
+        </button>
+      </div>
+
+      {/* Content Type Filter Tabs */}
+      <div className="flex gap-2 flex-wrap">
+        <button
+          onClick={() => setContentTypeFilter('all')}
+          className={`inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-all ${
+            contentTypeFilter === 'all'
+              ? 'bg-[var(--color-accent-primary)] text-white shadow-sm'
+              : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)]'
+          }`}
+        >
+          <Users className="w-4 h-4 mr-2" />
+          All ({contentTypeCounts.all})
+        </button>
+        <button
+          onClick={() => setContentTypeFilter(CONTENT_TYPES.SOCIAL)}
+          className={`inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-all ${
+            contentTypeFilter === CONTENT_TYPES.SOCIAL
+              ? 'bg-blue-500 text-white shadow-sm'
+              : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)]'
+          }`}
+        >
+          <Users className="w-4 h-4 mr-2" />
+          {CONTENT_TYPE_LABELS[CONTENT_TYPES.SOCIAL]} ({contentTypeCounts.social})
+        </button>
+        <button
+          onClick={() => setContentTypeFilter(CONTENT_TYPES.PODCAST)}
+          className={`inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-all ${
+            contentTypeFilter === CONTENT_TYPES.PODCAST
+              ? 'bg-purple-500 text-white shadow-sm'
+              : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)]'
+          }`}
+        >
+          <Mic className="w-4 h-4 mr-2" />
+          {CONTENT_TYPE_LABELS[CONTENT_TYPES.PODCAST]} ({contentTypeCounts.podcast})
+        </button>
+        <button
+          onClick={() => setContentTypeFilter(CONTENT_TYPES.NEWSLETTER)}
+          className={`inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-all ${
+            contentTypeFilter === CONTENT_TYPES.NEWSLETTER
+              ? 'bg-green-500 text-white shadow-sm'
+              : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)]'
+          }`}
+        >
+          <Mail className="w-4 h-4 mr-2" />
+          {CONTENT_TYPE_LABELS[CONTENT_TYPES.NEWSLETTER]} ({contentTypeCounts.newsletter})
         </button>
       </div>
 

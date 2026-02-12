@@ -1,4 +1,5 @@
-import { Plus, Trash2, Edit2, Search, Filter, SortAsc, Download, TrendingUp, ExternalLink } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { Plus, Trash2, Edit2, Search, Filter, SortAsc, Download, TrendingUp, ExternalLink, Users, Mic, Mail } from 'lucide-react';
 
 import useCreatorCRUD from '../../hooks/useCreatorCRUD';
 import useSearchFilterSort from '../../hooks/useSearchFilterSort';
@@ -8,6 +9,7 @@ import { useToast } from '../../contexts/ToastContext';
 import CreatorCardEdit from './CreatorCardEdit';
 import { ConfirmDialog } from '../ui';
 import { AVAILABLE_PLATFORMS } from '../../constants/platforms';
+import { CONTENT_TYPES, CONTENT_TYPE_LABELS } from '../../constants/contentTypes';
 import { promoteProspect as promoteProspectInDB } from '../../services/creatorsServiceSupabase';
 
 /**
@@ -23,8 +25,24 @@ export default function CreatorProspectsPage({ prospects, setProspects, setCreat
   // -------------------------------------------------------------------------
   // Hooks
   // -------------------------------------------------------------------------
+  const [contentTypeFilter, setContentTypeFilter] = useState('all');
   const crud = useCreatorCRUD({ items: prospects, setItems: setProspects, defaultStatus: 'prospect', itemLabel: 'prospect' });
-  const search = useSearchFilterSort({ items: prospects, searchFields: ['name', 'handle'] });
+
+  // Filter by content type
+  const filteredByContentType = useMemo(() => {
+    if (contentTypeFilter === 'all') return prospects;
+    return prospects.filter((p) => (p.contentType || 'social') === contentTypeFilter);
+  }, [prospects, contentTypeFilter]);
+
+  const search = useSearchFilterSort({ items: filteredByContentType, searchFields: ['name', 'handle'] });
+
+  // Count by content type for tabs
+  const contentTypeCounts = useMemo(() => ({
+    all: prospects.length,
+    social: prospects.filter((p) => (p.contentType || 'social') === CONTENT_TYPES.SOCIAL).length,
+    podcast: prospects.filter((p) => p.contentType === CONTENT_TYPES.PODCAST).length,
+    newsletter: prospects.filter((p) => p.contentType === CONTENT_TYPES.NEWSLETTER).length,
+  }), [prospects]);
 
   // -------------------------------------------------------------------------
   // Promote prospect to active roster
@@ -146,6 +164,54 @@ export default function CreatorProspectsPage({ prospects, setProspects, setCreat
             </button>
           </div>
         </div>
+      </div>
+
+      {/* Content Type Filter Tabs */}
+      <div className="mb-6 flex gap-2 flex-wrap">
+        <button
+          onClick={() => setContentTypeFilter('all')}
+          className={`inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-all ${
+            contentTypeFilter === 'all'
+              ? 'bg-[var(--color-accent-primary)] text-white shadow-sm'
+              : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)] hover:text-[var(--color-text-primary)] border border-[var(--color-border)]'
+          }`}
+        >
+          <Users className="w-4 h-4 mr-2" />
+          All ({contentTypeCounts.all})
+        </button>
+        <button
+          onClick={() => setContentTypeFilter(CONTENT_TYPES.SOCIAL)}
+          className={`inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-all ${
+            contentTypeFilter === CONTENT_TYPES.SOCIAL
+              ? 'bg-blue-500 text-white shadow-sm'
+              : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)] hover:text-[var(--color-text-primary)] border border-[var(--color-border)]'
+          }`}
+        >
+          <Users className="w-4 h-4 mr-2" />
+          {CONTENT_TYPE_LABELS[CONTENT_TYPES.SOCIAL]} ({contentTypeCounts.social})
+        </button>
+        <button
+          onClick={() => setContentTypeFilter(CONTENT_TYPES.PODCAST)}
+          className={`inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-all ${
+            contentTypeFilter === CONTENT_TYPES.PODCAST
+              ? 'bg-purple-500 text-white shadow-sm'
+              : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)] hover:text-[var(--color-text-primary)] border border-[var(--color-border)]'
+          }`}
+        >
+          <Mic className="w-4 h-4 mr-2" />
+          {CONTENT_TYPE_LABELS[CONTENT_TYPES.PODCAST]} ({contentTypeCounts.podcast})
+        </button>
+        <button
+          onClick={() => setContentTypeFilter(CONTENT_TYPES.NEWSLETTER)}
+          className={`inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-all ${
+            contentTypeFilter === CONTENT_TYPES.NEWSLETTER
+              ? 'bg-green-500 text-white shadow-sm'
+              : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)] hover:text-[var(--color-text-primary)] border border-[var(--color-border)]'
+          }`}
+        >
+          <Mail className="w-4 h-4 mr-2" />
+          {CONTENT_TYPE_LABELS[CONTENT_TYPES.NEWSLETTER]} ({contentTypeCounts.newsletter})
+        </button>
       </div>
 
       {/* Search and Filters */}
