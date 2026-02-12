@@ -9,7 +9,7 @@ import { useToast } from '../../contexts/ToastContext';
 import CreatorCardEdit from './CreatorCardEdit';
 import { ConfirmDialog } from '../ui';
 import { AVAILABLE_PLATFORMS } from '../../constants/platforms';
-import { CONTENT_TYPES, CONTENT_TYPE_LABELS } from '../../constants/contentTypes';
+import { CONTENT_TYPES, CONTENT_TYPE_LABELS, CONTENT_TYPE_OPTIONS } from '../../constants/contentTypes';
 import { promoteProspect as promoteProspectInDB } from '../../services/creatorsServiceSupabase';
 
 /**
@@ -440,6 +440,29 @@ export default function CreatorProspectsPage({ prospects, setProspects, setCreat
  * Preserves the original Prospects form layout.
  */
 function ProspectForm({ editForm, setEditForm, togglePlatform, onSave, onCancel, isNew = false }) {
+  // Support both single value (legacy) and array (new multi-select)
+  const contentTypes = Array.isArray(editForm.contentType)
+    ? editForm.contentType
+    : (editForm.contentType ? [editForm.contentType] : [CONTENT_TYPES.SOCIAL]);
+
+  const isSocial = contentTypes.includes(CONTENT_TYPES.SOCIAL);
+  const isPodcast = contentTypes.includes(CONTENT_TYPES.PODCAST);
+  const isNewsletter = contentTypes.includes(CONTENT_TYPES.NEWSLETTER);
+
+  // Toggle content type (multi-select)
+  const toggleContentType = (type) => {
+    let newTypes;
+    if (contentTypes.includes(type)) {
+      // Remove if already selected (but keep at least one)
+      newTypes = contentTypes.filter(t => t !== type);
+      if (newTypes.length === 0) newTypes = [type]; // Keep at least one selected
+    } else {
+      // Add if not selected
+      newTypes = [...contentTypes, type];
+    }
+    setEditForm({ ...editForm, contentType: newTypes });
+  };
+
   return (
     <div className="flex-1 flex flex-col">
       <div className="flex-1 space-y-3">
@@ -463,6 +486,34 @@ function ProspectForm({ editForm, setEditForm, togglePlatform, onSave, onCancel,
             onChange={(e) => setEditForm({ ...editForm, handle: e.target.value })}
             className="w-full px-3 py-2 bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-lg text-sm font-mono text-[var(--color-text-primary)] placeholder-[var(--color-text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-primary)]"
           />
+        </div>
+
+        <div>
+          <label className="block text-xs font-semibold text-[var(--color-text-secondary)] mb-1">
+            Content Type <span className="normal-case text-[10px] opacity-70">(select one or more)</span>
+          </label>
+          <div className="flex flex-wrap gap-2">
+            {CONTENT_TYPE_OPTIONS.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => toggleContentType(option.value)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                  contentTypes.includes(option.value)
+                    ? 'bg-gradient-to-r from-[var(--color-accent-primary)] to-[var(--color-accent-secondary)] text-white shadow-sm'
+                    : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-primary)] border border-[var(--color-border)]'
+                }`}
+                title={option.description}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+          {contentTypes.length > 1 && (
+            <p className="text-[10px] text-[var(--color-text-tertiary)] mt-1">
+              Selected: {contentTypes.map(t => CONTENT_TYPE_OPTIONS.find(o => o.value === t)?.label).join(', ')}
+            </p>
+          )}
         </div>
 
         <div>
@@ -498,24 +549,110 @@ function ProspectForm({ editForm, setEditForm, togglePlatform, onSave, onCancel,
           />
         </div>
 
-        <div>
-          <label className="block text-xs font-semibold text-[var(--color-text-secondary)] mb-2">Platforms</label>
-          <div className="flex flex-wrap gap-2">
-            {AVAILABLE_PLATFORMS.map((platform) => (
-              <button
-                key={platform}
-                onClick={() => togglePlatform(platform)}
-                className={`px-3 py-1 text-xs font-semibold rounded-full transition-all ${
-                  (editForm.platforms || []).includes(platform)
-                    ? 'bg-gradient-to-r from-[var(--color-accent-primary)] to-[var(--color-accent-secondary)] text-white'
-                    : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-secondary)] border border-[var(--color-border)] hover:border-[var(--color-accent-primary)]'
-                }`}
-              >
-                {platform}
-              </button>
-            ))}
+        {/* Podcast RSS URL */}
+        {isPodcast && (
+          <div>
+            <label className="block text-xs font-semibold text-[var(--color-text-secondary)] mb-1">
+              🎙️ Podcast RSS URL
+            </label>
+            <input
+              type="url"
+              className="w-full px-3 py-2 bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-lg text-sm text-[var(--color-text-primary)] placeholder-[var(--color-text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-primary)]"
+              value={editForm.podcastUrl || ''}
+              onChange={(e) => setEditForm({ ...editForm, podcastUrl: e.target.value })}
+              placeholder="https://podcast.example.com/feed"
+            />
           </div>
-        </div>
+        )}
+
+        {/* Podcast Listeners */}
+        {isPodcast && (
+          <div>
+            <label className="block text-xs font-semibold text-[var(--color-text-secondary)] mb-1">
+              🎙️ Average Listeners per Episode
+            </label>
+            <input
+              type="text"
+              className="w-full px-3 py-2 bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-lg text-sm text-[var(--color-text-primary)] placeholder-[var(--color-text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-primary)]"
+              value={editForm.podcastListeners || ''}
+              onChange={(e) => setEditForm({ ...editForm, podcastListeners: e.target.value })}
+              placeholder="e.g., 25,000"
+            />
+          </div>
+        )}
+
+        {/* Newsletter Subscription URL */}
+        {isNewsletter && (
+          <div>
+            <label className="block text-xs font-semibold text-[var(--color-text-secondary)] mb-1">
+              ✉️ Newsletter Subscription URL
+            </label>
+            <input
+              type="url"
+              className="w-full px-3 py-2 bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-lg text-sm text-[var(--color-text-primary)] placeholder-[var(--color-text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-primary)]"
+              value={editForm.newsletterUrl || ''}
+              onChange={(e) => setEditForm({ ...editForm, newsletterUrl: e.target.value })}
+              placeholder="https://newsletter.example.com/subscribe"
+            />
+          </div>
+        )}
+
+        {/* Newsletter Subscribers */}
+        {isNewsletter && (
+          <div>
+            <label className="block text-xs font-semibold text-[var(--color-text-secondary)] mb-1">
+              ✉️ Total Subscribers
+            </label>
+            <input
+              type="text"
+              className="w-full px-3 py-2 bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-lg text-sm text-[var(--color-text-primary)] placeholder-[var(--color-text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-primary)]"
+              value={editForm.newsletterSubscribers || ''}
+              onChange={(e) => setEditForm({ ...editForm, newsletterSubscribers: e.target.value })}
+              placeholder="e.g., 100,000"
+            />
+          </div>
+        )}
+
+        {/* Total Audience/Reach - shown for any type */}
+        {(isSocial || isPodcast || isNewsletter) && (
+          <div>
+            <label className="block text-xs font-semibold text-[var(--color-text-secondary)] mb-1">
+              📊 Total Audience/Reach
+              <span className="normal-case text-[10px] opacity-70 ml-1">
+                (followers, impressions, or combined reach)
+              </span>
+            </label>
+            <input
+              type="text"
+              className="w-full px-3 py-2 bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-lg text-sm text-[var(--color-text-primary)] placeholder-[var(--color-text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-primary)]"
+              value={editForm.totalReach || ''}
+              onChange={(e) => setEditForm({ ...editForm, totalReach: e.target.value })}
+              placeholder="e.g., 500,000"
+            />
+          </div>
+        )}
+
+        {/* Social Media Platforms - only for social content type */}
+        {isSocial && (
+          <div>
+            <label className="block text-xs font-semibold text-[var(--color-text-secondary)] mb-2">Platforms</label>
+            <div className="flex flex-wrap gap-2">
+              {AVAILABLE_PLATFORMS.map((platform) => (
+                <button
+                  key={platform}
+                  onClick={() => togglePlatform(platform)}
+                  className={`px-3 py-1 text-xs font-semibold rounded-full transition-all ${
+                    (editForm.platforms || []).includes(platform)
+                      ? 'bg-gradient-to-r from-[var(--color-accent-primary)] to-[var(--color-accent-secondary)] text-white'
+                      : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-secondary)] border border-[var(--color-border)] hover:border-[var(--color-accent-primary)]'
+                  }`}
+                >
+                  {platform}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Action Buttons */}
