@@ -28,20 +28,28 @@ export default function CreatorProspectsPage({ prospects, setProspects, setCreat
   const [contentTypeFilter, setContentTypeFilter] = useState('all');
   const crud = useCreatorCRUD({ items: prospects, setItems: setProspects, defaultStatus: 'prospect', itemLabel: 'prospect' });
 
+  // Helper to check if prospect has a content type (supports both array and single value)
+  const hasContentType = (prospect, type) => {
+    const types = Array.isArray(prospect.contentType)
+      ? prospect.contentType
+      : (prospect.contentType ? [prospect.contentType] : [CONTENT_TYPES.SOCIAL]);
+    return types.includes(type);
+  };
+
   // Filter by content type
   const filteredByContentType = useMemo(() => {
     if (contentTypeFilter === 'all') return prospects;
-    return prospects.filter((p) => (p.contentType || 'social') === contentTypeFilter);
+    return prospects.filter((p) => hasContentType(p, contentTypeFilter));
   }, [prospects, contentTypeFilter]);
 
   const search = useSearchFilterSort({ items: filteredByContentType, searchFields: ['name', 'handle'] });
 
-  // Count by content type for tabs
+  // Count by content type for tabs (counts prospects who have each type)
   const contentTypeCounts = useMemo(() => ({
     all: prospects.length,
-    social: prospects.filter((p) => (p.contentType || 'social') === CONTENT_TYPES.SOCIAL).length,
-    podcast: prospects.filter((p) => p.contentType === CONTENT_TYPES.PODCAST).length,
-    newsletter: prospects.filter((p) => p.contentType === CONTENT_TYPES.NEWSLETTER).length,
+    social: prospects.filter((p) => hasContentType(p, CONTENT_TYPES.SOCIAL)).length,
+    podcast: prospects.filter((p) => hasContentType(p, CONTENT_TYPES.PODCAST)).length,
+    newsletter: prospects.filter((p) => hasContentType(p, CONTENT_TYPES.NEWSLETTER)).length,
   }), [prospects]);
 
   // -------------------------------------------------------------------------

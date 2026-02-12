@@ -43,25 +43,33 @@ export default function CreatorRosterPage({ creators, setCreators }) {
   const activeOnly = useMemo(() => creators.filter((c) => c.active !== false), [creators]);
   const inactiveOnly = useMemo(() => creators.filter((c) => c.active === false), [creators]);
 
+  // Helper to check if creator has a content type (supports both array and single value)
+  const hasContentType = (creator, type) => {
+    const types = Array.isArray(creator.contentType)
+      ? creator.contentType
+      : (creator.contentType ? [creator.contentType] : [CONTENT_TYPES.SOCIAL]);
+    return types.includes(type);
+  };
+
   // Filter by content type
   const filteredByActiveStatus = subTab === 'active' ? activeOnly : inactiveOnly;
   const displayItems = useMemo(() => {
     if (contentTypeFilter === 'all') return filteredByActiveStatus;
-    return filteredByActiveStatus.filter((c) => (c.contentType || 'social') === contentTypeFilter);
+    return filteredByActiveStatus.filter((c) => hasContentType(c, contentTypeFilter));
   }, [filteredByActiveStatus, contentTypeFilter]);
 
   const search = useSearchFilterSort({ items: displayItems, searchFields: ['name', 'handle'] });
   const contract = useContractUpload({ creators, setCreators });
   const posts = usePosts({ creators, setCreators });
 
-  // Count by content type for tabs
+  // Count by content type for tabs (counts creators who have each type)
   const contentTypeCounts = useMemo(() => {
     const items = subTab === 'active' ? activeOnly : inactiveOnly;
     return {
       all: items.length,
-      social: items.filter((c) => (c.contentType || 'social') === CONTENT_TYPES.SOCIAL).length,
-      podcast: items.filter((c) => c.contentType === CONTENT_TYPES.PODCAST).length,
-      newsletter: items.filter((c) => c.contentType === CONTENT_TYPES.NEWSLETTER).length,
+      social: items.filter((c) => hasContentType(c, CONTENT_TYPES.SOCIAL)).length,
+      podcast: items.filter((c) => hasContentType(c, CONTENT_TYPES.PODCAST)).length,
+      newsletter: items.filter((c) => hasContentType(c, CONTENT_TYPES.NEWSLETTER)).length,
     };
   }, [activeOnly, inactiveOnly, subTab]);
 
