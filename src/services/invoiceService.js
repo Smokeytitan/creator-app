@@ -9,8 +9,14 @@ import ExcelJS from 'exceljs';
 import { supabase } from '../lib/supabaseClient';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import {
+  uploadTemplateToSupabase,
+  getDefaultTemplate,
+  downloadTemplateFile,
+  isSupabaseConfigured
+} from './invoice/invoiceServiceSupabase';
 
-// LocalStorage key for template mapping configuration
+// LocalStorage keys (fallback when Supabase not configured)
 const TEMPLATE_MAPPING_KEY = 'invoice_template_mapping';
 const TEMPLATE_WORKBOOK_KEY = 'invoice_template_workbook';
 const TEMPLATE_ORIGINAL_FILE_KEY = 'invoice_template_original_file'; // Original Excel file for styling
@@ -100,20 +106,37 @@ export const saveTemplateWorkbook = (workbook) => {
 };
 
 /**
- * Get saved template workbook from localStorage
- * @returns {object|null} Workbook object or null if not found
+ * Get saved template workbook (Supabase only - no localStorage fallback)
+ * @returns {Promise<object|null>} Workbook object or null if not found
  */
-export const getTemplateWorkbook = () => {
-  try {
-    const binary = localStorage.getItem(TEMPLATE_WORKBOOK_KEY);
-    if (!binary) return null;
+export const getTemplateWorkbook = async () => {
+  // Check if Supabase is configured
+  if (!isSupabaseConfigured()) {
+    throw new Error('Supabase is not configured. Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY environment variables.');
+  }
 
-    // Convert base64 back to workbook
-    const workbook = XLSX.read(binary, { type: 'base64' });
+  try {
+    console.log('[getTemplateWorkbook] Downloading from Supabase');
+    const template = await getDefaultTemplate();
+
+    if (!template || !template.file_path) {
+      console.log('[getTemplateWorkbook] No template found in Supabase');
+      return null;
+    }
+
+    console.log('[getTemplateWorkbook] Downloading workbook from:', template.file_path);
+    const blob = await downloadTemplateFile(template.file_path);
+
+    // Convert Blob to ArrayBuffer then parse with XLSX
+    const arrayBuffer = await blob.arrayBuffer();
+    const data = new Uint8Array(arrayBuffer);
+    const workbook = XLSX.read(data, { type: 'array' });
+
+    console.log('[getTemplateWorkbook] Workbook loaded successfully');
     return workbook;
   } catch (error) {
-    console.error('Failed to retrieve template workbook:', error);
-    return null;
+    console.error('[getTemplateWorkbook] Failed to retrieve from Supabase:', error);
+    throw new Error(`Failed to retrieve workbook from Supabase: ${error.message}`);
   }
 };
 
@@ -135,67 +158,111 @@ const saveOriginalTemplateFile = (buffer) => {
 };
 
 /**
- * Get original Excel file buffer from localStorage
- * @returns {Uint8Array|null} File buffer or null if not found
+ * Get original Excel file buffer (Supabase only - no localStorage fallback)
+ * @returns {Promise<Uint8Array|null>} File buffer or null if not found
  */
-const getOriginalTemplateFile = () => {
-  try {
-    const base64 = localStorage.getItem(TEMPLATE_ORIGINAL_FILE_KEY);
-    if (!base64) return null;
+const getOriginalTemplateFile = async () => {
+  // Check if Supabase is configured
+  if (!isSupabaseConfigured()) {
+    throw new Error('Supabase is not configured. Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY environment variables.');
+  }
 
-    // Convert base64 back to Uint8Array
-    const binaryString = atob(base64);
-    const len = binaryString.length;
-    const bytes = new Uint8Array(len);
-    for (let i = 0; i < len; i++) {
-      bytes[i] = binaryString.charCodeAt(i);
+  try {
+    console.log('[getOriginalTemplateFile] Downloading from Supabase');
+    const template = await getDefaultTemplate();
+
+    if (!template || !template.file_path) {
+      console.log('[getOriginalTemplateFile] No template found in Supabase');
+      return null;
     }
-    return bytes;
+
+    console.log('[getOriginalTemplateFile] Downloading file from:', template.file_path);
+    const blob = await downloadTemplateFile(template.file_path);
+
+    // Convert Blob to Uint8Array
+    const arrayBuffer = await blob.arrayBuffer();
+    return new Uint8Array(arrayBuffer);
   } catch (error) {
-    console.error('Failed to retrieve original template file:', error);
-    return null;
+    console.error('[getOriginalTemplateFile] Failed to retrieve from Supabase:', error);
+    throw new Error(`Failed to retrieve original file from Supabase: ${error.message}`);
   }
 };
 
 /**
- * Save template mapping configuration to localStorage
+ * Save template mapping configuration (Supabase only - no localStorage fallback)
  * @param {object} mapping - Mapping configuration object
- * @returns {boolean} Success status
+ * @param {File} file - Excel file to upload
+ * @param {object} workbook - Parsed workbook
+ * @returns {Promise<boolean>} Success status
  */
-export const saveTemplateMapping = (mapping) => {
+export const saveTemplateMapping = async (mapping, file = null, workbook = null) => {
+  // Check if Supabase is configured
+  if (!isSupabaseConfigured()) {
+    throw new Error('Supabase is not configured. Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY environment variables.');
+  }
+
+  // Check if we have required file data
+  if (!file || !workbook) {
+    throw new Error('File and workbook are required for Supabase upload');
+  }
+
   try {
-    const config = {
-      ...mapping,
-      savedAt: new Date().toISOString()
-    };
-    localStorage.setItem(TEMPLATE_MAPPING_KEY, JSON.stringify(config));
+    console.log('[saveTemplateMapping] Uploading to Supabase storage');
+    const templateName = mapping.templateName || 'Invoice Template';
+    const description = mapping.description || 'Invoice template for PDF generation';
+
+    // Upload to Supabase
+    await uploadTemplateToSupabase(file, workbook, mapping.mappings, templateName, description);
+    console.log('[saveTemplateMapping] Template saved to Supabase successfully');
     return true;
   } catch (error) {
-    console.error('Failed to save template mapping:', error);
-    return false;
+    console.error('[saveTemplateMapping] Failed to save to Supabase:', error);
+    throw new Error(`Failed to save template to Supabase: ${error.message}`);
   }
 };
 
 /**
- * Get saved template mapping configuration
- * @returns {object|null} Mapping configuration or null if not found
+ * Get saved template mapping configuration (Supabase only - no localStorage fallback)
+ * @returns {Promise<object|null>} Mapping configuration or null if not found
  */
-export const getTemplateMapping = () => {
+export const getTemplateMapping = async () => {
+  // Check if Supabase is configured
+  if (!isSupabaseConfigured()) {
+    throw new Error('Supabase is not configured. Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY environment variables.');
+  }
+
   try {
-    const data = localStorage.getItem(TEMPLATE_MAPPING_KEY);
-    return data ? JSON.parse(data) : null;
-  } catch (error) {
-    console.error('Failed to retrieve template mapping:', error);
+    console.log('[getTemplateMapping] Checking Supabase for template');
+    const template = await getDefaultTemplate();
+
+    if (template) {
+      console.log('[getTemplateMapping] Found template in Supabase:', template.name);
+      // Return in the format expected by the UI
+      return {
+        templateName: template.name,
+        sheetName: template.sheet_name,
+        mappings: template.mapping,
+        savedAt: template.created_at,
+        _supabaseId: template.id,
+        _filePath: template.file_path
+      };
+    }
+
+    console.log('[getTemplateMapping] No template found in Supabase');
     return null;
+  } catch (error) {
+    console.error('[getTemplateMapping] Failed to retrieve from Supabase:', error);
+    throw new Error(`Failed to retrieve template from Supabase: ${error.message}`);
   }
 };
 
 /**
- * Check if template is configured
- * @returns {boolean} True if template mapping exists
+ * Check if template is configured (Supabase or localStorage)
+ * @returns {Promise<boolean>} True if template mapping exists
  */
-export const hasTemplateConfigured = () => {
-  return getTemplateMapping() !== null;
+export const hasTemplateConfigured = async () => {
+  const mapping = await getTemplateMapping();
+  return mapping !== null;
 };
 
 /**
@@ -667,7 +734,7 @@ export const convertToPDF = async (workbook) => {
     console.log('[convertToPDF] Starting PDF conversion with formatting preservation...');
 
     // Load original Excel file with ExcelJS to get styling
-    const originalBuffer = getOriginalTemplateFile();
+    const originalBuffer = await getOriginalTemplateFile();
     if (!originalBuffer) {
       console.warn('[convertToPDF] Original file not found, using basic formatting');
       return convertToPDFBasic(workbook);
@@ -1313,11 +1380,11 @@ export const generateInvoice = async (creatorId, dateRange, templateWorkbook, ma
     console.log('[generateInvoice] Starting invoice generation for creator:', creatorId);
     console.log('[generateInvoice] Date range:', dateRange);
 
-    // Load template workbook from localStorage if not provided
+    // Load template workbook from storage if not provided
     let workbook = templateWorkbook;
     if (!workbook) {
-      console.log('[generateInvoice] Loading workbook from localStorage...');
-      workbook = getTemplateWorkbook();
+      console.log('[generateInvoice] Loading workbook from storage...');
+      workbook = await getTemplateWorkbook();
       if (!workbook) {
         throw new Error('No template workbook found. Please upload a template first.');
       }

@@ -7,13 +7,15 @@ import React, { useState, useRef } from 'react';
 import { Upload, Save, AlertCircle } from 'lucide-react';
 import ExcelPreview from './ExcelPreview';
 import FieldMappingDialog from './FieldMappingDialog';
-import { uploadTemplate, validateTemplateFile, saveTemplateMapping, saveTemplateWorkbook } from '../../services/invoiceService';
+import { uploadTemplate, validateTemplateFile, saveTemplateMapping } from '../../services/invoiceService';
 
 const TemplateUploadStep = ({ onComplete, initialWorkbook, initialMapping }) => {
   const [workbook, setWorkbook] = useState(initialWorkbook || null);
+  const [uploadedFile, setUploadedFile] = useState(null); // Store original file for Supabase upload
   const [mappings, setMappings] = useState(initialMapping?.mappings || {});
   const [templateName, setTemplateName] = useState(initialMapping?.templateName || 'Invoice Template');
   const [uploading, setUploading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   const [selectedCell, setSelectedCell] = useState(null);
   const [showMappingDialog, setShowMappingDialog] = useState(false);
@@ -38,6 +40,7 @@ const TemplateUploadStep = ({ onComplete, initialWorkbook, initialMapping }) => 
     try {
       const wb = await uploadTemplate(file);
       setWorkbook(wb);
+      setUploadedFile(file); // Store file for Supabase upload
       setMappings({}); // Reset mappings when new template uploaded
     } catch (err) {
       setError(err.message);
@@ -72,7 +75,7 @@ const TemplateUploadStep = ({ onComplete, initialWorkbook, initialMapping }) => 
   };
 
   // Save template configuration
-  const handleSaveTemplate = () => {
+  const handleSaveTemplate = async () => {
     if (!workbook) {
       setError('No template uploaded');
       return;
@@ -83,20 +86,26 @@ const TemplateUploadStep = ({ onComplete, initialWorkbook, initialMapping }) => 
       return;
     }
 
-    const config = {
-      templateName,
-      sheetName: workbook.SheetNames[0],
-      mappings
-    };
+    setSaving(true);
+    setError(null);
 
-    // Save both mapping and workbook
-    const mappingSuccess = saveTemplateMapping(config);
-    const workbookSuccess = saveTemplateWorkbook(workbook);
+    try {
+      const config = {
+        templateName,
+        sheetName: workbook.SheetNames[0],
+        mappings
+      };
 
-    if (mappingSuccess && workbookSuccess) {
+      // Save to Supabase (throws error if not configured)
+      await saveTemplateMapping(config, uploadedFile, workbook);
+
+      // Success - complete the step
       onComplete(workbook, config);
-    } else {
-      setError('Failed to save template configuration');
+    } catch (err) {
+      console.error('Error saving template:', err);
+      setError(err.message || 'Failed to save template configuration');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -207,11 +216,11 @@ const TemplateUploadStep = ({ onComplete, initialWorkbook, initialMapping }) => 
       <div className="flex gap-3 pt-4 border-t border-white/[0.12]">
         <button
           onClick={handleSaveTemplate}
-          disabled={!workbook || mappedCount === 0}
+          disabled={!workbook || mappedCount === 0 || saving}
           className="flex-1 btn-polygon-primary rounded-polygon-button px-4 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Save className="w-4 h-4 inline mr-2" />
-          Save Template & Continue
+          {saving ? 'Saving...' : 'Save Template & Continue'}
         </button>
       </div>
 

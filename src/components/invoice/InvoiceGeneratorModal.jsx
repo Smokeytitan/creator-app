@@ -34,8 +34,9 @@ const InvoiceGeneratorModal = ({ isOpen, onClose, creator }) => {
   const handleGenerate = async () => {
     setError(null);
 
-    // Check if template is configured
-    if (!hasTemplateConfigured()) {
+    // Check if template is configured (now async)
+    const hasTemplate = await hasTemplateConfigured();
+    if (!hasTemplate) {
       setError('Please upload an invoice template first from the main roster page.');
       return;
     }
@@ -56,11 +57,12 @@ const InvoiceGeneratorModal = ({ isOpen, onClose, creator }) => {
     setGenerating(true);
 
     try {
-      const templateMapping = getTemplateMapping();
+      // Get template mapping (now async)
+      const templateMapping = await getTemplateMapping();
       const result = await generateInvoice(
         creator.id,
         { start: startDateStr, end: endDateStr },
-        null, // workbook will be loaded from localStorage
+        null, // workbook will be loaded from storage
         templateMapping,
         creator // pass creator data for placeholder mode
       );
